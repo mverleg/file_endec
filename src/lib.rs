@@ -6,13 +6,13 @@ pub use crate::orchestrate::decrypt::decrypt;
 // These two methods are the main entry points.
 pub use crate::orchestrate::encrypt::encrypt;
 
-pub mod config;
-pub mod files;
-pub mod header;
-pub mod key;
-pub mod symmetric;
-pub mod util;
-pub mod orchestrate;
+mod config;
+mod files;
+mod header;
+mod key;
+mod symmetric;
+mod util;
+mod orchestrate;
 
 /// The demo used in this blog post:
 /// https://markv.nl/blog/symmetric-encryption-in-rust

@@ -216,6 +216,7 @@ mod tests {
         let args = EncryptArguments::from_iter(&["fileenc", "file.txt"]);
         let config = args.convert(Key::new("abcdef123!")).unwrap();
         assert!(config.files().contains(&PathBuf::from("file.txt")));
+        assert_eq!(1, config.files().len());
         assert_eq!(config.raw_key().key_data.unsecure(), "abcdef123!");
         assert_eq!(config.verbosity(), Verbosity::Normal);
         assert_eq!(config.overwrite(), false);

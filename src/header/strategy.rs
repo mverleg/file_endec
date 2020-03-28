@@ -25,7 +25,6 @@ impl Verbosity {
     pub fn quiet(self) -> bool {
         Verbosity::Quiet == self
     }
-
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -68,7 +68,7 @@ impl EndecConfig for DecryptConfig {
     fn output_dir(&self) -> Option<&Path> {
         match &self.output_dir {
             Some(pth) => Some(pth),
-            None => None
+            None => None,
         }
     }
 }

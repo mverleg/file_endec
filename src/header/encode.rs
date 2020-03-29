@@ -11,8 +11,8 @@ use crate::header::HEADER_MARKER;
 use crate::header::HEADER_SALT_MARKER;
 use crate::header::HEADER_VERSION_MARKER;
 use crate::key::salt::Salt;
-use crate::util::FedResult;
 use crate::util::errors::add_err;
+use crate::util::FedResult;
 
 fn wrap_err(res: Result<usize, impl Error>, verbose: bool) -> FedResult<()> {
     if let Err(err) = res {

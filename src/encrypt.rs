@@ -6,9 +6,9 @@ use ::std::process::exit;
 
 use ::structopt::StructOpt;
 
-use ::file_endec::EndecConfig;
 use ::file_endec::encrypt;
 use ::file_endec::EncryptConfig;
+use ::file_endec::EndecConfig;
 use ::file_endec::FedResult;
 use ::file_endec::Key;
 use ::file_endec::KeySource;
@@ -241,7 +241,9 @@ mod tests {
         let config = args.convert(Key::new("abcdef123!")).unwrap();
         assert!(config.files().contains(&PathBuf::from("file.txt")));
         assert!(config.files().contains(&PathBuf::from("another_file.txt")));
-        assert!(config.files().contains(&PathBuf::from("there_are_three_files")));
+        assert!(config
+            .files()
+            .contains(&PathBuf::from("there_are_three_files")));
         assert_eq!(3, config.files().len());
         assert_eq!(config.raw_key().key_data.unsecure(), "abcdef123!");
         assert_eq!(config.verbosity(), Verbosity::Quiet);

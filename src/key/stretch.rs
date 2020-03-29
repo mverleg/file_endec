@@ -1,7 +1,7 @@
 use crate::header::KeyHashAlg;
 use crate::key::hash::hash;
-use crate::key::Key;
 use crate::key::key::StretchKey;
+use crate::key::Key;
 use crate::key::Salt;
 
 pub fn stretch_key(

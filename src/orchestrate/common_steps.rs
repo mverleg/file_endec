@@ -2,8 +2,8 @@ use ::std::fs::File;
 use ::std::io::{BufReader, Read};
 
 use crate::files::file_meta::FileInfo;
-use crate::header::HEADER_MARKER;
 use crate::header::strategy::Verbosity;
+use crate::header::HEADER_MARKER;
 use crate::util::errors::wrap_io;
 use crate::util::FedResult;
 
@@ -18,7 +18,12 @@ pub fn open_reader(file: &FileInfo, verbosity: Verbosity) -> FedResult<BufReader
     }
 }
 
-pub fn read_file(reader: &mut BufReader<File>, path_str: &str, size_kb: u64, verbosity: Verbosity) -> FedResult<Vec<u8>> {
+pub fn read_file(
+    reader: &mut BufReader<File>,
+    path_str: &str,
+    size_kb: u64,
+    verbosity: Verbosity,
+) -> FedResult<Vec<u8>> {
     if verbosity.debug() {
         println!("reading {}", path_str);
     }
@@ -30,12 +35,12 @@ pub fn read_file(reader: &mut BufReader<File>, path_str: &str, size_kb: u64, ver
         );
     }
     let mut data = vec![];
-    wrap_io(|| "could not read input file", reader.read_to_end(&mut data))?;
+    wrap_io(
+        || "could not read input file",
+        reader.read_to_end(&mut data),
+    )?;
     if !verbosity.quiet() && data.starts_with(HEADER_MARKER.as_bytes()) {
-        eprintln!(
-            "warning: file '{}' seems to already be encrypted",
-            path_str
-        );
+        eprintln!("warning: file '{}' seems to already be encrypted", path_str);
     }
     Ok(data)
 }

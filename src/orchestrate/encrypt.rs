@@ -1,17 +1,16 @@
-
-use crate::key::Salt;
 use crate::config::typ::{EndecConfig, Extension};
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::compress_file;
 use crate::files::file_meta::inspect_files;
 use crate::files::write_output::write_output_file;
-use crate::header::Header;
 use crate::header::strategy::get_current_version_strategy;
+use crate::header::Header;
 use crate::key::stretch::stretch_key;
+use crate::key::Salt;
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
-use crate::{FedResult, EncryptConfig};
+use crate::{EncryptConfig, FedResult};
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     if config.delete_input() {
@@ -37,7 +36,12 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     //TODO @mark: progress logging
     for file in &files_info {
         let mut reader = open_reader(&file, config.verbosity())?;
-        let data = read_file(&mut reader, &file.path_str(), file.size_kb, config.verbosity())?;
+        let data = read_file(
+            &mut reader,
+            &file.path_str(),
+            file.size_kb,
+            config.verbosity(),
+        )?;
         let checksum = calculate_checksum(&data);
         let small = compress_file(data, &strategy.compression_algorithm)?;
         let secret = encrypt_file(small, &stretched_key, &salt, &strategy.symmetric_algorithms);

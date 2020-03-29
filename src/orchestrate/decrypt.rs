@@ -2,21 +2,21 @@ use ::std::collections::HashMap;
 
 pub use crate::config::enc::EncryptConfig;
 use crate::config::typ::{EndecConfig, Extension};
-use crate::files::Checksum;
+use crate::config::DecryptConfig;
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::decompress_file;
 use crate::files::file_meta::inspect_files;
 use crate::files::write_output::write_output_file;
-use crate::header::{get_version_strategy, parse_header};
+use crate::files::Checksum;
 pub use crate::header::strategy::Verbosity;
-pub use crate::key::{Key, KeySource};
+use crate::header::{get_version_strategy, parse_header};
 use crate::key::key::StretchKey;
-use crate::key::Salt;
 use crate::key::stretch::stretch_key;
+use crate::key::Salt;
+pub use crate::key::{Key, KeySource};
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::decrypt::decrypt_file;
 pub use crate::util::FedResult;
-use crate::config::DecryptConfig;
 
 pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
     if config.delete_input() {
@@ -51,11 +51,21 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
             key_cache.insert(salt.clone(), sk.clone());
             sk
         };
-        let data = read_file(&mut reader, &file.path_str(), file.size_kb, config.verbosity())?;
+        let data = read_file(
+            &mut reader,
+            &file.path_str(),
+            file.size_kb,
+            config.verbosity(),
+        )?;
         let revealed = decrypt_file(data, &stretched_key, &salt, &strategy.symmetric_algorithms)?;
         let big = decompress_file(revealed, &strategy.compression_algorithm)?;
         let actual_checksum = calculate_checksum(&big);
-        if !validate_checksum_matches(&actual_checksum, header.checksum(), config.verbosity(), &file.path_str()) {
+        if !validate_checksum_matches(
+            &actual_checksum,
+            header.checksum(),
+            config.verbosity(),
+            &file.path_str(),
+        ) {
             checksum_failure_count += 1;
         }
         write_output_file(config, &file, &big, None)?;
@@ -72,13 +82,21 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
         println!("decrypted {} files", files_info.len());
     }
     if checksum_failure_count > 0 {
-        return Err(format!("there were {} files whose checksums did not match; they \
-        likely do not contain real data", checksum_failure_count))
+        return Err(format!(
+            "there were {} files whose checksums did not match; they \
+        likely do not contain real data",
+            checksum_failure_count
+        ));
     }
     Ok(())
 }
 
-pub fn validate_checksum_matches(actual_checksum: &Checksum, expected_checksum: &Checksum, verbosity: Verbosity, file_name: &str) -> bool {
+pub fn validate_checksum_matches(
+    actual_checksum: &Checksum,
+    expected_checksum: &Checksum,
+    verbosity: Verbosity,
+    file_name: &str,
+) -> bool {
     if actual_checksum == expected_checksum {
         return true;
     }
@@ -86,13 +104,17 @@ pub fn validate_checksum_matches(actual_checksum: &Checksum, expected_checksum: 
         return false;
     }
     //TODO @mark: test this
-    eprintln!("warning: checksum for '{}' did not match! the decrypted file may contain garbage{}",
-          file_name,
-          if verbosity.debug() {
-              format!(" (expected {}, actually {})", expected_checksum, actual_checksum)
-          } else {
-              "".to_owned()
-          }
+    eprintln!(
+        "warning: checksum for '{}' did not match! the decrypted file may contain garbage{}",
+        file_name,
+        if verbosity.debug() {
+            format!(
+                " (expected {}, actually {})",
+                expected_checksum, actual_checksum
+            )
+        } else {
+            "".to_owned()
+        }
     );
     false
 }

@@ -4,8 +4,8 @@ use ::std::path::PathBuf;
 
 use crate::config::typ::Extension;
 use crate::header::strategy::Verbosity;
-use crate::util::FedResult;
 use crate::util::pth::determine_output_path;
+use crate::util::FedResult;
 
 #[derive(Debug)]
 pub struct FileInfo<'a> {
@@ -29,8 +29,7 @@ pub fn inspect_files<'a>(
     verbosity: Verbosity,
     overwrite: bool,
     extension: Extension,
-    output_dir: Option<&Path>
-
+    output_dir: Option<&Path>,
 ) -> FedResult<Vec<FileInfo<'a>>> {
     let mut not_found_cnt: u32 = 0;
     let mut output_exists_cnt: u32 = 0;
@@ -60,13 +59,12 @@ pub fn inspect_files<'a>(
         }
 
         // Output file
-        let output_file = determine_output_path(
-            file.as_path(),
-            extension,
-            output_dir,
-        );
+        let output_file = determine_output_path(file.as_path(), extension, output_dir);
         if !overwrite && output_file.exists() {
-            eprintln!("output path '{}' already exists", output_file.to_string_lossy());
+            eprintln!(
+                "output path '{}' already exists",
+                output_file.to_string_lossy()
+            );
             output_exists_cnt += 1;
         }
 
@@ -89,7 +87,11 @@ pub fn inspect_files<'a>(
             or --output-dir {}to control output location)",
             output_exists_cnt,
             if output_exists_cnt > 1 { "s" } else { "" },
-            if let Extension::Add(_) = extension { "or --output-extension " } else { "" },
+            if let Extension::Add(_) = extension {
+                "or --output-extension "
+            } else {
+                ""
+            },
         ));
     }
     Ok(infos)
@@ -100,9 +102,9 @@ mod tests {
     use ::tempfile::NamedTempFile;
     use ::tempfile::TempDir;
 
-    use crate::config::EncryptConfig;
     use crate::config::typ::EndecConfig;
     use crate::config::typ::Extension;
+    use crate::config::EncryptConfig;
     use crate::header::strategy::Verbosity;
     use crate::key::Key;
 
@@ -129,7 +131,8 @@ mod tests {
             config.overwrite(),
             Extension::Add(".enc"),
             config.output_dir(),
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(2, out_files.len());
         let expected_out_pth_1 = format!("{}.enc", in_file_1.path().to_str().unwrap());
         let expected_out_pth_2 = format!("{}.enc", in_file_2.path().to_str().unwrap());

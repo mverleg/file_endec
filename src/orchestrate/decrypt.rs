@@ -1,6 +1,5 @@
 use ::std::collections::HashMap;
 
-use crate::config::DecryptConfig;
 pub use crate::config::enc::EncryptConfig;
 use crate::config::typ::{EndecConfig, Extension};
 use crate::files::Checksum;
@@ -17,6 +16,7 @@ use crate::key::stretch::stretch_key;
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::decrypt::decrypt_file;
 pub use crate::util::FedResult;
+use crate::config::DecryptConfig;
 
 pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
     if config.delete_input() {

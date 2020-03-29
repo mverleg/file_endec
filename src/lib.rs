@@ -2,9 +2,16 @@
 //TODO @mark: make sure public api is as small as possible, perhaps only the two methods below
 //TODO @mark: async io
 
+pub use crate::config::enc::EncryptConfig;
+pub use crate::config::dec::DecryptConfig;
+pub use crate::util::FedResult;
+pub use crate::header::strategy::Verbosity;
+pub use crate::key::{Key, KeySource};
+
 pub use crate::orchestrate::decrypt::decrypt;
 // These two methods are the main entry points.
 pub use crate::orchestrate::encrypt::encrypt;
+pub use crate::config::typ::EndecConfig;
 
 mod config;
 mod files;

@@ -6,12 +6,13 @@ use ::std::process::exit;
 
 use ::structopt::StructOpt;
 
-use ::file_endec::EncryptConfig;
-use ::file_endec::Verbosity;
+use ::file_endec::EndecConfig;
 use ::file_endec::encrypt;
+use ::file_endec::EncryptConfig;
+use ::file_endec::FedResult;
 use ::file_endec::Key;
 use ::file_endec::KeySource;
-use ::file_endec::FedResult;
+use ::file_endec::Verbosity;
 
 //TODO @mark: flag like --read0 to accept pipe with \0 terminator byte like `find -print0` outputs (can't work with --key=pipe)
 
@@ -205,10 +206,6 @@ fn go_encrypt() -> FedResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use ::file_endec::config::typ::EndecConfig;
-    use ::file_endec::header::strategy::Verbosity;
-    use ::file_endec::key::Key;
-
     use super::*;
 
     #[test]

@@ -149,11 +149,8 @@ fn go_decrypt() -> FedResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use ::file_endec::config::typ::EndecConfig;
-    use ::file_endec::header::strategy::Verbosity;
-    use ::file_endec::key::Key;
-
     use super::*;
+    use ::file_endec::EndecConfig;
 
     #[test]
     fn parse_args_minimal() {

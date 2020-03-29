@@ -1,7 +1,3 @@
-pub use crate::config::enc::EncryptConfig;
-pub use crate::util::FedResult;
-pub use crate::header::strategy::Verbosity;
-pub use crate::key::{Key, KeySource};
 
 use crate::key::Salt;
 use crate::config::typ::{EndecConfig, Extension};
@@ -15,6 +11,7 @@ use crate::key::stretch::stretch_key;
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
+use crate::{FedResult, EncryptConfig};
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     if config.delete_input() {

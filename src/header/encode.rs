@@ -87,7 +87,6 @@ mod tests {
             version,
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
-            true,
         )
         .unwrap();
         let mut buf: Vec<u8> = Vec::new();
@@ -104,7 +103,6 @@ mod tests {
             version,
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
-            true,
         )
         .unwrap();
         let mut buf: Vec<u8> = Vec::new();

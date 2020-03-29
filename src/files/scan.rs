@@ -1,14 +1,11 @@
-#[cfg(test)]
+
 use ::std::env;
-use ::std::ffi::OsStr;
-use ::std::fs;
-use ::std::path::Path;
-use ::std::path::PathBuf;
 
-#[cfg(test)]
 use ::lazy_static::lazy_static;
-
-use crate::util::FedResult;
+use std::fs;
+use std::path::{Path, PathBuf};
+use crate::FedResult;
+use std::ffi::OsStr;
 
 /// Recursively get all the files in a directory that have '.enc' extension.
 pub fn get_enc_files_direct(dir: &Path) -> FedResult<Vec<PathBuf>> {
@@ -79,12 +76,6 @@ lazy_static! {
         }
         test_files_dir
     };
-}
-
-#[cfg(test)]
-pub fn test_files() -> Vec<PathBuf> {
-    let test_files_dir = TEST_FILE_DIR.clone();
-    get_enc_files_direct(&test_files_dir).unwrap()
 }
 
 #[cfg(test)]

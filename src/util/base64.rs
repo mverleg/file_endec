@@ -1,13 +1,16 @@
-use ::std::convert::TryInto;
-
 use ::data_encoding::BASE64URL_NOPAD;
 
 use crate::util::errors::FedResult;
 
+#[cfg(test)]
+use std::convert::TryInto;
+
+#[cfg(test)]
 pub fn u64_to_base64str(value: u64) -> String {
     BASE64URL_NOPAD.encode(&value.to_le_bytes())
 }
 
+#[cfg(test)]
 pub fn base64str_to_u64(base64_str: &str) -> FedResult<u64> {
     let bytes = match BASE64URL_NOPAD.decode(base64_str.as_bytes()) {
         Ok(bytes) => bytes,

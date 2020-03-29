@@ -1,8 +1,6 @@
 use ::semver::Version;
 
 use crate::files::Checksum;
-use crate::header::get_version_strategy;
-use crate::header::Strategy;
 use crate::key::Salt;
 use crate::util::FedResult;
 
@@ -10,18 +8,14 @@ use crate::util::FedResult;
 pub struct Header {
     version: Version,
     salt: Salt,
-    strategy: &'static Strategy,
     checksum: Checksum,
 }
 
 impl Header {
-    pub fn new(version: Version, salt: Salt, checksum: Checksum, verbose: bool) -> FedResult<Self> {
-        let strategy = get_version_strategy(&version, verbose)
-            .map_err(|e| format!("version used to encrypt: {}", e))?;
+    pub fn new(version: Version, salt: Salt, checksum: Checksum) -> FedResult<Self> {
         Ok(Header {
             version,
             salt,
-            strategy,
             checksum,
         })
     }
@@ -31,9 +25,6 @@ impl Header {
     }
     pub fn salt(&self) -> &Salt {
         &self.salt
-    }
-    pub fn strategy(&self) -> &'static Strategy {
-        self.strategy
     }
     pub fn checksum(&self) -> &Checksum {
         &self.checksum

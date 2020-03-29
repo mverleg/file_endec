@@ -8,7 +8,6 @@ use ::structopt::StructOpt;
 
 use ::file_endec::encrypt;
 use ::file_endec::EncryptConfig;
-use ::file_endec::EndecConfig;
 use ::file_endec::FedResult;
 use ::file_endec::Key;
 use ::file_endec::KeySource;
@@ -207,6 +206,7 @@ fn go_encrypt() -> FedResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ::file_endec::EndecConfig;
 
     #[test]
     fn parse_args_minimal() {

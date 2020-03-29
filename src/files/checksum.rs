@@ -19,6 +19,7 @@ pub enum ChecksumType {
 }
 
 impl ChecksumType {
+    #[allow(dead_code)]
     pub fn parse(input: &str) -> FedResult<Self> {
         if "xx_sha256" == input {
             Ok(ChecksumType::Xxhash_Sha256_b64)
@@ -44,6 +45,7 @@ pub struct Checksum {
 }
 
 impl Checksum {
+    #[cfg(test)]
     pub fn fixed_for_test(data: Vec<u8>) -> Self {
         Checksum {
             typ: ChecksumType::Xxhash_Sha256_b64,

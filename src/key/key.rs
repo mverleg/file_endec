@@ -3,6 +3,7 @@ use ::secstr::SecVec;
 use ::zxcvbn::zxcvbn;
 use ::zxcvbn::Entropy;
 
+#[cfg(test)]
 use crate::key::hash::fastish_hash;
 
 #[derive(Debug, Clone)]
@@ -55,6 +56,7 @@ impl StretchKey {
         }
     }
 
+    #[cfg(test)]
     pub fn mock_stretch(key_data: &[u8]) -> Self {
         StretchKey::new(&fastish_hash(key_data))
     }

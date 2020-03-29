@@ -92,7 +92,7 @@ pub fn parse_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<Head
     let checksum = parse_checksum(reader, &mut line, verbose)?;
     read_line(reader, &mut line, verbose)?;
     check_prefix(&line, HEADER_DATA_MARKER, verbose).unwrap();
-    Header::new(version, salt, checksum, verbose)
+    Header::new(version, salt, checksum)
 }
 
 #[cfg(test)]
@@ -133,7 +133,6 @@ mod tests {
             version,
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
-            true,
         )
         .unwrap();
         let mut buf = input.as_bytes();
@@ -149,7 +148,6 @@ mod tests {
             version,
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
-            true,
         )
         .unwrap();
         let mut buf = input.as_bytes();

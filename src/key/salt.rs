@@ -59,6 +59,7 @@ impl Salt {
         Ok(Salt { salt: long })
     }
 
+    #[cfg(test)]
     pub fn fixed_for_test(salt: u64) -> Self {
         // Iterator didn't work: salt.to_le_bytes().into_iter().cycle().take(SALT_LEN).collect::<Vec<u8>>()
         let mut repeated: [u8; 64] = [0u8; SALT_LEN];

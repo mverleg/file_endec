@@ -1,4 +1,9 @@
-use crate::config::enc::EncryptConfig;
+pub use crate::config::enc::EncryptConfig;
+pub use crate::util::FedResult;
+pub use crate::header::strategy::Verbosity;
+pub use crate::key::{Key, KeySource};
+
+use crate::key::Salt;
 use crate::config::typ::{EndecConfig, Extension};
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::compress_file;
@@ -6,11 +11,9 @@ use crate::files::file_meta::inspect_files;
 use crate::files::write_output::write_output_file;
 use crate::header::Header;
 use crate::header::strategy::get_current_version_strategy;
-use crate::key::Salt;
 use crate::key::stretch::stretch_key;
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::encrypt::encrypt_file;
-use crate::util::FedResult;
 use crate::util::version::get_current_version;
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {

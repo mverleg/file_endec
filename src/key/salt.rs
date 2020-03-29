@@ -45,9 +45,9 @@ impl Hash for Salt {
 impl Debug for Salt {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         f.write_str("salt[")?;
-        f.write_str(&format!("{}", self.salt[0]))?;
+        write!(f, "{}", self.salt[0])?;
         f.write_str("...")?;
-        f.write_str(&format!("{}", self.salt[self.salt.len() - 1]))?;
+        write!(f, "{}", self.salt[self.salt.len() - 1])?;
         f.write_str("]")
     }
 }

@@ -6,12 +6,12 @@ use ::std::process::exit;
 
 use ::structopt::StructOpt;
 
-use ::file_endec::config::DecryptConfig;
 use ::file_endec::decrypt;
-use ::file_endec::header::strategy::Verbosity;
-use ::file_endec::key::Key;
-use ::file_endec::key::KeySource;
-use ::file_endec::util::FedResult;
+use ::file_endec::DecryptConfig;
+use ::file_endec::FedResult;
+use ::file_endec::Key;
+use ::file_endec::KeySource;
+use ::file_endec::Verbosity;
 
 #[derive(Debug, StructOpt)]
 #[structopt(

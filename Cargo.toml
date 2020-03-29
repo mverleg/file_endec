@@ -50,7 +50,7 @@ data-encoding = "^2.1.2"
 brotli = "^3.3.0"
 
 # shredding
-filetime = "^0.2.8"
+file_shred = "^1.0.0"
 
 # utilities
 lazy_static = "^1.4.0"

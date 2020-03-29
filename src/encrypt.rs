@@ -6,12 +6,12 @@ use ::std::process::exit;
 
 use ::structopt::StructOpt;
 
-use ::file_endec::config::EncryptConfig;
+use ::file_endec::EncryptConfig;
+use ::file_endec::Verbosity;
 use ::file_endec::encrypt;
-use ::file_endec::header::strategy::Verbosity;
-use ::file_endec::key::Key;
-use ::file_endec::key::KeySource;
-use ::file_endec::util::FedResult;
+use ::file_endec::Key;
+use ::file_endec::KeySource;
+use ::file_endec::FedResult;
 
 //TODO @mark: flag like --read0 to accept pipe with \0 terminator byte like `find -print0` outputs (can't work with --key=pipe)
 

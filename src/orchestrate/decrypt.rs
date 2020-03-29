@@ -1,20 +1,22 @@
 use ::std::collections::HashMap;
 
 use crate::config::DecryptConfig;
+pub use crate::config::enc::EncryptConfig;
 use crate::config::typ::{EndecConfig, Extension};
 use crate::files::Checksum;
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::decompress_file;
 use crate::files::file_meta::inspect_files;
+use crate::files::write_output::write_output_file;
 use crate::header::{get_version_strategy, parse_header};
-use crate::header::strategy::Verbosity;
+pub use crate::header::strategy::Verbosity;
+pub use crate::key::{Key, KeySource};
 use crate::key::key::StretchKey;
 use crate::key::Salt;
 use crate::key::stretch::stretch_key;
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::decrypt::decrypt_file;
-use crate::util::FedResult;
-use crate::files::write_output::write_output_file;
+pub use crate::util::FedResult;
 
 pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
     if config.delete_input() {
@@ -99,6 +101,7 @@ pub fn validate_checksum_matches(actual_checksum: &Checksum, expected_checksum: 
 /// https://markv.nl/blog/symmetric-encryption-in-rust
 #[cfg(test)]
 mod tests {
+    use ::std::fs;
     use ::std::fs::File;
     use ::std::io::Read;
 
@@ -112,8 +115,6 @@ mod tests {
     use crate::files::scan::TEST_FILE_DIR;
     use crate::header::strategy::Verbosity;
     use crate::key::key::Key;
-    use crate::files::shred::delete_file;
-    use crate::config::typ::EndecConfig;
 
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");
@@ -159,7 +160,7 @@ mod tests {
                 .read_to_end(&mut dec_data)
                 .unwrap();
             assert_eq!(&original_data, &dec_data);
-            delete_file(&dec_pth, conf.debug()).unwrap();
+            fs::remove_file(&dec_pth).unwrap();
         }
     }
 

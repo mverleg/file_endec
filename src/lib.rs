@@ -1,4 +1,3 @@
-//TODO @mark: async io
 
 pub use crate::config::DecryptConfig;
 pub use crate::config::EncryptConfig;
@@ -11,11 +10,11 @@ pub use crate::orchestrate::decrypt::decrypt;
 // These two methods are the main entry points.
 pub use crate::orchestrate::encrypt::encrypt;
 
-#[cfg(test)] pub use crate::files::mockfile::generate_test_file_content_for_test;
-#[cfg(test)] pub use crate::symmetric::decrypt::decrypt_aes256;
-#[cfg(test)] pub use crate::symmetric::decrypt::decrypt_twofish;
-#[cfg(test)] pub use crate::symmetric::encrypt::encrypt_aes256;
-#[cfg(test)] pub use crate::symmetric::encrypt::encrypt_twofish;
+#[cfg(all(test, feature = "expose"))] pub use crate::files::mockfile::generate_test_file_content_for_test;
+#[cfg(feature = "expose")] pub use crate::symmetric::decrypt::decrypt_aes256;
+#[cfg(feature = "expose")] pub use crate::symmetric::decrypt::decrypt_twofish;
+#[cfg(feature = "expose")] pub use crate::symmetric::encrypt::encrypt_aes256;
+#[cfg(feature = "expose")] pub use crate::symmetric::encrypt::encrypt_twofish;
 
 mod config;
 mod files;

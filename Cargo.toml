@@ -8,6 +8,10 @@ edition = "2018"
 name = "file_endec"
 path = "src/lib.rs"
 
+[features]
+default = []
+expose = []
+
 [[bin]]
 name = "fileenc"
 path = "src/encrypt.rs"

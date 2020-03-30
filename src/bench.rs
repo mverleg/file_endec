@@ -1,7 +1,8 @@
 use ::criterion::criterion_group;
 use ::criterion::criterion_main;
+use criterion::Criterion;
 
-#[cfg(test)]
+#[cfg(all(test, feature = "expose"))]
 mod hash {
     use ::criterion::Benchmark;
     use ::criterion::black_box;
@@ -74,7 +75,7 @@ mod hash {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "expose"))]
 mod encrypt {
     use ::criterion::Benchmark;
     use ::criterion::black_box;
@@ -137,8 +138,14 @@ mod encrypt {
     }
 }
 
+#[cfg(not(feature = "expose"))]
+pub fn need_expose_feature(c: &mut Criterion) {
+    panic!("benchmarks require feature 'expose' to be enabled")
+}
+
 //TODO @mark: fully encrypt and decrypt large file
 
+#[cfg(feature = "expose")]
 criterion_group!(
     hash_bench,
     hash::scrypt_benchmark,
@@ -147,10 +154,18 @@ criterion_group!(
     hash::stretch_benchmark,
 );
 
+#[cfg(feature = "expose")]
 criterion_group!(
     encrypt_bench,
     encrypt::encrypt_aes256_benchmark,
     encrypt::encrypt_twofish_benchmark,
 );
 
-criterion_main!(hash_bench, encrypt_bench,);
+#[cfg(feature = "expose")]
+criterion_main!(hash_bench,
+    hash_bench,
+    encrypt_bench,
+);
+
+#[cfg(not(feature = "expose"))]
+criterion_main!(hash_bench, need_expose_feature);

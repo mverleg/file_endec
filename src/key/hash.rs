@@ -67,7 +67,7 @@ pub fn hash_sha256(data: &[u8], salt: &[u8]) -> Vec<u8> {
     output
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "expose"))]
 #[inline]
 pub fn fastish_hash(data: &[u8]) -> Vec<u8> {
     let mut output = vec![0; 32];

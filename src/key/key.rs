@@ -1,9 +1,9 @@
 use ::secstr::SecUtf8;
 use ::secstr::SecVec;
-use ::zxcvbn::zxcvbn;
 use ::zxcvbn::Entropy;
+use ::zxcvbn::zxcvbn;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "expose"))]
 use crate::key::hash::fastish_hash;
 
 #[derive(Debug, Clone)]
@@ -56,7 +56,7 @@ impl StretchKey {
         }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "expose"))]
     pub fn mock_stretch(key_data: &[u8]) -> Self {
         StretchKey::new(&fastish_hash(key_data))
     }

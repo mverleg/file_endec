@@ -1,5 +1,7 @@
 use ::criterion::criterion_group;
 use ::criterion::criterion_main;
+
+#[cfg(not(feature = "expose"))]
 use criterion::Criterion;
 
 #[cfg(all(test, feature = "expose"))]
@@ -140,7 +142,7 @@ mod encrypt {
 }
 
 #[cfg(not(feature = "expose"))]
-pub fn need_expose_feature(c: &mut Criterion) {
+pub fn need_expose_feature(_: &mut Criterion) {
     panic!("benchmarks require feature 'expose' to be enabled")
 }
 
@@ -163,10 +165,12 @@ criterion_group!(
 );
 
 #[cfg(feature = "expose")]
-criterion_main!(hash_bench,
+criterion_main!(
     hash_bench,
     encrypt_bench,
 );
 
 #[cfg(not(feature = "expose"))]
-criterion_main!(hash_bench, need_expose_feature);
+criterion_group!(need_expose_feature_group, need_expose_feature);
+#[cfg(not(feature = "expose"))]
+criterion_main!(need_expose_feature_group);

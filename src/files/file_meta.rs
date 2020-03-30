@@ -12,10 +12,6 @@ pub struct FileInfo<'a> {
     pub in_path: &'a Path,
     pub size_kb: u64,
     pub out_pth: PathBuf,
-    //TODO: make sure encrypted file has same permissions and owner as original
-    //TODO @mark: permissions: https://doc.rust-lang.org/std/fs/fn.set_permissions.html
-    //TODO @mark: owner is not in std
-    pub permissions: (),
 }
 
 impl<'a> FileInfo<'a> {
@@ -72,7 +68,6 @@ pub fn inspect_files<'a>(
             in_path: file.as_path(),
             size_kb: meta.len() / 1024,
             out_pth: output_file,
-            permissions: (),
         });
     }
     if not_found_cnt > 0 {

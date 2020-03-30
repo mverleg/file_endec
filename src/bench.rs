@@ -3,16 +3,16 @@ use ::criterion::criterion_main;
 
 #[cfg(test)]
 mod hash {
-    use ::criterion::black_box;
     use ::criterion::Benchmark;
+    use ::criterion::black_box;
     use ::criterion::Criterion;
 
     use ::file_endec::header::strategy::get_current_version_strategy;
+    use ::file_endec::key::{Key, Salt};
     use ::file_endec::key::hash::hash_argon2i;
     use ::file_endec::key::hash::hash_bcrypt;
     use ::file_endec::key::hash::hash_sha256;
     use ::file_endec::key::stretch::stretch_key;
-    use ::file_endec::key::{Key, Salt};
 
     fn get_data() -> Vec<u8> {
         black_box(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
@@ -76,16 +76,17 @@ mod hash {
 
 #[cfg(test)]
 mod encrypt {
-    use ::criterion::black_box;
     use ::criterion::Benchmark;
+    use ::criterion::black_box;
     use ::criterion::Criterion;
 
-    use ::file_endec::files::mockfile::generate_test_file_content_for_test;
-    use ::file_endec::key::key::StretchKey;
-    use ::file_endec::key::Salt;
-    use ::file_endec::symmetric::decrypt::{decrypt_aes256, decrypt_twofish};
-    use ::file_endec::symmetric::encrypt::encrypt_aes256;
-    use ::file_endec::symmetric::encrypt::encrypt_twofish;
+    use ::file_endec::decrypt_aes256;
+    use ::file_endec::decrypt_twofish;
+    use ::file_endec::encrypt_aes256;
+    use ::file_endec::encrypt_twofish;
+    use ::file_endec::generate_test_file_content_for_test;
+    use ::file_endec::Salt;
+    use ::file_endec::StretchKey;
 
     pub fn encrypt_aes256_benchmark(c: &mut Criterion) {
         c.bench(

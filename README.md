@@ -15,6 +15,7 @@ Functionality
 * Backward-compatibility.
 * Pass keys by prompt, argument, environment, file or pipe.
 * Warnings for weak keys.
+* Shredding of deleted files.
 
 How to use
 -------------------------------

@@ -55,14 +55,3 @@ Keep in mind
 
 * Encrypting the same file twice will give different results, which is needed for semantically security. This may be suboptimal for version control.
 * When hashing multiple files, they share the same salt. This choice was made because stretching takes long, and because if one key were to be found somehow, it would work for all files regardless of salts.
-
-Possible future plans
--------------------------------
-
-* Only encrypt if it saves more than 5% (or some other number). Needs encryption to be in header.
-* Recursively encrypt and decrypt all files in a directory.
-* Give the encrypted / decrypted file the same owner and permissions as the original.
-* Faster Twofish implementation, or different algorithm (now 6x slower than aes256).
-* Inspect an encrypted file (see algorithms etc) without decrypting.
-* Handle files that do not fit in RAM.
-* Simple graphical interface to drag files to encrypted vault (unlikely).

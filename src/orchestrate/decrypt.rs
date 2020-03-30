@@ -18,6 +18,34 @@ use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::decrypt::decrypt_file;
 pub use crate::util::FedResult;
 
+pub fn validate_checksum_matches(
+    actual_checksum: &Checksum,
+    expected_checksum: &Checksum,
+    verbosity: Verbosity,
+    file_name: &str,
+) -> bool {
+    if actual_checksum == expected_checksum {
+        return true;
+    }
+    if verbosity.quiet() {
+        return false;
+    }
+    //TODO @mark: test this
+    eprintln!(
+        "warning: checksum for '{}' did not match! the decrypted file may contain garbage{}",
+        file_name,
+        if verbosity.debug() {
+            format!(
+                " (expected {}, actually {})",
+                expected_checksum, actual_checksum
+            )
+        } else {
+            "".to_owned()
+        }
+    );
+    false
+}
+
 pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
     if config.delete_input() {
         unimplemented!("deleting input not implemented"); //TODO @mark
@@ -89,34 +117,6 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
         ));
     }
     Ok(())
-}
-
-pub fn validate_checksum_matches(
-    actual_checksum: &Checksum,
-    expected_checksum: &Checksum,
-    verbosity: Verbosity,
-    file_name: &str,
-) -> bool {
-    if actual_checksum == expected_checksum {
-        return true;
-    }
-    if verbosity.quiet() {
-        return false;
-    }
-    //TODO @mark: test this
-    eprintln!(
-        "warning: checksum for '{}' did not match! the decrypted file may contain garbage{}",
-        file_name,
-        if verbosity.debug() {
-            format!(
-                " (expected {}, actually {})",
-                expected_checksum, actual_checksum
-            )
-        } else {
-            "".to_owned()
-        }
-    );
-    false
 }
 
 /// The demo used in this blog post:

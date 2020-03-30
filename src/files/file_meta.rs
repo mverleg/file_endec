@@ -139,6 +139,4 @@ mod tests {
         assert_eq!(out_files[0].out_pth.to_string_lossy(), expected_out_pth_1);
         assert_eq!(out_files[1].out_pth.to_string_lossy(), expected_out_pth_2);
     }
-
-    //TODO @mark: test for overwrite output?
 }

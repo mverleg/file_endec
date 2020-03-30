@@ -1,5 +1,18 @@
 
-#[cfg(test)]
+#[cfg(any(test, feature = "expose"))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generate() {
+        let data = generate_test_file_content_for_test(15_001);
+        assert_eq!(15_001, data.len());
+        assert!(data.contains(&0));
+        assert!(data.contains(&127));
+        assert!(data.contains(&255));
+    }
+}
+
 pub fn generate_test_file_content_for_test(len: usize) -> Vec<u8> {
     let mut data = vec![0u8; len];
     let mut a: u32 = 1;
@@ -12,18 +25,4 @@ pub fn generate_test_file_content_for_test(len: usize) -> Vec<u8> {
         b = c;
     }
     data
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn generate() {
-        let data = generate_test_file_content_for_test(15_001);
-        assert_eq!(15_001, data.len());
-        assert!(data.contains(&0));
-        assert!(data.contains(&127));
-        assert!(data.contains(&255));
-    }
 }

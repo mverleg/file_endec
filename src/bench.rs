@@ -8,12 +8,13 @@ mod hash {
     use ::criterion::black_box;
     use ::criterion::Criterion;
 
-    use ::file_endec::header::strategy::get_current_version_strategy;
-    use ::file_endec::key::{Key, Salt};
-    use ::file_endec::key::hash::hash_argon2i;
-    use ::file_endec::key::hash::hash_bcrypt;
-    use ::file_endec::key::hash::hash_sha256;
-    use ::file_endec::key::stretch::stretch_key;
+    use ::file_endec::get_current_version_strategy;
+    use ::file_endec::hash_argon2i;
+    use ::file_endec::hash_bcrypt;
+    use ::file_endec::hash_sha256;
+    use ::file_endec::Key;
+    use ::file_endec::Salt;
+    use ::file_endec::stretch_key;
 
     fn get_data() -> Vec<u8> {
         black_box(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])

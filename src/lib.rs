@@ -3,14 +3,22 @@ pub use crate::config::DecryptConfig;
 pub use crate::config::EncryptConfig;
 pub use crate::config::EndecConfig;
 pub use crate::header::strategy::Verbosity;
-pub use crate::key::{Key, KeySource};
+pub use crate::key::Key;
+pub use crate::key::KeySource;
 pub use crate::util::FedResult;
 
 pub use crate::orchestrate::decrypt::decrypt;
 // These two methods are the main entry points.
 pub use crate::orchestrate::encrypt::encrypt;
 
-#[cfg(all(test, feature = "expose"))] pub use crate::files::mockfile::generate_test_file_content_for_test;
+#[cfg(feature = "expose")] pub use crate::files::mockfile::generate_test_file_content_for_test;
+#[cfg(feature = "expose")] pub use crate::header::strategy::get_current_version_strategy;
+#[cfg(feature = "expose")] pub use crate::key::hash::hash_argon2i;
+#[cfg(feature = "expose")] pub use crate::key::hash::hash_bcrypt;
+#[cfg(feature = "expose")] pub use crate::key::hash::hash_sha256;
+#[cfg(feature = "expose")] pub use crate::key::Salt;
+#[cfg(feature = "expose")] pub use crate::key::key::StretchKey;
+#[cfg(feature = "expose")] pub use crate::key::stretch::stretch_key;
 #[cfg(feature = "expose")] pub use crate::symmetric::decrypt::decrypt_aes256;
 #[cfg(feature = "expose")] pub use crate::symmetric::decrypt::decrypt_twofish;
 #[cfg(feature = "expose")] pub use crate::symmetric::encrypt::encrypt_aes256;
@@ -35,8 +43,6 @@ mod tests {
     use ::lazy_static::lazy_static;
     use ::regex::Regex;
     use ::secstr::SecVec;
-
-    use crate::key::key::Key;
 
     type Aes256Cbc = Cbc<Aes256, Iso7816>;
 

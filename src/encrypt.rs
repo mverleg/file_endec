@@ -89,59 +89,30 @@ pub struct EncryptArguments {
 
 impl fmt::Display for EncryptArguments {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        f.write_str("  files:\n")?;
+
+        writeln!(f, "* files:")?;
         for file in self.files.clone().into_iter() {
-            f.write_str("  - ")?;
-            f.write_str(file.to_string_lossy().as_ref())?;
-            f.write_str("\n")?;
+            writeln!(f, "  - {}", file.to_string_lossy().as_ref())?;
         }
 
-        //TODO @mark: absolute path?
         match &self.output_dir {
             Some(dir) => {
-                f.write_str("  output directory: ")?;
-                f.write_str(dir.to_string_lossy().as_ref())?
+                writeln!(f, "* output: directory {}", dir.to_string_lossy().as_ref())?;
             }
-            None => f.write_str("  output is stored alongside input")?,
+            None => writeln!(f, "* output: stored alongside input (no directory requested)")?,
         }
-        f.write_str("\n")?;
 
-        f.write_str("  extension: ")?;
-        f.write_str(&self.output_extension)?;
-        f.write_str("\n")?;
+        writeln!(f, "* extension: {}", &self.output_extension)?;
 
-        // Currently, this is always "on", because printing is only used in debug mode.
-        //TODO @mark: also include quiet mode (also for decrypt)
-        f.write_str("  debug logging: ")?;
-        f.write_str(if self.debug { "on" } else { "off" })?;
-        f.write_str("\n")?;
+        writeln!(f, "* logging: {}", if self.debug { "verbose" } else { if self.quiet { "quiet" } else { "normal" }})?;
 
-        f.write_str("  dry run: ")?;
-        f.write_str(if self.dry_run { "yes" } else { "no" })?;
-        f.write_str("\n")?;
+        writeln!(f, "* dry run: {}", if self.dry_run { "YES" } else { "no" })?;
 
-        f.write_str("  overwrite existing output files: ")?;
-        f.write_str(if self.overwrite {
-            if self.dry_run {
-                "no (overridden by dry run)"
-            } else {
-                "yes"
-            }
-        } else {
-            "no"
-        })?;
-        f.write_str("\n")?;
+        writeln!(f, "* overwrite existing output: {}", if self.overwrite { if self.dry_run { "no (overridden by dry run)" } else { "yes" }} else { "no" })?;
 
-        f.write_str("  delete input files: ")?;
-        f.write_str(if self.delete_input {
-            if self.dry_run {
-                "no (overridden by dry run)"
-            } else {
-                "yes"
-            }
-        } else {
-            "no"
-        })?;
+        writeln!(f, "* shred input: {}", if self.delete_input { if self.dry_run { "no (overridden by dry run)" } else { "yes" }} else { "no" })?;
+
+        writeln!(f, "* weak keys: {}", if self.accept_weak_key { "warn" } else { "accept" })?;
 
         Ok(())
     }
@@ -149,7 +120,7 @@ impl fmt::Display for EncryptArguments {
 
 pub fn main() {
     if let Err(err) = go_encrypt() {
-        stderr().write_all(err.as_bytes()).unwrap();
+        writeln!(stderr(), "{}", err).unwrap();
         exit(1);
     }
 }

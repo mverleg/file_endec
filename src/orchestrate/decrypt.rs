@@ -30,7 +30,6 @@ pub fn validate_checksum_matches(
     if verbosity.quiet() {
         return false;
     }
-    //TODO @mark: test this
     eprintln!(
         "warning: checksum for '{}' did not match! the decrypted file may contain garbage{}",
         file_name,
@@ -203,7 +202,6 @@ mod tests {
         );
         let result = decrypt(&conf);
         assert!(result.is_err());
-        dbg!(&result.unwrap_err());
         assert!(result.unwrap_err().contains("checksums did not match"));
     }
 

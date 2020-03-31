@@ -91,7 +91,7 @@ impl fmt::Display for DecryptArguments {
 
         // Currently, this is always "on", because printing is only used in debug mode.
         f.write_str("  debug logging: ")?;
-        f.write_str(if self.debug { "on" } else { "off" })?;
+        f.write_str(if self.debug { "verbose" } else { if self.quiet { "quiet" } else { "normal" } })?;
         f.write_str("\n")?;
 
         f.write_str("  overwrite existing output files: ")?;

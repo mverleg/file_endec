@@ -137,6 +137,7 @@ mod tests {
     use crate::files::scan::TEST_FILE_DIR;
     use crate::header::strategy::Verbosity;
     use crate::key::key::Key;
+    use tempfile::tempdir;
 
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");
@@ -151,6 +152,7 @@ mod tests {
             .unwrap()
             .iter()
             .map(|f| f.file_stem().unwrap().to_str().unwrap())
+            .filter(|s| s.starts_with("original_"))
             .map(|n| COMPAT_FILE_RE.captures_iter(n).next().unwrap())
             .map(|v| Version::parse(&v[1]).unwrap())
             .collect();
@@ -184,6 +186,25 @@ mod tests {
             assert_eq!(&original_data, &dec_data);
             fs::remove_file(&dec_pth).unwrap();
         }
+    }
+
+    #[test]
+    fn fail_invalid_checksum() {
+        let mut enc_pth = TEST_FILE_DIR.clone();
+        enc_pth.push("invalid_checksum.txt.enc".to_owned());
+        let out_pth = tempdir().unwrap();
+        let conf = DecryptConfig::new(
+            vec![enc_pth],
+            COMPAT_KEY.clone(),
+            Verbosity::Normal,
+            false,
+            false,
+            Some(out_pth.path().to_owned()),
+        );
+        let result = decrypt(&conf);
+        assert!(result.is_err());
+        dbg!(&result.unwrap_err());
+        assert!(result.unwrap_err().contains("checksums did not match"));
     }
 
     //TODO @mark: check that invalid checksum will fail decryption

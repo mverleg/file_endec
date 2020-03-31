@@ -13,8 +13,6 @@ use ::file_endec::Key;
 use ::file_endec::KeySource;
 use ::file_endec::Verbosity;
 
-//TODO @mark: flag like --read0 to accept pipe with \0 terminator byte like `find -print0` outputs (can't work with --key=pipe)
-
 #[derive(Debug, StructOpt)]
 #[structopt(
     name = "FileEnc",

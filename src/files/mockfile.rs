@@ -1,7 +1,8 @@
 
 #[cfg(any(test, feature = "expose"))]
 mod tests {
-    use super::*;
+    #[allow(unused_imports)]
+    use super::generate_test_file_content_for_test;
 
     #[test]
     fn generate() {

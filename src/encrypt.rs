@@ -112,7 +112,7 @@ impl fmt::Display for EncryptArguments {
 
         writeln!(f, "* shred input: {}", if self.delete_input { if self.dry_run { "no (overridden by dry run)" } else { "yes" }} else { "no" })?;
 
-        writeln!(f, "* weak keys: {}", if self.accept_weak_key { "warn" } else { "accept" })?;
+        writeln!(f, "* weak keys: {}", if self.accept_weak_key { "accept" } else { "warn" })?;
 
         Ok(())
     }

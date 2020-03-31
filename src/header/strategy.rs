@@ -28,6 +28,7 @@ impl Verbosity {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(dead_code)]  // None is never constructed
 pub enum CompressionAlg {
     Brotli,
     None,

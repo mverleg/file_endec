@@ -73,33 +73,24 @@ pub struct DecryptArguments {
 
 impl fmt::Display for DecryptArguments {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        f.write_str("  files:\n")?;
+
+        writeln!(f, "* files:")?;
         for file in self.files.clone().into_iter() {
-            f.write_str("  - ")?;
-            f.write_str(file.to_string_lossy().as_ref())?;
-            f.write_str("\n")?;
+            writeln!(f, "  - {}", file.to_string_lossy().as_ref())?;
         }
 
         match &self.output_dir {
             Some(dir) => {
-                f.write_str("  output directory: ")?;
-                f.write_str(dir.to_string_lossy().as_ref())?
+                writeln!(f, "* output: directory {}", dir.to_string_lossy().as_ref())?;
             }
-            None => f.write_str("  output is stored alongside input")?,
+            None => writeln!(f, "* output: stored alongside input (no directory requested)")?,
         }
-        f.write_str("\n")?;
 
-        // Currently, this is always "on", because printing is only used in debug mode.
-        f.write_str("  debug logging: ")?;
-        f.write_str(if self.debug { "verbose" } else { if self.quiet { "quiet" } else { "normal" } })?;
-        f.write_str("\n")?;
+        writeln!(f, "* logging: {}", if self.debug { "verbose" } else { if self.quiet { "quiet" } else { "normal" }})?;
 
-        f.write_str("  overwrite existing output files: ")?;
-        f.write_str(if self.overwrite { "yes" } else { "no" })?;
-        f.write_str("\n")?;
+        writeln!(f, "* overwrite existing output: {}", if self.overwrite { "yes" } else { "no" })?;
 
-        f.write_str("  delete input files: ")?;
-        f.write_str(if self.delete_input { "yes" } else { "no" })?;
+        writeln!(f, "* shred input: {}", if self.delete_input { "yes" } else { "no" })?;
 
         Ok(())
     }

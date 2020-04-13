@@ -201,8 +201,10 @@ mod tests {
             Some(out_pth.path().to_owned()),
         );
         let result = decrypt(&conf);
-        assert!(result.is_err());
-        assert!(result.unwrap_err().contains("checksums did not match"));
+        assert!(&result.is_err());
+        // dbg!(&result.unwrap_err());  //TODO @mark: TEMPORARY! REMOVE THIS!
+        // panic!();
+        assert!(&result.unwrap_err().contains("checksums did not match"));
     }
 
     //TODO @mark: check that invalid checksum will fail decryption

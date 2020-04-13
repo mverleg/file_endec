@@ -31,7 +31,7 @@ impl Header {
     }
 }
 
-pub const HEADER_MARKER: &str = "github.com/mverleg/file_endec";
+pub const HEADER_MARKER: &str = "github.com/mverleg/file_endec\0";
 pub const HEADER_VERSION_MARKER: &str = "v ";
 pub const HEADER_SALT_MARKER: &str = "salt ";
 pub const HEADER_CHECKSUM_MARKER: &str = "check ";

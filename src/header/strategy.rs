@@ -31,17 +31,14 @@ impl Verbosity {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-#[allow(dead_code)]  // None is never constructed
 pub enum CompressionAlg {
     Brotli,
-    None,
 }
 
 impl fmt::Display for CompressionAlg {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
         f.write_str(match self {
             CompressionAlg::Brotli => "brotli",
-            CompressionAlg::None => "no compression",
         })
     }
 }
@@ -83,7 +80,7 @@ impl fmt::Display for SymmetricEncryptionAlg {
 #[derive(Debug, PartialEq, Eq)]
 pub struct Strategy {
     pub stretch_count: u64,
-    pub compression_algorithm: CompressionAlg,
+    pub compression_algorithm: Option<CompressionAlg>,
     pub key_hash_algorithms: Vec<KeyHashAlg>,
     pub symmetric_algorithms: Vec<SymmetricEncryptionAlg>,
 }
@@ -91,7 +88,7 @@ pub struct Strategy {
 lazy_static! {
     static ref STRATEGY_1_0_0: Strategy = Strategy {
         stretch_count: 5,
-        compression_algorithm: CompressionAlg::Brotli,
+        compression_algorithm: Some(CompressionAlg::Brotli),
         key_hash_algorithms: vec![KeyHashAlg::BCrypt, KeyHashAlg::Argon2i, KeyHashAlg::Sha512],
         symmetric_algorithms: vec![
             SymmetricEncryptionAlg::Aes256,

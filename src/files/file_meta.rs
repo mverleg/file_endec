@@ -15,6 +15,12 @@ pub struct FileInfo<'a> {
     pub out_pth: PathBuf,
 }
 
+impl <'a> FileInfo<'a> {
+    pub fn file_name(&self) -> String {
+        self.in_path.file_name().unwrap().to_string_lossy().to_string()
+    }
+}
+
 // Only relies on in_path, which should be uniquely identifying
 impl <'a> hash::Hash for FileInfo<'a> {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {

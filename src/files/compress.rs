@@ -14,10 +14,12 @@ lazy_static! {
     };
 }
 
-pub fn compress_file(data: Vec<u8>, alg: &CompressionAlg) -> FedResult<Vec<u8>> {
+pub fn compress_file(data: Vec<u8>, alg: &Option<CompressionAlg>) -> FedResult<Vec<u8>> {
     match alg {
-        CompressionAlg::Brotli => brotli_compress(&data),
-        CompressionAlg::None => Ok(data),
+        Some(alg) => match alg {
+            CompressionAlg::Brotli => brotli_compress(&data),
+        },
+        None => Ok(data),
     }
 }
 
@@ -36,10 +38,12 @@ pub fn brotli_compress(data: &[u8]) -> FedResult<Vec<u8>> {
     }
 }
 
-pub fn decompress_file(data: Vec<u8>, alg: &CompressionAlg) -> FedResult<Vec<u8>> {
+pub fn decompress_file(data: Vec<u8>, alg: &Option<CompressionAlg>) -> FedResult<Vec<u8>> {
     match alg {
-        CompressionAlg::Brotli => brotli_decompress(&data),
-        CompressionAlg::None => Ok(data),
+        Some(alg) => match alg {
+            CompressionAlg::Brotli => brotli_decompress(&data),
+        },
+        None => Ok(data),
     }
 }
 

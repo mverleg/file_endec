@@ -39,9 +39,9 @@ pub struct Progress<'a> {
 
 impl <'a> Progress<'a> {
     pub fn new(
-        verbosity: &Verbosity,
-        strategy: &Strategy,
-        files: &[FileInfo],
+        verbosity: &'a Verbosity,
+        strategy: &'a Strategy,
+        files: &'a [FileInfo],
     ) -> Self {
         if verbosity.quiet() {
             return Progress { data: None }

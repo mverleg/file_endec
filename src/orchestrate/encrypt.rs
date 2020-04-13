@@ -11,6 +11,7 @@ use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
 use crate::{EncryptConfig, FedResult};
+use crate::util::progress::Progress;
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     if config.delete_input() {
@@ -25,7 +26,13 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
         Extension::Add(config.output_extension()),
         config.output_dir(),
     )?;
-    let _total_size_kb: u64 = files_info.iter().map(|inf| inf.size_kb).sum();
+    let total_size_kb: u64 = files_info.iter().map(|inf| inf.size_kb).sum();
+    // let progress = if config.progress_bar {
+    //     Some(ProgressBar::new(total_size_kb))
+    // } else {
+    //     None
+    // };
+    Progress::new(&config.verbosity(), &strategy, &files_info);
     let salt = Salt::generate_random()?;
     let stretched_key = stretch_key(
         config.raw_key(),

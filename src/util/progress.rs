@@ -14,8 +14,8 @@ static RATIO_COMPRESSION_STRETCH: f64 = 1.0;
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum TaskType<'a> {
     Stretch(&'a KeyHashAlg),
-    Compress(&'a SymmetricEncryptionAlg, &'a FileInfo<'a>),
-    Symmetric(&'a CompressionAlg, &'a FileInfo<'a>),
+    Compress(&'a CompressionAlg, &'a FileInfo<'a>),
+    Symmetric(&'a SymmetricEncryptionAlg, &'a FileInfo<'a>),
 }
 
 #[derive(Debug, Hash, PartialEq, Eq)]
@@ -67,7 +67,7 @@ impl <'a> Progress<'a> {
         for file in files {
             for alg in &strategy.compression_algorithm {
                 todo.insert(Task {
-                    typ: TaskType::Compress(alg, &file),
+                    typ: TaskType::Compress(&alg, &file),
                     text: format!("{} {}", &alg, &file.file_name()),
                     size: todo!(),
                 });
@@ -76,7 +76,7 @@ impl <'a> Progress<'a> {
         for file in files {
             for alg in &strategy.symmetric_algorithms {
                 todo.insert(Task {
-                    typ: TaskType::Symmetric(alg, &file),
+                    typ: TaskType::Symmetric(&alg, &file),
                     text: format!("{} {}", &alg, &file.file_name()),
                     size: todo!(),
                 });

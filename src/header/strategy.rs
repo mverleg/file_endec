@@ -1,8 +1,11 @@
+use ::std::fmt;
+
 use ::lazy_static::lazy_static;
 use ::semver::Version;
 
-use crate::util::version::get_current_version;
 use crate::util::FedResult;
+use crate::util::version::get_current_version;
+use std::fmt::Formatter;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Verbosity {
@@ -34,11 +37,30 @@ pub enum CompressionAlg {
     None,
 }
 
+impl fmt::Display for CompressionAlg {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
+        f.write_str(match self {
+            CompressionAlg::Brotli => "brotli",
+            CompressionAlg::None => "no compression",
+        })
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum KeyHashAlg {
     BCrypt,
     Argon2i,
     Sha512,
+}
+
+impl fmt::Display for KeyHashAlg {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
+        f.write_str(match self {
+            KeyHashAlg::BCrypt => "bcrypt",
+            KeyHashAlg::Argon2i => "argon2i",
+            KeyHashAlg::Sha512 => "sha512",
+        })
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -47,6 +69,15 @@ pub enum SymmetricEncryptionAlg {
     Aes256,
     // Twofish with Iso7816 padding and cipher block chaining
     Twofish,
+}
+
+impl fmt::Display for SymmetricEncryptionAlg {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
+        f.write_str(match self {
+            SymmetricEncryptionAlg::Aes256 => "aes256",
+            SymmetricEncryptionAlg::Twofish => "twofish",
+        })
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]

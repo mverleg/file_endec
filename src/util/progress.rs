@@ -7,29 +7,37 @@ use crate::header::{Strategy, KeyHashAlg, SymmetricEncryptionAlg, CompressionAlg
 use crate::Verbosity;
 use indicatif::ProgressStyle;
 
+//TODO @mark: TEMPORARY! REMOVE THIS!
 static RATIO_SYMMETRIC_STRETCH: f64 = 1.0;
 static RATIO_COMPRESSION_STRETCH: f64 = 1.0;
 
-#[derive(Debug, Hash, PartialEq)]
-enum Task<'a> {
+#[derive(Debug, Hash, PartialEq, Eq)]
+enum TaskType<'a> {
     Stretch(&'a KeyHashAlg),
-    Compress(&'a SymmetricEncryptionAlg, FileInfo<'a>),
-    Symmetric(&'a CompressionAlg, FileInfo<'a>),
+    Compress(&'a SymmetricEncryptionAlg, &'a FileInfo<'a>),
+    Symmetric(&'a CompressionAlg, &'a FileInfo<'a>),
+}
+
+#[derive(Debug, Hash, PartialEq, Eq)]
+struct Task<'a> {
+    typ: TaskType<'a>,
+    text: String,
+    size: u32,
 }
 
 #[derive(Debug)]
-struct ProgressData {
+struct ProgressData<'a> {
     bar: ProgressBar,
-    current: Option<Task>,
-    todo: HashSet<Task>,
+    current: Option<Task<'a>>,
+    todo: HashSet<Task<'a>>,
 }
 
 #[derive(Debug)]
-pub struct Progress {
-    data: Option<ProgressData>
+pub struct Progress<'a> {
+    data: Option<ProgressData<'a>>
 }
 
-impl Progress {
+impl <'a> Progress<'a> {
     pub fn new(
         verbosity: &Verbosity,
         strategy: &Strategy,
@@ -47,18 +55,31 @@ impl Progress {
             pb
         };
         let mut todo = HashSet::new();
+        //TODO @mark: consider adding load and save of file?
         for alg in &strategy.key_hash_algorithms {
             //strategy.stretch_count * RATIO_STRETCH_VS_KILOBYTE;
-            todo.insert(Task::Stretch(alg.clone()));
-        }
-        for file in files {
-            for alg in &strategy.symmetric_algorithms {
-                todo.insert(Task::Symmetric(alg, file));
-            }
+            todo.insert(Task {
+                typ: TaskType::Stretch(alg),
+                text: format!("{} key stretch", &alg),
+                size: todo!(),
+            });
         }
         for file in files {
             for alg in &strategy.compression_algorithm {
-                todo.insert(Task::Compress(alg, file));
+                todo.insert(Task {
+                    typ: TaskType::Compress(alg, &file),
+                    text: format!("{} {}", &alg, &file.file_name()),
+                    size: todo!(),
+                });
+            }
+        }
+        for file in files {
+            for alg in &strategy.symmetric_algorithms {
+                todo.insert(Task {
+                    typ: TaskType::Symmetric(alg, &file),
+                    text: format!("{} {}", &alg, &file.file_name()),
+                    size: todo!(),
+                });
             }
         }
         Progress { data: Some(ProgressData {

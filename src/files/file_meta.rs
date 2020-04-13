@@ -6,6 +6,7 @@ use crate::config::typ::Extension;
 use crate::header::strategy::Verbosity;
 use crate::util::pth::determine_output_path;
 use crate::util::FedResult;
+use ::std::hash;
 
 #[derive(Debug)]
 pub struct FileInfo<'a> {
@@ -13,6 +14,22 @@ pub struct FileInfo<'a> {
     pub size_kb: u64,
     pub out_pth: PathBuf,
 }
+
+// Only relies on in_path, which should be uniquely identifying
+impl <'a> hash::Hash for FileInfo<'a> {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.in_path.hash(state)
+    }
+}
+
+// Only relies on in_path, which should be uniquely identifying
+impl <'a> PartialEq for FileInfo<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.in_path == other.in_path
+    }
+}
+
+impl <'a> Eq for FileInfo<'a> {}
 
 impl<'a> FileInfo<'a> {
     pub fn path_str(&self) -> String {

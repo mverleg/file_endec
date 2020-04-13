@@ -11,7 +11,7 @@ use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
 use crate::{EncryptConfig, FedResult};
-use crate::util::progress::Progress;
+use crate::util::progress::{Progress, IndicatifProgress};
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     if config.delete_input() {
@@ -32,7 +32,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     // } else {
     //     None
     // };
-    Progress::new(&config.verbosity(), &strategy, &files_info);
+    IndicatifProgress::new(&config.verbosity(), &strategy, &files_info);
     let salt = Salt::generate_random()?;
     let stretched_key = stretch_key(
         config.raw_key(),

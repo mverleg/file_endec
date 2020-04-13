@@ -31,19 +31,29 @@ struct ProgressData<'a> {
     todo: HashMap<TaskType<'a>, TaskInfo>,
 }
 
+pub trait Progress<'a> {
+    fn start_stretch_alg(&mut self, alg: &'a KeyHashAlg);
+
+    fn start_compress_alg_for_file(&mut self, alg: &'a CompressionAlg, file: &'a FileInfo<'a>);
+
+    fn start_sym_alg_for_file(&mut self, alg: &'a SymmetricEncryptionAlg, file: &'a FileInfo<'a>);
+
+    fn finish(&mut self);
+}
+
 #[derive(Debug)]
-pub struct Progress<'a> {
+pub struct IndicatifProgress<'a> {
     data: Option<ProgressData<'a>>
 }
 
-impl <'a> Progress<'a> {
+impl <'a> IndicatifProgress<'a> {
     pub fn new(
         verbosity: &'a Verbosity,
         strategy: &'a Strategy,
         files: &'a [FileInfo],
     ) -> Self {
         if verbosity.quiet() {
-            return Progress { data: None }
+            return IndicatifProgress { data: None }
         }
         let mut todo = HashMap::new();
         //TODO @mark: consider adding load and save of file?
@@ -93,44 +103,69 @@ impl <'a> Progress<'a> {
             pb.tick();
             pb
         };
-        Progress { data: Some(ProgressData {
+        IndicatifProgress { data: Some(ProgressData {
             bar,
             current: None,
             todo,
         })}
     }
+}
 
-    pub fn start_stretch_alg(&mut self, alg: &'a KeyHashAlg) {
+impl <'a> Progress<'a> for IndicatifProgress<'a> {
+
+    fn start_stretch_alg(&mut self, alg: &'a KeyHashAlg) {
         if let Some(data) = &self.data {
             let typ = TaskType::Stretch(alg);
             let info = data.todo.get(&typ)
                 .expect("attempted to start progress on a task that is not known");
-            todo();  //TODO @mark: TEMPORARY! REMOVE THIS!
+            todo!();  //TODO @mark: TEMPORARY! REMOVE THIS!
         }
     }
 
-    pub fn start_compress_alg_for_file(&mut self, alg: &'a CompressionAlg, file: &'a FileInfo<'a>) {
+    fn start_compress_alg_for_file(&mut self, alg: &'a CompressionAlg, file: &'a FileInfo<'a>) {
         if let Some(data) = &self.data {
             let typ = TaskType::Compress(&alg, &file);
             let info = data.todo.get(&typ)
                 .expect("attempted to start progress on a task that is not known");
-            todo();  //TODO @mark: TEMPORARY! REMOVE THIS!
+            todo!();  //TODO @mark: TEMPORARY! REMOVE THIS!
         }
     }
 
-    pub fn start_sym_alg_for_file(&mut self, alg: &'a SymmetricEncryptionAlg, file: &'a FileInfo<'a>) {
+    fn start_sym_alg_for_file(&mut self, alg: &'a SymmetricEncryptionAlg, file: &'a FileInfo<'a>) {
         if let Some(data) = &self.data {
             let typ = TaskType::Symmetric(&alg, &file);
             let info = data.todo.get(&typ)
                 .expect("attempted to start progress on a task that is not known");
-            todo();  //TODO @mark: TEMPORARY! REMOVE THIS!
+            todo!();  //TODO @mark: TEMPORARY! REMOVE THIS!
         }
     }
 
-    pub fn finish(&mut self) {
+    fn finish(&mut self) {
         if let Some(data) = &self.data {
             debug_assert!(data.todo.is_empty());
             data.bar.finish();
         }
+    }
+}
+
+#[cfg(test)]
+pub struct LogProgress {}
+
+#[cfg(test)]
+impl <'a> Progress<'a> for LogProgress {
+    fn start_stretch_alg(&mut self, alg: &'a KeyHashAlg) {
+        println!("stretching key using {}", alg);
+    }
+
+    fn start_compress_alg_for_file(&mut self, alg: &'a CompressionAlg, file: &'a FileInfo<'a>) {
+        println!("(de)compressing {} using {}", file.file_name(), alg);
+    }
+
+    fn start_sym_alg_for_file(&mut self, alg: &'a SymmetricEncryptionAlg, file: &'a FileInfo<'a>) {
+        println!("en/decrypting {} using {}", file.file_name(), alg);
+    }
+
+    fn finish(&mut self) {
+        println!("finishing up");
     }
 }

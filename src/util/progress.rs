@@ -1,11 +1,11 @@
 use std::collections::HashSet;
 
 use ::indicatif::ProgressBar;
+use ::indicatif::ProgressStyle;
 
 use crate::files::file_meta::FileInfo;
-use crate::header::{Strategy, KeyHashAlg, SymmetricEncryptionAlg, CompressionAlg};
+use crate::header::{CompressionAlg, KeyHashAlg, Strategy, SymmetricEncryptionAlg};
 use crate::Verbosity;
-use indicatif::ProgressStyle;
 
 //TODO @mark: TEMPORARY! REMOVE THIS!
 static RATIO_SYMMETRIC_STRETCH: f64 = 1.0;
@@ -22,7 +22,7 @@ enum TaskType<'a> {
 struct Task<'a> {
     typ: TaskType<'a>,
     text: String,
-    size: u32,
+    size: u64,
 }
 
 #[derive(Debug)]
@@ -46,14 +46,6 @@ impl <'a> Progress<'a> {
         if verbosity.quiet() {
             return Progress { data: None }
         }
-        let bar = {
-            let pb = ProgressBar::new(1000);
-            pb.set_style(ProgressStyle::default_bar()
-                .template("[{elapsed}] {wide_bar} [percent]")
-                .progress_chars("##-"));
-            pb.tick();
-            pb
-        };
         let mut todo = HashSet::new();
         //TODO @mark: consider adding load and save of file?
         for alg in &strategy.key_hash_algorithms {
@@ -61,7 +53,8 @@ impl <'a> Progress<'a> {
             todo.insert(Task {
                 typ: TaskType::Stretch(alg),
                 text: format!("{} key stretch", &alg),
-                size: todo!(),
+                //TODO @mark: check the scaling here
+                size: (strategy.stretch_count as f64 / 100.0).ceil() as u64,
             });
         }
         for file in files {
@@ -69,7 +62,8 @@ impl <'a> Progress<'a> {
                 todo.insert(Task {
                     typ: TaskType::Compress(&alg, &file),
                     text: format!("{} {}", &alg, &file.file_name()),
-                    size: todo!(),
+                    //TODO @mark: check the scaling here
+                    size: file.size_kb,
                 });
             }
         }
@@ -78,10 +72,22 @@ impl <'a> Progress<'a> {
                 todo.insert(Task {
                     typ: TaskType::Symmetric(&alg, &file),
                     text: format!("{} {}", &alg, &file.file_name()),
-                    size: todo!(),
+                    //TODO @mark: check the scaling here
+                    size: file.size_kb,
                 });
             }
         }
+        let total_size = todo.iter()
+            .map(|task| task.size)
+            .sum();
+        let bar = {
+            let pb = ProgressBar::new(total_size);
+            pb.set_style(ProgressStyle::default_bar()
+                .template("[{elapsed}] {wide_bar} [percent]")
+                .progress_chars("##-"));
+            pb.tick();
+            pb
+        };
         Progress { data: Some(ProgressData {
             bar,
             current: None,
@@ -89,19 +95,19 @@ impl <'a> Progress<'a> {
         })}
     }
 
-    pub fn start_stretch_alg(&mut self) {
+    pub fn start_stretch_alg(&mut self, alg: &'a KeyHashAlg) {
         if let Some(data) = &self.data {
 
         }
     }
 
-    pub fn start_compress_alg_for_file(&mut self) {
+    pub fn start_compress_alg_for_file(&mut self, alg: &'a CompressionAlg, file: &'a FileInfo<'a>) {
         if let Some(data) = &self.data {
 
         }
     }
 
-    pub fn start_sym_alg_for_file(&mut self) {
+    pub fn start_sym_alg_for_file(&mut self, alg: &'a SymmetricEncryptionAlg, file: &'a FileInfo<'a>) {
         if let Some(data) = &self.data {
 
         }

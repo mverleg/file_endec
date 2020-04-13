@@ -27,21 +27,21 @@ impl Verbosity {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 #[allow(dead_code)]  // None is never constructed
 pub enum CompressionAlg {
     Brotli,
     None,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum KeyHashAlg {
     BCrypt,
     Argon2i,
     Sha512,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum SymmetricEncryptionAlg {
     // Aes 256 with Iso7816 padding and cipher block chaining
     Aes256,

@@ -3,17 +3,22 @@ use std::collections::HashSet;
 use ::indicatif::ProgressBar;
 
 use crate::files::file_meta::FileInfo;
-use crate::header::Strategy;
+use crate::header::{Strategy, KeyHashAlg, SymmetricEncryptionAlg, CompressionAlg};
 use crate::Verbosity;
 use indicatif::ProgressStyle;
 
-#[derive(Debug, Hash, PartialEq)]
-struct Task {
+static RATIO_SYMMETRIC_STRETCH: f64 = 1.0;
+static RATIO_COMPRESSION_STRETCH: f64 = 1.0;
 
+#[derive(Debug, Hash, PartialEq)]
+enum Task<'a> {
+    Stretch(&'a KeyHashAlg),
+    Compress(&'a SymmetricEncryptionAlg, FileInfo<'a>),
+    Symmetric(&'a CompressionAlg, FileInfo<'a>),
 }
 
 #[derive(Debug)]
-pub struct ProgressData {
+struct ProgressData {
     bar: ProgressBar,
     current: Option<Task>,
     todo: HashSet<Task>,
@@ -33,10 +38,6 @@ impl Progress {
         if verbosity.quiet() {
             return Progress { data: None }
         }
-        //strategy.key_hash_algorithms
-        //strategy.stretch_count
-        //strategy.symmetric_algorithms
-        //strategy.compression_algorithm
         let bar = {
             let pb = ProgressBar::new(1000);
             pb.set_style(ProgressStyle::default_bar()
@@ -45,7 +46,21 @@ impl Progress {
             pb.tick();
             pb
         };
-        let todo = ();
+        let mut todo = HashSet::new();
+        for alg in &strategy.key_hash_algorithms {
+            //strategy.stretch_count * RATIO_STRETCH_VS_KILOBYTE;
+            todo.insert(Task::Stretch(alg.clone()));
+        }
+        for file in files {
+            for alg in &strategy.symmetric_algorithms {
+                todo.insert(Task::Symmetric(alg, file));
+            }
+        }
+        for file in files {
+            for alg in &strategy.compression_algorithm {
+                todo.insert(Task::Compress(alg, file));
+            }
+        }
         Progress { data: Some(ProgressData {
             bar,
             current: None,
@@ -54,25 +69,25 @@ impl Progress {
     }
 
     pub fn start_stretch_alg(&mut self) {
-        if let Some(data) = self.data {
+        if let Some(data) = &self.data {
 
         }
     }
 
     pub fn start_compress_alg_for_file(&mut self) {
-        if let Some(data) = self.data {
+        if let Some(data) = &self.data {
 
         }
     }
 
     pub fn start_sym_alg_for_file(&mut self) {
-        if let Some(data) = self.data {
+        if let Some(data) = &self.data {
 
         }
     }
 
     pub fn finish(&mut self) {
-        if let Some(data) = self.data {
+        if let Some(data) = &self.data {
             debug_assert!(data.todo.is_empty());
             data.bar.finish();
         }

@@ -27,7 +27,7 @@ struct TaskInfo {
 #[derive(Debug)]
 struct ProgressData<'a> {
     bar: ProgressBar,
-    current: Option<(TaskType<'a>, TaskInfo)>,
+    current: Option<TaskInfo>,
     todo: HashMap<TaskType<'a>, TaskInfo>,
 }
 
@@ -98,7 +98,7 @@ impl <'a> IndicatifProgress<'a> {
         let bar = {
             let pb = ProgressBar::new(total_size);
             pb.set_style(ProgressStyle::default_bar()
-                .template("[{elapsed}] {wide_bar} [percent]")
+                .template("[{elapsed}] {msg} {wide_bar} {percent}")
                 .progress_chars("##-"));
             pb.tick();
             pb
@@ -114,29 +114,41 @@ impl <'a> IndicatifProgress<'a> {
 impl <'a> Progress<'a> for IndicatifProgress<'a> {
 
     fn start_stretch_alg(&mut self, alg: &'a KeyHashAlg) {
-        if let Some(data) = &self.data {
+        if let Some(ref mut data) = self.data {
             let typ = TaskType::Stretch(alg);
-            let info = data.todo.get(&typ)
+            let info = data.todo.remove(&typ)
                 .expect("attempted to start progress on a task that is not known");
-            todo!();  //TODO @mark: TEMPORARY! REMOVE THIS!
+            if let Some(prev) = &data.current {
+                data.bar.inc(prev.size);
+            }
+            data.bar.set_message(&info.text);
+            data.current = Some(info);
         }
     }
 
     fn start_compress_alg_for_file(&mut self, alg: &'a CompressionAlg, file: &'a FileInfo<'a>) {
-        if let Some(data) = &self.data {
+        if let Some(data) = &mut self.data {
             let typ = TaskType::Compress(&alg, &file);
-            let info = data.todo.get(&typ)
+            let info = data.todo.remove(&typ)
                 .expect("attempted to start progress on a task that is not known");
-            todo!();  //TODO @mark: TEMPORARY! REMOVE THIS!
+            if let Some(prev) = &data.current {
+                data.bar.inc(prev.size);
+            }
+            data.bar.set_message(&info.text);
+            data.current = Some(info);
         }
     }
 
     fn start_sym_alg_for_file(&mut self, alg: &'a SymmetricEncryptionAlg, file: &'a FileInfo<'a>) {
-        if let Some(data) = &self.data {
+        if let Some(data) = &mut self.data {
             let typ = TaskType::Symmetric(&alg, &file);
-            let info = data.todo.get(&typ)
+            let info = data.todo.remove(&typ)
                 .expect("attempted to start progress on a task that is not known");
-            todo!();  //TODO @mark: TEMPORARY! REMOVE THIS!
+            if let Some(prev) = &data.current {
+                data.bar.inc(prev.size);
+            }
+            data.bar.set_message(&info.text);
+            data.current = Some(info);
         }
     }
 

@@ -31,6 +31,17 @@ struct ProgressData<'a> {
     todo: HashMap<TaskType<'a>, TaskInfo>,
 }
 
+impl <'a> ProgressData<'a> {
+    fn next_step(&mut self, task: Option<TaskInfo>) {
+        let task = task.expect("attempted to start progress on a task that is not known");
+        if let Some(prev) = &self.current {
+            self.bar.inc(prev.size);
+        }
+        self.bar.set_message(&task.text);
+        self.current = Some(task);
+    }
+}
+
 pub trait Progress<'a> {
     fn start_stretch_alg(&mut self, alg: &'a KeyHashAlg);
 
@@ -116,39 +127,24 @@ impl <'a> Progress<'a> for IndicatifProgress<'a> {
     fn start_stretch_alg(&mut self, alg: &'a KeyHashAlg) {
         if let Some(ref mut data) = self.data {
             let typ = TaskType::Stretch(alg);
-            let info = data.todo.remove(&typ)
-                .expect("attempted to start progress on a task that is not known");
-            if let Some(prev) = &data.current {
-                data.bar.inc(prev.size);
-            }
-            data.bar.set_message(&info.text);
-            data.current = Some(info);
+            let info = data.todo.remove(&typ);
+            data.next_step(info);
         }
     }
 
     fn start_compress_alg_for_file(&mut self, alg: &'a CompressionAlg, file: &'a FileInfo<'a>) {
         if let Some(data) = &mut self.data {
             let typ = TaskType::Compress(&alg, &file);
-            let info = data.todo.remove(&typ)
-                .expect("attempted to start progress on a task that is not known");
-            if let Some(prev) = &data.current {
-                data.bar.inc(prev.size);
-            }
-            data.bar.set_message(&info.text);
-            data.current = Some(info);
+            let info = data.todo.remove(&typ);
+            data.next_step(info);
         }
     }
 
     fn start_sym_alg_for_file(&mut self, alg: &'a SymmetricEncryptionAlg, file: &'a FileInfo<'a>) {
         if let Some(data) = &mut self.data {
             let typ = TaskType::Symmetric(&alg, &file);
-            let info = data.todo.remove(&typ)
-                .expect("attempted to start progress on a task that is not known");
-            if let Some(prev) = &data.current {
-                data.bar.inc(prev.size);
-            }
-            data.bar.set_message(&info.text);
-            data.current = Some(info);
+            let info = data.todo.remove(&typ);
+            data.next_step(info);
         }
     }
 

@@ -1,17 +1,18 @@
+use crate::{EncryptConfig, FedResult};
 use crate::config::typ::{EndecConfig, Extension};
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::compress_file;
 use crate::files::file_meta::inspect_files;
 use crate::files::write_output::write_output_file;
-use crate::header::strategy::get_current_version_strategy;
 use crate::header::Header;
-use crate::key::stretch::stretch_key;
+use crate::header::strategy::get_current_version_strategy;
 use crate::key::Salt;
+use crate::key::stretch::stretch_key;
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::encrypt::encrypt_file;
-use crate::util::version::get_current_version;
-use crate::{EncryptConfig, FedResult};
 use crate::util::progress::IndicatifProgress;
+use crate::util::progress::LogProgress;
+use crate::util::version::get_current_version;
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     if config.delete_input() {
@@ -26,19 +27,15 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
         Extension::Add(config.output_extension()),
         config.output_dir(),
     )?;
-    // let total_size_kb: u64 = files_info.iter().map(|inf| inf.size_kb).sum();
-    // let progress = if config.progress_bar {
-    //     Some(ProgressBar::new(total_size_kb))
-    // } else {
-    //     None
-    // };
-    IndicatifProgress::new(&config.verbosity(), &strategy, &files_info);
+    // let mut progress = IndicatifProgress::new(&config.verbosity(), &strategy, &files_info);
+    let mut progress = LogProgress::new();
     let salt = Salt::generate_random()?;
     let stretched_key = stretch_key(
         config.raw_key(),
         &salt,
         strategy.stretch_count,
         &strategy.key_hash_algorithms,
+        &mut progress,
     );
     //TODO @mark: progress logging
     for file in &files_info {
@@ -78,6 +75,7 @@ mod tests {
 
     use ::lazy_static::lazy_static;
     use ::regex::Regex;
+    use tempfile::tempdir;
 
     use crate::config::EncryptConfig;
     use crate::encrypt;
@@ -85,7 +83,6 @@ mod tests {
     use crate::header::strategy::Verbosity;
     use crate::key::key::Key;
     use crate::util::version::get_current_version;
-    use tempfile::tempdir;
 
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");

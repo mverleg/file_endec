@@ -34,20 +34,19 @@ struct ProgressData<'a> {
 impl <'a> ProgressData<'a> {
     fn next_step(&mut self, task: Option<TaskInfo>) {
         let task = task.expect("attempted to start progress on a task that is not known");
-        if let Some(prev) = &self.current {
-            self.bar.inc(prev.size);
-        }
+        let prev = &self.current.unwrap();
+        self.bar.inc(prev.size);
         self.bar.set_message(&task.text);
         self.current = Some(task);
     }
 }
 
 pub trait Progress<'a> {
-    fn start_stretch_alg(&mut self, alg: &'a KeyHashAlg);
+    fn start_stretch_alg(&mut self, alg: &KeyHashAlg);
 
-    fn start_compress_alg_for_file(&mut self, alg: &'a CompressionAlg, file: &'a FileInfo<'a>);
+    fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo<'a>);
 
-    fn start_sym_alg_for_file(&mut self, alg: &'a SymmetricEncryptionAlg, file: &'a FileInfo<'a>);
+    fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo<'a>);
 
     fn finish(&mut self);
 }
@@ -124,7 +123,7 @@ impl <'a> IndicatifProgress<'a> {
 
 impl <'a> Progress<'a> for IndicatifProgress<'a> {
 
-    fn start_stretch_alg(&mut self, alg: &'a KeyHashAlg) {
+    fn start_stretch_alg(&mut self, alg: &KeyHashAlg) {
         if let Some(ref mut data) = self.data {
             let typ = TaskType::Stretch(alg);
             let info = data.todo.remove(&typ);
@@ -132,7 +131,7 @@ impl <'a> Progress<'a> for IndicatifProgress<'a> {
         }
     }
 
-    fn start_compress_alg_for_file(&mut self, alg: &'a CompressionAlg, file: &'a FileInfo<'a>) {
+    fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo<'a>) {
         if let Some(data) = &mut self.data {
             let typ = TaskType::Compress(&alg, &file);
             let info = data.todo.remove(&typ);
@@ -140,7 +139,7 @@ impl <'a> Progress<'a> for IndicatifProgress<'a> {
         }
     }
 
-    fn start_sym_alg_for_file(&mut self, alg: &'a SymmetricEncryptionAlg, file: &'a FileInfo<'a>) {
+    fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo<'a>) {
         if let Some(data) = &mut self.data {
             let typ = TaskType::Symmetric(&alg, &file);
             let info = data.todo.remove(&typ);
@@ -156,24 +155,39 @@ impl <'a> Progress<'a> for IndicatifProgress<'a> {
     }
 }
 
-#[cfg(test)]
-pub struct LogProgress {}
+pub struct LogProgress {
+    current: String,
+}
 
-#[cfg(test)]
+impl LogProgress {
+    pub fn new() -> Self {
+        LogProgress {
+            current: "initializing".to_owned()
+        }
+    }
+
+    fn next(&mut self, next: String) {
+        println!("end {}", &self.current);
+        println!("start {}", &next);
+        self.current = next;
+    }
+}
+
 impl <'a> Progress<'a> for LogProgress {
-    fn start_stretch_alg(&mut self, alg: &'a KeyHashAlg) {
-        println!("stretching key using {}", alg);
+
+    fn start_stretch_alg(&mut self, alg: &KeyHashAlg) {
+        self.next(format!("stretching key using {}", alg));
     }
 
-    fn start_compress_alg_for_file(&mut self, alg: &'a CompressionAlg, file: &'a FileInfo<'a>) {
-        println!("(de)compressing {} using {}", file.file_name(), alg);
+    fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo<'a>) {
+        self.next(format!("(de)compressing {} using {}", file.file_name(), alg));
     }
 
-    fn start_sym_alg_for_file(&mut self, alg: &'a SymmetricEncryptionAlg, file: &'a FileInfo<'a>) {
-        println!("en/decrypting {} using {}", file.file_name(), alg);
+    fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo<'a>) {
+        self.next(format!("start en/decrypting {} using {}", file.file_name(), alg));
     }
 
     fn finish(&mut self) {
-        println!("finishing up");
+        self.next(format!("finishing up"));
     }
 }

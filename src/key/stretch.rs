@@ -3,17 +3,20 @@ use crate::key::hash::hash;
 use crate::key::key::StretchKey;
 use crate::key::Key;
 use crate::key::Salt;
+use crate::util::progress::Progress;
 
-pub fn stretch_key(
+pub fn stretch_key<'a>(
     raw_key: &Key,
     salt: &Salt,
     stretch_count: u64,
     key_hash_algorithms: &[KeyHashAlg],
+    progress: &mut impl Progress<'a>,
 ) -> StretchKey {
     assert!(!key_hash_algorithms.is_empty());
     let salt_bytes = salt.salt;
     let mut data = raw_key.key_data.clone().unsecure().as_bytes().to_owned();
     for key_hash_alg in key_hash_algorithms {
+        progress.start_stretch_alg(&key_hash_alg);
         data = hash(&data, &salt_bytes, key_hash_alg);
         for i in 0..stretch_count {
             data.extend(&i.to_le_bytes());
@@ -35,11 +38,13 @@ mod tests {
     #[test]
     fn stratch_test_password() {
         let strat = get_current_version_strategy(true);
+        let mut progress = LogProgress::new();
         stretch_key(
             &Key::new(&"MY secret p@ssw0rd"),
             &Salt::fixed_for_test(123_456_789),
             strat.stretch_count,
             &strat.key_hash_algorithms,
+            &progress,
         );
     }
 

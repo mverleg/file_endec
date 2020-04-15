@@ -11,7 +11,6 @@ use crate::key::stretch::stretch_key;
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::progress::IndicatifProgress;
-use crate::util::progress::LogProgress;
 use crate::util::version::get_current_version;
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
@@ -27,8 +26,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
         Extension::Add(config.output_extension()),
         config.output_dir(),
     )?;
-    // let mut progress = IndicatifProgress::new(&config.verbosity(), &strategy, &files_info);
-    let mut progress = LogProgress::new();
+    let mut progress = IndicatifProgress::new(&config.verbosity(), &strategy, &files_info);
     let salt = Salt::generate_random()?;
     let stretched_key = stretch_key(
         config.raw_key(),

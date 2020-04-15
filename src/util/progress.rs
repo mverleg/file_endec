@@ -6,16 +6,18 @@ use ::indicatif::ProgressStyle;
 use crate::files::file_meta::FileInfo;
 use crate::header::{CompressionAlg, KeyHashAlg, Strategy, SymmetricEncryptionAlg};
 use crate::Verbosity;
+use std::path::PathBuf;
+use std::mem;
 
 //TODO @mark: TEMPORARY! REMOVE THIS!
 static RATIO_SYMMETRIC_STRETCH: f64 = 1.0;
 static RATIO_COMPRESSION_STRETCH: f64 = 1.0;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
-enum TaskType<'a> {
-    Stretch(&'a KeyHashAlg),
-    Compress(&'a CompressionAlg, &'a FileInfo<'a>),
-    Symmetric(&'a SymmetricEncryptionAlg, &'a FileInfo<'a>),
+enum TaskType {
+    Stretch(KeyHashAlg),
+    Compress(CompressionAlg, PathBuf),
+    Symmetric(SymmetricEncryptionAlg, PathBuf),
 }
 
 #[derive(Debug)]
@@ -25,42 +27,45 @@ struct TaskInfo {
 }
 
 #[derive(Debug)]
-struct ProgressData<'a> {
+struct ProgressData {
     bar: ProgressBar,
-    current: Option<TaskInfo>,
-    todo: HashMap<TaskType<'a>, TaskInfo>,
+    current: TaskInfo,
+    todo: HashMap<TaskType, TaskInfo>,
 }
 
-impl <'a> ProgressData<'a> {
-    fn next_step(&mut self, task: Option<TaskInfo>) {
-        let task = task.expect("attempted to start progress on a task that is not known");
-        let prev = &self.current.unwrap();
-        self.bar.inc(prev.size);
+impl  ProgressData {
+    fn next_step(&mut self, next_task: Option<TaskInfo>) {
+        let mut task = next_task.expect("attempted to start progress on a task that is not known");
+        // Set the message of the task that is starting.
         self.bar.set_message(&task.text);
-        self.current = Some(task);
+        // Swap the completed task and the starting one, so that a new task becomes
+        // current, and 'task' is now the previous task.
+        mem::swap(&mut task, &mut self.current);
+        // Increment the progress bar based on the task that was just completed.
+        self.bar.inc(task.size);
     }
 }
 
-pub trait Progress<'a> {
+pub trait Progress {
     fn start_stretch_alg(&mut self, alg: &KeyHashAlg);
 
-    fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo<'a>);
+    fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo);
 
-    fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo<'a>);
+    fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo);
 
     fn finish(&mut self);
 }
 
 #[derive(Debug)]
-pub struct IndicatifProgress<'a> {
-    data: Option<ProgressData<'a>>
+pub struct IndicatifProgress {
+    data: Option<ProgressData>
 }
 
-impl <'a> IndicatifProgress<'a> {
+impl  IndicatifProgress {
     pub fn new(
-        verbosity: &'a Verbosity,
-        strategy: &'a Strategy,
-        files: &'a [FileInfo],
+        verbosity: &Verbosity,
+        strategy: &Strategy,
+        files: &[FileInfo],
     ) -> Self {
         if verbosity.quiet() {
             return IndicatifProgress { data: None }
@@ -70,7 +75,7 @@ impl <'a> IndicatifProgress<'a> {
         for alg in &strategy.key_hash_algorithms {
             //strategy.stretch_count * RATIO_STRETCH_VS_KILOBYTE;
             todo.insert(
-                TaskType::Stretch(alg),
+                TaskType::Stretch(alg.clone()),
                 TaskInfo {
                     text: format!("{} key stretch", &alg),
                     //TODO @mark: check the scaling here
@@ -81,7 +86,7 @@ impl <'a> IndicatifProgress<'a> {
         for file in files {
             for alg in &strategy.compression_algorithm {
                 todo.insert(
-                    TaskType::Compress(&alg, &file),
+                    TaskType::Compress(alg.clone(), file.in_path.to_owned()),
                     TaskInfo {
                         text: format!("{} {}", &alg, &file.file_name()),
                         //TODO @mark: check the scaling here
@@ -93,7 +98,7 @@ impl <'a> IndicatifProgress<'a> {
         for file in files {
             for alg in &strategy.symmetric_algorithms {
                 todo.insert(
-                    TaskType::Symmetric(&alg, &file),
+                    TaskType::Symmetric(alg.clone(), file.in_path.to_owned()),
                     TaskInfo {
                         text: format!("{} {}", &alg, &file.file_name()),
                         //TODO @mark: check the scaling here
@@ -115,33 +120,36 @@ impl <'a> IndicatifProgress<'a> {
         };
         IndicatifProgress { data: Some(ProgressData {
             bar,
-            current: None,
+            current: TaskInfo {
+                text: "initialize".to_owned(),
+                size: 1,
+            },
             todo,
         })}
     }
 }
 
-impl <'a> Progress<'a> for IndicatifProgress<'a> {
+impl  Progress for IndicatifProgress {
 
     fn start_stretch_alg(&mut self, alg: &KeyHashAlg) {
         if let Some(ref mut data) = self.data {
-            let typ = TaskType::Stretch(alg);
+            let typ = TaskType::Stretch(alg.clone());
             let info = data.todo.remove(&typ);
             data.next_step(info);
         }
     }
 
-    fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo<'a>) {
+    fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo) {
         if let Some(data) = &mut self.data {
-            let typ = TaskType::Compress(&alg, &file);
+            let typ = TaskType::Compress(alg.clone(), file.in_path.to_owned());
             let info = data.todo.remove(&typ);
             data.next_step(info);
         }
     }
 
-    fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo<'a>) {
+    fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo) {
         if let Some(data) = &mut self.data {
-            let typ = TaskType::Symmetric(&alg, &file);
+            let typ = TaskType::Symmetric(alg.clone(), file.in_path.to_owned());
             let info = data.todo.remove(&typ);
             data.next_step(info);
         }
@@ -167,23 +175,23 @@ impl LogProgress {
     }
 
     fn next(&mut self, next: String) {
-        println!("end {}", &self.current);
-        println!("start {}", &next);
+        println!("finish {}", &self.current);
+        println!("start  {}", &next);
         self.current = next;
     }
 }
 
-impl <'a> Progress<'a> for LogProgress {
+impl  Progress for LogProgress {
 
     fn start_stretch_alg(&mut self, alg: &KeyHashAlg) {
         self.next(format!("stretching key using {}", alg));
     }
 
-    fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo<'a>) {
+    fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo) {
         self.next(format!("(de)compressing {} using {}", file.file_name(), alg));
     }
 
-    fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo<'a>) {
+    fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo) {
         self.next(format!("start en/decrypting {} using {}", file.file_name(), alg));
     }
 

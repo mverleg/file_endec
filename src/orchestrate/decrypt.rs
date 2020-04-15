@@ -17,6 +17,7 @@ pub use crate::key::{Key, KeySource};
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::decrypt::decrypt_file;
 pub use crate::util::FedResult;
+use crate::util::progress::LogProgress;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,
@@ -69,11 +70,13 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
         let stretched_key = if let Some(sk) = key_cache.get(&salt) {
             sk.clone()
         } else {
+            let mut progress = LogProgress::new();
             let sk = stretch_key(
                 config.raw_key(),
                 &salt,
                 strategy.stretch_count,
                 &strategy.key_hash_algorithms,
+                &mut progress,
             );
             key_cache.insert(salt.clone(), sk.clone());
             sk

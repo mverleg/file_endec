@@ -10,7 +10,7 @@ pub fn stretch_key<'a>(
     salt: &Salt,
     stretch_count: u64,
     key_hash_algorithms: &[KeyHashAlg],
-    progress: &mut impl Progress<'a>,
+    progress: &mut impl Progress,
 ) -> StretchKey {
     assert!(!key_hash_algorithms.is_empty());
     let salt_bytes = salt.salt;
@@ -31,6 +31,8 @@ mod tests {
     #[cfg(not(debug_assertions))]
     use crate::header::strategy::get_current_version_strategy;
 
+    use crate::util::progress::LogProgress;
+
     #[cfg(not(debug_assertions))]
     use super::*;
 
@@ -44,7 +46,7 @@ mod tests {
             &Salt::fixed_for_test(123_456_789),
             strat.stretch_count,
             &strat.key_hash_algorithms,
-            &progress,
+            &mut progress,
         );
     }
 

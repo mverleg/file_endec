@@ -68,10 +68,10 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
             );
         }
     }
+    progress.finish();
     if !config.quiet() {
         println!("encrypted {} files", files_info.len());
     }
-    progress.finish();
     Ok(())
 }
 

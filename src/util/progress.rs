@@ -1,4 +1,6 @@
 use ::std::collections::HashMap;
+use ::std::mem;
+use ::std::path::PathBuf;
 
 use ::indicatif::ProgressBar;
 use ::indicatif::ProgressStyle;
@@ -6,12 +8,6 @@ use ::indicatif::ProgressStyle;
 use crate::files::file_meta::FileInfo;
 use crate::header::{CompressionAlg, KeyHashAlg, Strategy, SymmetricEncryptionAlg};
 use crate::Verbosity;
-use std::mem;
-use std::path::PathBuf;
-
-//TODO @mark: TEMPORARY! REMOVE THIS!
-static RATIO_SYMMETRIC_STRETCH: f64 = 1.0;
-static RATIO_COMPRESSION_STRETCH: f64 = 1.0;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum TaskType {
@@ -35,6 +31,7 @@ struct ProgressData {
     todo: HashMap<TaskType, TaskInfo>,
 }
 
+//TODO @mark: conflicts warnig logging vs progress
 impl ProgressData {
     fn next_step(&mut self, next_task: Option<TaskInfo>) {
         let mut task = next_task.expect("attempted to start progress on a task that is not known");
@@ -73,15 +70,14 @@ impl IndicatifProgress {
             return IndicatifProgress { data: None };
         }
         let mut todo = HashMap::new();
-        //TODO @mark: consider adding load and save of file?
         for alg in &strategy.key_hash_algorithms {
             //strategy.stretch_count * RATIO_STRETCH_VS_KILOBYTE;
             todo.insert(
                 TaskType::Stretch(alg.clone()),
                 TaskInfo {
                     text: format!("{} key stretch", &alg),
-                    //TODO @mark: check the scaling here
-                    size: (strategy.stretch_count as f64 / 100.0).ceil() as u64,
+                    //size: (strategy.stretch_count as f64 / 1.0).ceil() as u64,
+                    size: strategy.stretch_count * 6,
                 },
             );
         }
@@ -90,7 +86,6 @@ impl IndicatifProgress {
                 TaskType::Read(file.in_path.to_owned()),
                 TaskInfo {
                     text: format!("read {}", &file.file_name()),
-                    //TODO @mark: check the scaling here
                     size: file.size_kb,
                 },
             );
@@ -98,8 +93,7 @@ impl IndicatifProgress {
                 TaskType::Write(file.in_path.to_owned()),
                 TaskInfo {
                     text: format!("write {}", &file.file_name()),
-                    //TODO @mark: check the scaling here
-                    size: file.size_kb,
+                    size: file.size_kb * 2,
                 },
             );
             for alg in &strategy.compression_algorithm {
@@ -107,8 +101,7 @@ impl IndicatifProgress {
                     TaskType::Compress(alg.clone(), file.in_path.to_owned()),
                     TaskInfo {
                         text: format!("{} {}", &alg, &file.file_name()),
-                        //TODO @mark: check the scaling here
-                        size: file.size_kb,
+                        size: file.size_kb * 3,
                     },
                 );
             }
@@ -117,8 +110,7 @@ impl IndicatifProgress {
                     TaskType::Symmetric(alg.clone(), file.in_path.to_owned()),
                     TaskInfo {
                         text: format!("{} {}", &alg, &file.file_name()),
-                        //TODO @mark: check the scaling here
-                        size: file.size_kb,
+                        size: file.size_kb * 3,
                     },
                 );
             }
@@ -129,7 +121,7 @@ impl IndicatifProgress {
             pb.set_style(
                 ProgressStyle::default_bar()
                     // .template("[{elapsed}] {msg:25<} [{wide_bar:}] {percent:>2}%")
-                    .template("[{wide_bar:}] {percent:>2}% {msg:<32!}")
+                    .template("[{wide_bar:}] {percent:>3}% {msg:<40!}")
                     .progress_chars("=> "),
             );
             pb.tick();

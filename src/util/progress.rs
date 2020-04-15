@@ -16,8 +16,10 @@ static RATIO_COMPRESSION_STRETCH: f64 = 1.0;
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum TaskType {
     Stretch(KeyHashAlg),
+    Read(PathBuf),
     Compress(CompressionAlg, PathBuf),
     Symmetric(SymmetricEncryptionAlg, PathBuf),
+    Write(PathBuf),
 }
 
 #[derive(Debug)]
@@ -49,9 +51,13 @@ impl ProgressData {
 pub trait Progress {
     fn start_stretch_alg(&mut self, alg: &KeyHashAlg);
 
+    fn start_read_for_file(&mut self, file: &FileInfo);
+
     fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo);
 
     fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo);
+
+    fn start_write_for_file(&mut self, file: &FileInfo);
 
     fn finish(&mut self);
 }
@@ -80,6 +86,22 @@ impl IndicatifProgress {
             );
         }
         for file in files {
+            todo.insert(
+                TaskType::Read(file.in_path.to_owned()),
+                TaskInfo {
+                    text: format!("read {}", &file.file_name()),
+                    //TODO @mark: check the scaling here
+                    size: file.size_kb,
+                },
+            );
+            todo.insert(
+                TaskType::Write(file.in_path.to_owned()),
+                TaskInfo {
+                    text: format!("write {}", &file.file_name()),
+                    //TODO @mark: check the scaling here
+                    size: file.size_kb,
+                },
+            );
             for alg in &strategy.compression_algorithm {
                 todo.insert(
                     TaskType::Compress(alg.clone(), file.in_path.to_owned()),
@@ -90,8 +112,6 @@ impl IndicatifProgress {
                     },
                 );
             }
-        }
-        for file in files {
             for alg in &strategy.symmetric_algorithms {
                 todo.insert(
                     TaskType::Symmetric(alg.clone(), file.in_path.to_owned()),
@@ -137,6 +157,14 @@ impl Progress for IndicatifProgress {
         }
     }
 
+    fn start_read_for_file(&mut self, file: &FileInfo) {
+        if let Some(data) = &mut self.data {
+            let typ = TaskType::Read(file.in_path.to_owned());
+            let info = data.todo.remove(&typ);
+            data.next_step(info);
+        }
+    }
+
     fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo) {
         if let Some(data) = &mut self.data {
             let typ = TaskType::Compress(alg.clone(), file.in_path.to_owned());
@@ -148,6 +176,14 @@ impl Progress for IndicatifProgress {
     fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo) {
         if let Some(data) = &mut self.data {
             let typ = TaskType::Symmetric(alg.clone(), file.in_path.to_owned());
+            let info = data.todo.remove(&typ);
+            data.next_step(info);
+        }
+    }
+
+    fn start_write_for_file(&mut self, file: &FileInfo) {
+        if let Some(data) = &mut self.data {
+            let typ = TaskType::Write(file.in_path.to_owned());
             let info = data.todo.remove(&typ);
             data.next_step(info);
         }
@@ -176,9 +212,13 @@ impl SilentProgress {
 impl Progress for SilentProgress {
     fn start_stretch_alg(&mut self, _alg: &KeyHashAlg) {}
 
+    fn start_read_for_file(&mut self, file: &FileInfo) {}
+
     fn start_compress_alg_for_file(&mut self, _alg: &CompressionAlg, _file: &FileInfo) {}
 
     fn start_sym_alg_for_file(&mut self, _alg: &SymmetricEncryptionAlg, _file: &FileInfo) {}
+
+    fn start_write_for_file(&mut self, file: &FileInfo) {}
 
     fn finish(&mut self) {}
 }
@@ -206,6 +246,13 @@ impl Progress for LogProgress {
         self.next(format!("stretching key using {}", alg));
     }
 
+    fn start_read_for_file(&mut self, file: &FileInfo) {
+        self.next(format!(
+            "reading {}",
+            file.file_name()
+        ));
+    }
+
     fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo) {
         self.next(format!(
             "(de)compressing {} using {}",
@@ -219,6 +266,13 @@ impl Progress for LogProgress {
             "start en/decrypting {} using {}",
             file.file_name(),
             alg
+        ));
+    }
+
+    fn start_write_for_file(&mut self, file: &FileInfo) {
+        self.next(format!(
+            "writing {}",
+            file.file_name()
         ));
     }
 

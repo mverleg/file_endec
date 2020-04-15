@@ -10,6 +10,7 @@ use ::std::hash;
 
 #[derive(Debug)]
 pub struct FileInfo<'a> {
+    //TODO @mark: RC this
     pub in_path: &'a Path,
     pub size_kb: u64,
     pub out_pth: PathBuf,

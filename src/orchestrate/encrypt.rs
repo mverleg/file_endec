@@ -42,12 +42,11 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
             &file.path_str(),
             file.size_kb,
             config.verbosity(),
-            &mut progress,
+            &mut || progress.start_read_for_file(&file)
         )?;
         let checksum = calculate_checksum(&data, &mut progress);
-        let small = compress_file(data, &strategy.compression_algorithm, &mut |alg| {
-            progress.start_compress_alg_for_file(&alg, &file)
-        })?;
+        let small = compress_file(data, &strategy.compression_algorithm,
+            &mut |alg| progress.start_compress_alg_for_file(&alg, &file))?;
         let secret = encrypt_file(
             small,
             &stretched_key,
@@ -57,9 +56,10 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
         );
         let header = Header::new(version.clone(), salt.clone(), checksum)?;
         if !config.dry_run() {
-            write_output_file(config, &file, &secret, Some(&header), &mut progress)?;
+            write_output_file(config, &file, &secret, Some(&header),
+                &mut || progress.start_write_for_file(&file))?;
         } else if !config.quiet() {
-            //TODO @mark: progress.start_write();
+            progress.start_write_for_file(&file);
             println!(
                 "successfully encrypted '{}' ({} kb); not saving to '{}' because of dry-run",
                 file.path_str(),

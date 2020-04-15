@@ -15,8 +15,9 @@ pub fn write_output_file(
     file: &FileInfo,
     data: &[u8],
     header: Option<&Header>,
-    progress: &mut impl Progress,
+    start_progress: &mut impl FnMut(),
 ) -> FedResult<()> {
+    start_progress();
     if file.out_pth.exists() {
         if config.overwrite() {
             assert!(file.out_pth.is_file());

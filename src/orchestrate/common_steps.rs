@@ -24,8 +24,9 @@ pub fn read_file(
     path_str: &str,
     size_kb: u64,
     verbosity: Verbosity,
-    progress: &mut impl Progress,
+    start_progress: &mut impl FnMut(),
 ) -> FedResult<Vec<u8>> {
+    start_progress();
     if verbosity.debug() {
         println!("reading {}", path_str);
     }

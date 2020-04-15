@@ -8,12 +8,14 @@ use crate::header::write_header;
 use crate::header::Header;
 use crate::util::errors::wrap_io;
 use crate::util::FedResult;
+use crate::util::progress::Progress;
 
 pub fn write_output_file(
     config: &impl EndecConfig,
     file: &FileInfo,
     data: &[u8],
     header: Option<&Header>,
+    progress: &mut impl Progress,
 ) -> FedResult<()> {
     if file.out_pth.exists() {
         if config.overwrite() {

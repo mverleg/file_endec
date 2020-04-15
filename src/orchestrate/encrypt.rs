@@ -10,7 +10,7 @@ use crate::key::Salt;
 use crate::key::stretch::stretch_key;
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::encrypt::encrypt_file;
-use crate::util::progress::IndicatifProgress;
+use crate::util::progress::{IndicatifProgress, Progress};
 use crate::util::version::get_current_version;
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
@@ -35,7 +35,6 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
         &strategy.key_hash_algorithms,
         &mut progress,
     );
-    //TODO @mark: progress logging
     for file in &files_info {
         let mut reader = open_reader(&file, config.verbosity())?;
         let data = read_file(
@@ -43,14 +42,16 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
             &file.path_str(),
             file.size_kb,
             config.verbosity(),
+            &mut progress,
         )?;
-        let checksum = calculate_checksum(&data);
-        let small = compress_file(data, &strategy.compression_algorithm)?;
-        let secret = encrypt_file(small, &stretched_key, &salt, &strategy.symmetric_algorithms);
+        let checksum = calculate_checksum(&data, &mut progress);
+        let small = compress_file(data, &strategy.compression_algorithm, &mut progress)?;
+        let secret = encrypt_file(small, &stretched_key, &salt, &strategy.symmetric_algorithms, &mut progress);
         let header = Header::new(version.clone(), salt.clone(), checksum)?;
         if !config.dry_run() {
-            write_output_file(config, &file, &secret, Some(&header))?;
+            write_output_file(config, &file, &secret, Some(&header), &mut progress)?;
         } else if !config.quiet() {
+            //TODO @mark: progress.start_write();
             println!(
                 "successfully encrypted '{}' ({} kb); not saving to '{}' because of dry-run",
                 file.path_str(),
@@ -62,6 +63,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     if !config.quiet() {
         println!("encrypted {} files", files_info.len());
     }
+    progress.finish();
     Ok(())
 }
 

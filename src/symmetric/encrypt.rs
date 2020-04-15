@@ -4,12 +4,14 @@ use crate::header::SymmetricEncryptionAlg;
 use crate::key::key::StretchKey;
 use crate::key::Salt;
 use crate::symmetric::{Aes256Cbc, TwofishCbc};
+use crate::util::progress::Progress;
 
 pub fn encrypt_file(
     mut data: Vec<u8>,
     key: &StretchKey,
     salt: &Salt,
     encrypt_algs: &[SymmetricEncryptionAlg],
+    progress: &mut impl Progress,
 ) -> Vec<u8> {
     assert!(!encrypt_algs.is_empty());
     for encrypt_alg in encrypt_algs {

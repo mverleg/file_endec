@@ -10,6 +10,7 @@ use ::twox_hash::XxHash64;
 use crate::util::base64::base64str_to_u8s;
 use crate::util::base64::u8s_to_base64str;
 use crate::util::FedResult;
+use crate::util::progress::Progress;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ChecksumType {
@@ -76,7 +77,7 @@ impl Display for Checksum {
     }
 }
 
-pub fn calculate_checksum(data: &[u8]) -> Checksum {
+pub fn calculate_checksum(data: &[u8], progress: &mut impl Progress,) -> Checksum {
     let mut hasher = XxHash64::with_seed(5_771_919_056_451_745_621);
     for b in data {
         hasher.write_u8(*b);
@@ -101,6 +102,7 @@ mod tests {
     use crate::files::mockfile::generate_test_file_content_for_test;
 
     use super::*;
+    use crate::util::progress::{LogProgress, SilentProgress};
 
     #[test]
     fn parse() {
@@ -113,7 +115,8 @@ mod tests {
     #[test]
     fn calculate() {
         let data = generate_test_file_content_for_test(15_001);
-        let checksum = calculate_checksum(&data);
+        let mut progress = SilentProgress::new();
+        let checksum = calculate_checksum(&data, &mut progress);
         assert_eq!(
             vec![219, 36, 108, 103, 132, 201, 242, 88, 202, 217, 207, 138, 186, 93, 68, 203],
             checksum.value,

@@ -113,8 +113,9 @@ impl  IndicatifProgress {
         let bar = {
             let pb = ProgressBar::new(total_size);
             pb.set_style(ProgressStyle::default_bar()
-                .template("[{elapsed}] {msg} {wide_bar} {percent}")
-                .progress_chars("##-"));
+                // .template("[{elapsed}] {msg:25<} [{wide_bar:}] {percent:>2}%")
+                .template("[{wide_bar:}] {percent:>2}% {msg:25<}")
+                .progress_chars("=> "));
             pb.tick();
             pb
         };
@@ -129,7 +130,7 @@ impl  IndicatifProgress {
     }
 }
 
-impl  Progress for IndicatifProgress {
+impl Progress for IndicatifProgress {
 
     fn start_stretch_alg(&mut self, alg: &KeyHashAlg) {
         if let Some(ref mut data) = self.data {
@@ -156,11 +157,34 @@ impl  Progress for IndicatifProgress {
     }
 
     fn finish(&mut self) {
-        if let Some(data) = &self.data {
+        if let Some(data) = &mut self.data {
             debug_assert!(data.todo.is_empty());
+            data.next_step(Some(TaskInfo {
+                text: "finished".to_owned(),
+                size: 0,
+            }));
             data.bar.finish();
         }
     }
+}
+
+pub struct SilentProgress {}
+
+impl SilentProgress {
+    pub fn new() -> Self {
+        SilentProgress {}
+    }
+}
+
+impl Progress for SilentProgress {
+
+    fn start_stretch_alg(&mut self, _alg: &KeyHashAlg) {}
+
+    fn start_compress_alg_for_file(&mut self, _alg: &CompressionAlg, _file: &FileInfo) {}
+
+    fn start_sym_alg_for_file(&mut self, _alg: &SymmetricEncryptionAlg, _file: &FileInfo) {}
+
+    fn finish(&mut self) {}
 }
 
 pub struct LogProgress {
@@ -181,7 +205,7 @@ impl LogProgress {
     }
 }
 
-impl  Progress for LogProgress {
+impl Progress for LogProgress {
 
     fn start_stretch_alg(&mut self, alg: &KeyHashAlg) {
         self.next(format!("stretching key using {}", alg));

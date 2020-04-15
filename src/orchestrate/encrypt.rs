@@ -44,7 +44,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file)
         )?;
-        let checksum = calculate_checksum(&data, &mut progress);
+        let checksum = calculate_checksum(&data, &mut || progress.start_checksum_for_file(&file));
         let small = compress_file(data, &strategy.compression_algorithm,
             &mut |alg| progress.start_compress_alg_for_file(&alg, &file))?;
         let secret = encrypt_file(

@@ -16,7 +16,7 @@ use crate::key::Salt;
 pub use crate::key::{Key, KeySource};
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::decrypt::decrypt_file;
-use crate::util::progress::{LogProgress, IndicatifProgress};
+use crate::util::progress::{LogProgress, IndicatifProgress, Progress};
 pub use crate::util::FedResult;
 
 pub fn validate_checksum_matches(
@@ -85,10 +85,11 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
             &file.path_str(),
             file.size_kb,
             config.verbosity(),
+            &mut || progress.start_read_for_file(file)
         )?;
         let revealed = decrypt_file(data, &stretched_key, &salt, &strategy.symmetric_algorithms)?;
         let big = decompress_file(revealed, &strategy.compression_algorithm)?;
-        let actual_checksum = calculate_checksum(&big);
+        let actual_checksum = calculate_checksum(&big, &mut || progress.start_checksum_for_file(&file));
         if !validate_checksum_matches(
             &actual_checksum,
             header.checksum(),
@@ -97,7 +98,13 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
         ) {
             checksum_failure_count += 1;
         }
-        write_output_file(config, &file, &big, None)?;
+        write_output_file(
+            config,
+            &file,
+            &big,
+            None,
+            &mut || progress.start_write_for_file(file)
+        )?;
         if !config.quiet() {
             println!(
                 "successfully decrypted '{}' to '{}' ({} kb)",

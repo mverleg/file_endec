@@ -15,6 +15,7 @@ enum TaskType {
     Read(PathBuf),
     Compress(CompressionAlg, PathBuf),
     Symmetric(SymmetricEncryptionAlg, PathBuf),
+    Checksum(PathBuf),
     Write(PathBuf),
 }
 
@@ -53,6 +54,8 @@ pub trait Progress {
     fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo);
 
     fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo);
+
+    fn start_checksum_for_file(&mut self, file: &FileInfo);
 
     fn start_write_for_file(&mut self, file: &FileInfo);
 
@@ -114,6 +117,13 @@ impl IndicatifProgress {
                     },
                 );
             }
+            todo.insert(
+                TaskType::Checksum(file.in_path.to_owned()),
+                TaskInfo {
+                    text: format!("checksum {}", &file.file_name()),
+                    size: file.size_kb,
+                },
+            );
         }
         let total_size = todo.iter().map(|task| task.1.size).sum();
         let bar = {
@@ -181,6 +191,14 @@ impl Progress for IndicatifProgress {
         }
     }
 
+    fn start_checksum_for_file(&mut self, file: &FileInfo) {
+        if let Some(data) = &mut self.data {
+            let typ = TaskType::Checksum(file.in_path.to_owned());
+            let info = data.todo.remove(&typ);
+            data.next_step(info);
+        }
+    }
+
     fn start_write_for_file(&mut self, file: &FileInfo) {
         if let Some(data) = &mut self.data {
             let typ = TaskType::Write(file.in_path.to_owned());
@@ -212,13 +230,15 @@ impl SilentProgress {
 impl Progress for SilentProgress {
     fn start_stretch_alg(&mut self, _alg: &KeyHashAlg) {}
 
-    fn start_read_for_file(&mut self, file: &FileInfo) {}
+    fn start_read_for_file(&mut self, _file: &FileInfo) {}
 
     fn start_compress_alg_for_file(&mut self, _alg: &CompressionAlg, _file: &FileInfo) {}
 
     fn start_sym_alg_for_file(&mut self, _alg: &SymmetricEncryptionAlg, _file: &FileInfo) {}
 
-    fn start_write_for_file(&mut self, file: &FileInfo) {}
+    fn start_checksum_for_file(&mut self, _file: &FileInfo) {}
+
+    fn start_write_for_file(&mut self, _file: &FileInfo) {}
 
     fn finish(&mut self) {}
 }
@@ -266,6 +286,13 @@ impl Progress for LogProgress {
             "start en/decrypting {} using {}",
             file.file_name(),
             alg
+        ));
+    }
+
+    fn start_checksum_for_file(&mut self, file: &FileInfo) {
+        self.next(format!(
+            "calculating checksum {}",
+            file.file_name()
         ));
     }
 

@@ -1,11 +1,10 @@
-
 use ::std::env;
 
+use crate::FedResult;
 use ::lazy_static::lazy_static;
+use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
-use crate::FedResult;
-use std::ffi::OsStr;
 
 /// Recursively get all the files in a directory that have '.enc' extension.
 pub fn get_enc_files_direct(dir: &Path) -> FedResult<Vec<PathBuf>> {

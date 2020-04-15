@@ -1,17 +1,17 @@
-use crate::{EncryptConfig, FedResult};
 use crate::config::typ::{EndecConfig, Extension};
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::compress_file;
 use crate::files::file_meta::inspect_files;
 use crate::files::write_output::write_output_file;
-use crate::header::{Header, CompressionAlg};
 use crate::header::strategy::get_current_version_strategy;
-use crate::key::Salt;
+use crate::header::{CompressionAlg, Header};
 use crate::key::stretch::stretch_key;
+use crate::key::Salt;
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::progress::{IndicatifProgress, Progress};
 use crate::util::version::get_current_version;
+use crate::{EncryptConfig, FedResult};
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     if config.delete_input() {
@@ -45,8 +45,16 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
             &mut progress,
         )?;
         let checksum = calculate_checksum(&data, &mut progress);
-        let small = compress_file(data, &strategy.compression_algorithm, &mut |alg| progress.start_compress_alg_for_file(&alg, &file))?;
-        let secret = encrypt_file(small, &stretched_key, &salt, &strategy.symmetric_algorithms, &mut |alg| progress.start_sym_alg_for_file(&alg, &file));
+        let small = compress_file(data, &strategy.compression_algorithm, &mut |alg| {
+            progress.start_compress_alg_for_file(&alg, &file)
+        })?;
+        let secret = encrypt_file(
+            small,
+            &stretched_key,
+            &salt,
+            &strategy.symmetric_algorithms,
+            &mut |alg| progress.start_sym_alg_for_file(&alg, &file),
+        );
         let header = Header::new(version.clone(), salt.clone(), checksum)?;
         if !config.dry_run() {
             write_output_file(config, &file, &secret, Some(&header), &mut progress)?;

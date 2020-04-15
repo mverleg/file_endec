@@ -6,17 +6,17 @@ use criterion::Criterion;
 
 #[cfg(all(test, feature = "expose"))]
 mod hash {
-    use ::criterion::Benchmark;
     use ::criterion::black_box;
+    use ::criterion::Benchmark;
     use ::criterion::Criterion;
 
     use ::file_endec::get_current_version_strategy;
     use ::file_endec::hash_argon2i;
     use ::file_endec::hash_bcrypt;
     use ::file_endec::hash_sha256;
+    use ::file_endec::stretch_key;
     use ::file_endec::Key;
     use ::file_endec::Salt;
-    use ::file_endec::stretch_key;
 
     fn get_data() -> Vec<u8> {
         black_box(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
@@ -80,8 +80,8 @@ mod hash {
 
 #[cfg(all(test, feature = "expose"))]
 mod encrypt {
-    use ::criterion::Benchmark;
     use ::criterion::black_box;
+    use ::criterion::Benchmark;
     use ::criterion::Criterion;
 
     use ::file_endec::decrypt_aes256;
@@ -165,10 +165,7 @@ criterion_group!(
 );
 
 #[cfg(feature = "expose")]
-criterion_main!(
-    hash_bench,
-    encrypt_bench,
-);
+criterion_main!(hash_bench, encrypt_bench,);
 
 #[cfg(not(feature = "expose"))]
 criterion_group!(need_expose_feature_group, need_expose_feature);

@@ -89,7 +89,6 @@ pub struct EncryptArguments {
 
 impl fmt::Display for EncryptArguments {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-
         writeln!(f, "* files:")?;
         for file in self.files.clone().into_iter() {
             writeln!(f, "  - {}", file.to_string_lossy().as_ref())?;
@@ -99,20 +98,67 @@ impl fmt::Display for EncryptArguments {
             Some(dir) => {
                 writeln!(f, "* output: directory {}", dir.to_string_lossy().as_ref())?;
             }
-            None => writeln!(f, "* output: stored alongside input (no directory requested)")?,
+            None => writeln!(
+                f,
+                "* output: stored alongside input (no directory requested)"
+            )?,
         }
 
         writeln!(f, "* extension: {}", &self.output_extension)?;
 
-        writeln!(f, "* logging: {}", if self.debug { "verbose" } else { if self.quiet { "quiet" } else { "normal" }})?;
+        writeln!(
+            f,
+            "* logging: {}",
+            if self.debug {
+                "verbose"
+            } else {
+                if self.quiet {
+                    "quiet"
+                } else {
+                    "normal"
+                }
+            }
+        )?;
 
         writeln!(f, "* dry run: {}", if self.dry_run { "YES" } else { "no" })?;
 
-        writeln!(f, "* overwrite existing output: {}", if self.overwrite { if self.dry_run { "no (overridden by dry run)" } else { "yes" }} else { "no" })?;
+        writeln!(
+            f,
+            "* overwrite existing output: {}",
+            if self.overwrite {
+                if self.dry_run {
+                    "no (overridden by dry run)"
+                } else {
+                    "yes"
+                }
+            } else {
+                "no"
+            }
+        )?;
 
-        writeln!(f, "* shred input: {}", if self.delete_input { if self.dry_run { "no (overridden by dry run)" } else { "yes" }} else { "no" })?;
+        writeln!(
+            f,
+            "* shred input: {}",
+            if self.delete_input {
+                if self.dry_run {
+                    "no (overridden by dry run)"
+                } else {
+                    "yes"
+                }
+            } else {
+                "no"
+            }
+        )?;
 
-        writeln!(f, "* weak keys: {}", if self.accept_weak_key { "accept" } else { "warn" })?;
+        writeln!(
+            f,
+            "* weak keys: {}",
+            if self.accept_weak_key {
+                "accept"
+            } else {
+                "warn"
+            }
+        )?;
 
         Ok(())
     }

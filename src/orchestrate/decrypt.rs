@@ -16,8 +16,8 @@ use crate::key::Salt;
 pub use crate::key::{Key, KeySource};
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::decrypt::decrypt_file;
-pub use crate::util::FedResult;
 use crate::util::progress::LogProgress;
+pub use crate::util::FedResult;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,

@@ -15,27 +15,31 @@ pub struct FileInfo<'a> {
     pub out_pth: PathBuf,
 }
 
-impl <'a> FileInfo<'a> {
+impl<'a> FileInfo<'a> {
     pub fn file_name(&self) -> String {
-        self.in_path.file_name().unwrap().to_string_lossy().to_string()
+        self.in_path
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .to_string()
     }
 }
 
 // Only relies on in_path, which should be uniquely identifying
-impl <'a> hash::Hash for FileInfo<'a> {
+impl<'a> hash::Hash for FileInfo<'a> {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.in_path.hash(state)
     }
 }
 
 // Only relies on in_path, which should be uniquely identifying
-impl <'a> PartialEq for FileInfo<'a> {
+impl<'a> PartialEq for FileInfo<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.in_path == other.in_path
     }
 }
 
-impl <'a> Eq for FileInfo<'a> {}
+impl<'a> Eq for FileInfo<'a> {}
 
 impl<'a> FileInfo<'a> {
     pub fn path_str(&self) -> String {

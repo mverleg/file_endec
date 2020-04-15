@@ -73,7 +73,6 @@ pub struct DecryptArguments {
 
 impl fmt::Display for DecryptArguments {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-
         writeln!(f, "* files:")?;
         for file in self.files.clone().into_iter() {
             writeln!(f, "  - {}", file.to_string_lossy().as_ref())?;
@@ -83,14 +82,37 @@ impl fmt::Display for DecryptArguments {
             Some(dir) => {
                 writeln!(f, "* output: directory {}", dir.to_string_lossy().as_ref())?;
             }
-            None => writeln!(f, "* output: stored alongside input (no directory requested)")?,
+            None => writeln!(
+                f,
+                "* output: stored alongside input (no directory requested)"
+            )?,
         }
 
-        writeln!(f, "* logging: {}", if self.debug { "verbose" } else { if self.quiet { "quiet" } else { "normal" }})?;
+        writeln!(
+            f,
+            "* logging: {}",
+            if self.debug {
+                "verbose"
+            } else {
+                if self.quiet {
+                    "quiet"
+                } else {
+                    "normal"
+                }
+            }
+        )?;
 
-        writeln!(f, "* overwrite existing output: {}", if self.overwrite { "yes" } else { "no" })?;
+        writeln!(
+            f,
+            "* overwrite existing output: {}",
+            if self.overwrite { "yes" } else { "no" }
+        )?;
 
-        writeln!(f, "* shred input: {}", if self.delete_input { "yes" } else { "no" })?;
+        writeln!(
+            f,
+            "* shred input: {}",
+            if self.delete_input { "yes" } else { "no" }
+        )?;
 
         Ok(())
     }

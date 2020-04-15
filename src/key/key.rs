@@ -1,7 +1,7 @@
 use ::secstr::SecUtf8;
 use ::secstr::SecVec;
-use ::zxcvbn::Entropy;
 use ::zxcvbn::zxcvbn;
+use ::zxcvbn::Entropy;
 
 #[cfg(any(test, feature = "expose"))]
 use crate::key::hash::fastish_hash;

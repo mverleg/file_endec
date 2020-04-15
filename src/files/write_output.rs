@@ -7,8 +7,8 @@ use crate::files::file_meta::FileInfo;
 use crate::header::write_header;
 use crate::header::Header;
 use crate::util::errors::wrap_io;
-use crate::util::FedResult;
 use crate::util::progress::Progress;
+use crate::util::FedResult;
 
 pub fn write_output_file(
     config: &impl EndecConfig,

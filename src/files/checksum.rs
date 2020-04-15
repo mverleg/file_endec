@@ -9,8 +9,8 @@ use ::twox_hash::XxHash64;
 
 use crate::util::base64::base64str_to_u8s;
 use crate::util::base64::u8s_to_base64str;
-use crate::util::FedResult;
 use crate::util::progress::Progress;
+use crate::util::FedResult;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ChecksumType {
@@ -77,7 +77,7 @@ impl Display for Checksum {
     }
 }
 
-pub fn calculate_checksum(data: &[u8], progress: &mut impl Progress,) -> Checksum {
+pub fn calculate_checksum(data: &[u8], progress: &mut impl Progress) -> Checksum {
     let mut hasher = XxHash64::with_seed(5_771_919_056_451_745_621);
     for b in data {
         hasher.write_u8(*b);

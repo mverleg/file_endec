@@ -3,10 +3,10 @@ use ::std::io::Read;
 use ::brotli::enc::BrotliEncoderParams;
 use ::lazy_static::lazy_static;
 
-use crate::header::CompressionAlg;
-use crate::util::FedResult;
-use crate::util::progress::Progress;
 use crate::files::file_meta::FileInfo;
+use crate::header::CompressionAlg;
+use crate::util::progress::Progress;
+use crate::util::FedResult;
 
 lazy_static! {
     static ref BROTLI_CONFIG: BrotliEncoderParams = {
@@ -19,7 +19,7 @@ lazy_static! {
 pub fn compress_file<'a>(
     data: Vec<u8>,
     alg: &Option<CompressionAlg>,
-    start_progress: &mut impl FnMut(&CompressionAlg)
+    start_progress: &mut impl FnMut(&CompressionAlg),
 ) -> FedResult<Vec<u8>> {
     match alg {
         Some(alg) => {
@@ -27,7 +27,7 @@ pub fn compress_file<'a>(
             match alg {
                 CompressionAlg::Brotli => brotli_compress(&data),
             }
-        },
+        }
         None => Ok(data),
     }
 }

@@ -3,8 +3,8 @@ use ::std::fmt;
 use ::lazy_static::lazy_static;
 use ::semver::Version;
 
-use crate::util::FedResult;
 use crate::util::version::get_current_version;
+use crate::util::FedResult;
 use std::fmt::Formatter;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

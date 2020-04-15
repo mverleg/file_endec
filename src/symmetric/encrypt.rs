@@ -11,10 +11,11 @@ pub fn encrypt_file(
     key: &StretchKey,
     salt: &Salt,
     encrypt_algs: &[SymmetricEncryptionAlg],
-    progress: &mut impl Progress,
+    start_progress: &mut impl FnMut(&SymmetricEncryptionAlg),
 ) -> Vec<u8> {
     assert!(!encrypt_algs.is_empty());
     for encrypt_alg in encrypt_algs {
+        start_progress(encrypt_alg);
         data = match encrypt_alg {
             SymmetricEncryptionAlg::Aes256 => encrypt_aes256(&data, key, salt),
             SymmetricEncryptionAlg::Twofish => encrypt_twofish(&data, key, salt),

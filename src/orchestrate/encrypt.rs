@@ -4,7 +4,7 @@ use crate::files::checksum::calculate_checksum;
 use crate::files::compress::compress_file;
 use crate::files::file_meta::inspect_files;
 use crate::files::write_output::write_output_file;
-use crate::header::Header;
+use crate::header::{Header, CompressionAlg};
 use crate::header::strategy::get_current_version_strategy;
 use crate::key::Salt;
 use crate::key::stretch::stretch_key;
@@ -45,8 +45,8 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
             &mut progress,
         )?;
         let checksum = calculate_checksum(&data, &mut progress);
-        let small = compress_file(data, &strategy.compression_algorithm, &mut progress)?;
-        let secret = encrypt_file(small, &stretched_key, &salt, &strategy.symmetric_algorithms, &mut progress);
+        let small = compress_file(data, &strategy.compression_algorithm, &mut |alg| progress.start_compress_alg_for_file(&alg, &file))?;
+        let secret = encrypt_file(small, &stretched_key, &salt, &strategy.symmetric_algorithms, &mut |alg| progress.start_sym_alg_for_file(&alg, &file));
         let header = Header::new(version.clone(), salt.clone(), checksum)?;
         if !config.dry_run() {
             write_output_file(config, &file, &secret, Some(&header), &mut progress)?;

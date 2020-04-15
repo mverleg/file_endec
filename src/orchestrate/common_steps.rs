@@ -6,6 +6,7 @@ use crate::header::strategy::Verbosity;
 use crate::header::HEADER_MARKER;
 use crate::util::errors::wrap_io;
 use crate::util::FedResult;
+use crate::util::progress::Progress;
 
 pub fn open_reader(file: &FileInfo, verbosity: Verbosity) -> FedResult<BufReader<File>> {
     match File::open(file.in_path) {
@@ -23,6 +24,7 @@ pub fn read_file(
     path_str: &str,
     size_kb: u64,
     verbosity: Verbosity,
+    progress: &mut impl Progress,
 ) -> FedResult<Vec<u8>> {
     if verbosity.debug() {
         println!("reading {}", path_str);

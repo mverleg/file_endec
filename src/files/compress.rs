@@ -6,6 +6,7 @@ use ::lazy_static::lazy_static;
 use crate::header::CompressionAlg;
 use crate::util::FedResult;
 use crate::util::progress::Progress;
+use crate::files::file_meta::FileInfo;
 
 lazy_static! {
     static ref BROTLI_CONFIG: BrotliEncoderParams = {
@@ -15,14 +16,17 @@ lazy_static! {
     };
 }
 
-pub fn compress_file(
+pub fn compress_file<'a>(
     data: Vec<u8>,
     alg: &Option<CompressionAlg>,
-    progress: &mut impl Progress,
+    start_progress: &mut impl FnMut(&CompressionAlg)
 ) -> FedResult<Vec<u8>> {
     match alg {
-        Some(alg) => match alg {
-            CompressionAlg::Brotli => brotli_compress(&data),
+        Some(alg) => {
+            start_progress(&alg);
+            match alg {
+                CompressionAlg::Brotli => brotli_compress(&data),
+            }
         },
         None => Ok(data),
     }

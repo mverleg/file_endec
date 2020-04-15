@@ -47,77 +47,77 @@ pub fn validate_checksum_matches(
 }
 
 pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
-    if config.delete_input() {
-        unimplemented!("deleting input not implemented"); //TODO @mark
-    }
-    let files_info = inspect_files(
-        config.files(),
-        config.verbosity(),
-        config.overwrite(),
-        Extension::Strip,
-        config.output_dir(),
-    )?;
-    let _total_size_kb: u64 = files_info.iter().map(|inf| inf.size_kb).sum();
-    let mut key_cache: HashMap<Salt, StretchKey> = HashMap::new();
-    //TODO @mark: if I want to do time logging well, I need to scan headers to see how many salts
-    let mut checksum_failure_count = 0;
-    for file in &files_info {
-        let mut reader = open_reader(&file, config.verbosity())?;
-        let header = parse_header(&mut reader, config.verbosity().debug())?;
-        let version = header.version();
-        let salt = header.salt().clone();
-        let strategy = get_version_strategy(&version, config.debug())?;
-        let stretched_key = if let Some(sk) = key_cache.get(&salt) {
-            sk.clone()
-        } else {
-            let mut progress = LogProgress::new();
-            let sk = stretch_key(
-                config.raw_key(),
-                &salt,
-                strategy.stretch_count,
-                &strategy.key_hash_algorithms,
-                &mut progress,
-            );
-            key_cache.insert(salt.clone(), sk.clone());
-            sk
-        };
-        let data = read_file(
-            &mut reader,
-            &file.path_str(),
-            file.size_kb,
-            config.verbosity(),
-        )?;
-        let revealed = decrypt_file(data, &stretched_key, &salt, &strategy.symmetric_algorithms)?;
-        let big = decompress_file(revealed, &strategy.compression_algorithm)?;
-        let actual_checksum = calculate_checksum(&big);
-        if !validate_checksum_matches(
-            &actual_checksum,
-            header.checksum(),
-            config.verbosity(),
-            &file.path_str(),
-        ) {
-            checksum_failure_count += 1;
-        }
-        write_output_file(config, &file, &big, None)?;
-        if !config.quiet() {
-            println!(
-                "successfully decrypted '{}' to '{}' ({} kb)",
-                file.path_str(),
-                file.out_pth.to_string_lossy(),
-                big.len() / 1024,
-            );
-        }
-    }
-    if !config.quiet() {
-        println!("decrypted {} files", files_info.len());
-    }
-    if checksum_failure_count > 0 {
-        return Err(format!(
-            "there were {} files whose checksums did not match; they \
-        likely do not contain real data",
-            checksum_failure_count
-        ));
-    }
+    // if config.delete_input() {
+    //     unimplemented!("deleting input not implemented"); //TODO @mark
+    // }
+    // let files_info = inspect_files(
+    //     config.files(),
+    //     config.verbosity(),
+    //     config.overwrite(),
+    //     Extension::Strip,
+    //     config.output_dir(),
+    // )?;
+    // let _total_size_kb: u64 = files_info.iter().map(|inf| inf.size_kb).sum();
+    // let mut key_cache: HashMap<Salt, StretchKey> = HashMap::new();
+    // //TODO @mark: if I want to do time logging well, I need to scan headers to see how many salts
+    // let mut checksum_failure_count = 0;
+    // for file in &files_info {
+    //     let mut reader = open_reader(&file, config.verbosity())?;
+    //     let header = parse_header(&mut reader, config.verbosity().debug())?;
+    //     let version = header.version();
+    //     let salt = header.salt().clone();
+    //     let strategy = get_version_strategy(&version, config.debug())?;
+    //     let stretched_key = if let Some(sk) = key_cache.get(&salt) {
+    //         sk.clone()
+    //     } else {
+    //         let mut progress = LogProgress::new();
+    //         let sk = stretch_key(
+    //             config.raw_key(),
+    //             &salt,
+    //             strategy.stretch_count,
+    //             &strategy.key_hash_algorithms,
+    //             &mut progress,
+    //         );
+    //         key_cache.insert(salt.clone(), sk.clone());
+    //         sk
+    //     };
+    //     let data = read_file(
+    //         &mut reader,
+    //         &file.path_str(),
+    //         file.size_kb,
+    //         config.verbosity(),
+    //     )?;
+    //     let revealed = decrypt_file(data, &stretched_key, &salt, &strategy.symmetric_algorithms)?;
+    //     let big = decompress_file(revealed, &strategy.compression_algorithm)?;
+    //     let actual_checksum = calculate_checksum(&big);
+    //     if !validate_checksum_matches(
+    //         &actual_checksum,
+    //         header.checksum(),
+    //         config.verbosity(),
+    //         &file.path_str(),
+    //     ) {
+    //         checksum_failure_count += 1;
+    //     }
+    //     write_output_file(config, &file, &big, None)?;
+    //     if !config.quiet() {
+    //         println!(
+    //             "successfully decrypted '{}' to '{}' ({} kb)",
+    //             file.path_str(),
+    //             file.out_pth.to_string_lossy(),
+    //             big.len() / 1024,
+    //         );
+    //     }
+    // }
+    // if !config.quiet() {
+    //     println!("decrypted {} files", files_info.len());
+    // }
+    // if checksum_failure_count > 0 {
+    //     return Err(format!(
+    //         "there were {} files whose checksums did not match; they \
+    //     likely do not contain real data",
+    //         checksum_failure_count
+    //     ));
+    // }
     Ok(())
 }
 

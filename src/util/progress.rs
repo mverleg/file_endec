@@ -114,7 +114,7 @@ impl  IndicatifProgress {
             let pb = ProgressBar::new(total_size);
             pb.set_style(ProgressStyle::default_bar()
                 // .template("[{elapsed}] {msg:25<} [{wide_bar:}] {percent:>2}%")
-                .template("[{wide_bar:}] {percent:>2}% {msg:25<}")
+                .template("[{wide_bar:}] {percent:>2}% {msg:<32!}")
                 .progress_chars("=> "));
             pb.tick();
             pb
@@ -158,7 +158,7 @@ impl Progress for IndicatifProgress {
 
     fn finish(&mut self) {
         if let Some(data) = &mut self.data {
-            debug_assert!(data.todo.is_empty());
+            assert!(data.todo.is_empty());
             data.next_step(Some(TaskInfo {
                 text: "finished".to_owned(),
                 size: 0,

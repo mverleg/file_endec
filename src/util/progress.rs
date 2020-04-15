@@ -144,8 +144,16 @@ impl Progress for IndicatifProgress {
     fn start_stretch_alg(&mut self, alg: &KeyHashAlg) {
         if let Some(ref mut data) = self.data {
             let typ = TaskType::Stretch(alg.clone());
-            let info = data.todo.remove(&typ);
-            data.next_step(info);
+            match data.todo.remove(&typ) {
+                // This is the first key stretch; use normal progress.
+                Some(info) => data.next_step(Some(info)),
+                // For decryption there could be an unpredictable amount of key stretching
+                // because it is not known beforehand which salts are used. Use size 0.
+                None => data.next_step(Some(TaskInfo {
+                    text: format!("{} key stretch (again)", &alg),
+                    size: 0,
+                })),
+            }
         }
     }
 

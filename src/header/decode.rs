@@ -95,6 +95,14 @@ pub fn parse_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<Head
     Header::new(version, salt, checksum)
 }
 
+pub fn skip_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<()> {
+    let mut line = String::new();
+    while !line.starts_with(HEADER_DATA_MARKER) {
+        read_line(reader, &mut line, verbose)?;
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use ::std::io::BufReader;
@@ -107,6 +115,7 @@ mod tests {
     use crate::key::salt::Salt;
 
     use super::parse_header;
+    use crate::header::decode::skip_header;
 
     #[test]
     fn stop_read_after_header() {
@@ -115,7 +124,23 @@ mod tests {
             "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\
             \ncheck xx_sha256 Ag\ndata:\nthis is the data and should not be read!\nthe end of the data";
         let mut reader = BufReader::new(input.as_bytes());
-        let _header = parse_header(&mut reader, true).unwrap();
+        parse_header(&mut reader, true).unwrap();
+        let mut remainder = vec![];
+        reader.read_to_end(&mut remainder).unwrap();
+        let expected = "this is the data and should not be read!\nthe end of the data"
+            .as_bytes()
+            .to_owned();
+        assert_eq!(expected, remainder);
+    }
+
+    #[test]
+    fn skip_header_position() {
+        let _version = Version::parse("1.0.0").unwrap();
+        let input =
+            "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\
+            \ncheck xx_sha256 Ag\ndata:\nthis is the data and should not be read!\nthe end of the data";
+        let mut reader = BufReader::new(input.as_bytes());
+        skip_header(&mut reader, true).unwrap();
         let mut remainder = vec![];
         reader.read_to_end(&mut remainder).unwrap();
         let expected = "this is the data and should not be read!\nthe end of the data"

@@ -18,6 +18,8 @@ use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::decrypt::decrypt_file;
 use crate::util::progress::{LogProgress, IndicatifProgress, Progress};
 pub use crate::util::FedResult;
+use crate::header::decode::skip_header;
+use crate::files::read_headers::read_file_strategies;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,
@@ -50,20 +52,22 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
     if config.delete_input() {
         unimplemented!("deleting input not implemented"); //TODO @mark
     }
-    let files_info = inspect_files(
-        config.files(),
-        config.verbosity(),
-        config.overwrite(),
-        Extension::Strip,
-        config.output_dir(),
+    let files_info = read_file_strategies(
+        &inspect_files(
+            config.files(),
+            config.verbosity(),
+            config.overwrite(),
+            Extension::Strip,
+            config.output_dir(),
+        )?
     )?;
-    let mut progress = IndicatifProgress::new(&config.verbosity(), &strategy, &files_info);
+    let mut progress = IndicatifProgress::new_one_strategy(&file_strat, &config.verbosity());
     let mut key_cache: HashMap<Salt, StretchKey> = HashMap::new();
     //TODO @mark: if I want to do time logging well, I need to scan headers to see how many salts
     let mut checksum_failure_count = 0;
-    for file in &files_info {
-        let mut reader = open_reader(&file, config.verbosity())?;
-        let header = parse_header(&mut reader, config.verbosity().debug())?;
+    for file_strat in &files_info {
+        let mut reader = open_reader(&file.file, config.verbosity())?;
+        skip_header(&mut reader, config.verbosity().debug())?;
         let version = header.version();
         let salt = header.salt().clone();
         let strategy = get_version_strategy(&version, config.debug())?;

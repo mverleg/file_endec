@@ -8,6 +8,7 @@ use ::indicatif::ProgressStyle;
 use crate::files::file_meta::FileInfo;
 use crate::header::{CompressionAlg, KeyHashAlg, Strategy, SymmetricEncryptionAlg};
 use crate::Verbosity;
+use crate::files::read_headers::FileStrategy;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum TaskType {
@@ -68,7 +69,12 @@ pub struct IndicatifProgress {
 }
 
 impl IndicatifProgress {
-    pub fn new(verbosity: &Verbosity, strategy: &Strategy, files: &[FileInfo]) -> Self {
+    pub fn new_one_strategy(strategy: &Strategy, files: &[FileInfo], verbosity: &Verbosity) -> Self {
+
+        return new_file_strategy();
+    }
+
+    pub fn new_file_strategy(file_strategies: &[FileStrategy], verbosity: &Verbosity) -> Self {
         if verbosity.quiet() {
             return IndicatifProgress { data: None };
         }

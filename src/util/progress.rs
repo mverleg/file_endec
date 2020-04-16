@@ -17,6 +17,7 @@ enum TaskType {
     Symmetric(SymmetricEncryptionAlg, PathBuf),
     Checksum(PathBuf),
     Write(PathBuf),
+    DetailsPending(PathBuf)
 }
 
 #[derive(Debug)]
@@ -68,7 +69,50 @@ pub struct IndicatifProgress {
 }
 
 impl IndicatifProgress {
-    pub fn new(verbosity: &Verbosity, strategy: &Strategy, files: &[FileInfo]) -> Self {
+    fn tasks_from_strategy(&mut self, file: &FileInfo) {
+        todo.insert(
+            TaskType::Read(file.in_path.to_owned()),
+            TaskInfo {
+                text: format!("read {}", &file.file_name()),
+                size: file.size_kb,
+            },
+        );
+        todo.insert(
+            TaskType::Write(file.in_path.to_owned()),
+            TaskInfo {
+                text: format!("write {}", &file.file_name()),
+                size: file.size_kb * 2,
+            },
+        );
+        for alg in &strategy.compression_algorithm {
+            todo.insert(
+                TaskType::Compress(alg.clone(), file.in_path.to_owned()),
+                TaskInfo {
+                    text: format!("{} {}", &alg, &file.file_name()),
+                    size: file.size_kb * 3,
+                },
+            );
+        }
+        for alg in &strategy.symmetric_algorithms {
+            todo.insert(
+                TaskType::Symmetric(alg.clone(), file.in_path.to_owned()),
+                TaskInfo {
+                    text: format!("{} {}", &alg, &file.file_name()),
+                    size: file.size_kb * 3,
+                },
+            );
+        }
+        todo.insert(
+            TaskType::Checksum(file.in_path.to_owned()),
+            TaskInfo {
+                text: format!("checksum {}", &file.file_name()),
+                size: file.size_kb,
+            },
+        );
+        //TODO @mark: make sure todos added here add up to the same total as the pending task
+    }
+
+    pub fn new(verbosity: &Verbosity, strategy: Option<&Strategy>, files: &[FileInfo]) -> Self {
         if verbosity.quiet() {
             return IndicatifProgress { data: None };
         }
@@ -85,45 +129,8 @@ impl IndicatifProgress {
             );
         }
         for file in files {
-            todo.insert(
-                TaskType::Read(file.in_path.to_owned()),
-                TaskInfo {
-                    text: format!("read {}", &file.file_name()),
-                    size: file.size_kb,
-                },
-            );
-            todo.insert(
-                TaskType::Write(file.in_path.to_owned()),
-                TaskInfo {
-                    text: format!("write {}", &file.file_name()),
-                    size: file.size_kb * 2,
-                },
-            );
-            for alg in &strategy.compression_algorithm {
-                todo.insert(
-                    TaskType::Compress(alg.clone(), file.in_path.to_owned()),
-                    TaskInfo {
-                        text: format!("{} {}", &alg, &file.file_name()),
-                        size: file.size_kb * 3,
-                    },
-                );
-            }
-            for alg in &strategy.symmetric_algorithms {
-                todo.insert(
-                    TaskType::Symmetric(alg.clone(), file.in_path.to_owned()),
-                    TaskInfo {
-                        text: format!("{} {}", &alg, &file.file_name()),
-                        size: file.size_kb * 3,
-                    },
-                );
-            }
-            todo.insert(
-                TaskType::Checksum(file.in_path.to_owned()),
-                TaskInfo {
-                    text: format!("checksum {}", &file.file_name()),
-                    size: file.size_kb,
-                },
-            );
+            // Add 'pending' tasks, because for decryption, breakup per task isn't known in advance.
+
         }
         let total_size = todo.iter().map(|task| task.1.size).sum();
         let bar = {
@@ -137,7 +144,7 @@ impl IndicatifProgress {
             pb.tick();
             pb
         };
-        IndicatifProgress {
+        let mut progress = IndicatifProgress {
             data: Some(ProgressData {
                 bar,
                 current: TaskInfo {
@@ -146,7 +153,15 @@ impl IndicatifProgress {
                 },
                 todo,
             }),
+        };
+        if let Some(strat) = strategy {
+            // For encryption, the strategy is known beforehand, so break up
+            // pending todos into detailed tasks immediately.
+            for file in files {
+                progress.tasks_from_strategy(&file);
+            }
         }
+        progress
     }
 }
 

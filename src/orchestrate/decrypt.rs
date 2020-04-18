@@ -68,8 +68,8 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
     for file_strat in &files_info {
         let mut reader = open_reader(&file_strat.file, config.verbosity())?;
         skip_header(&mut reader, config.verbosity().debug())?;
-        let version = file_strat.strategy.version();
-        let salt = file_strat.strategy.salt().clone();
+        let version = file_strat.header.version();
+        let salt = file_strat.header.salt().clone();
         let strategy = get_version_strategy(&version, config.debug())?;
         let stretched_key = if let Some(sk) = key_cache.get(&salt) {
             sk.clone()
@@ -87,33 +87,33 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
         let data = read_file(
             &mut reader,
             &file_strat.file.path_str(),
-            file.size_kb,
+            file_strat.file.size_kb,
             config.verbosity(),
-            &mut || progress.start_read_for_file(file)
+            &mut || progress.start_read_for_file(&file_strat.file)
         )?;
         let revealed = decrypt_file(data, &stretched_key, &salt, &strategy.symmetric_algorithms)?;
         let big = decompress_file(revealed, &strategy.compression_algorithm)?;
-        let actual_checksum = calculate_checksum(&big, &mut || progress.start_checksum_for_file(&file));
+        let actual_checksum = calculate_checksum(&big, &mut || progress.start_checksum_for_file(&file_strat.file));
         if !validate_checksum_matches(
             &actual_checksum,
-            file_strat.strategy.checksum(),
+            file_strat.header.checksum(),
             config.verbosity(),
-            &file.path_str(),
+            &file_strat.file.path_str(),
         ) {
             checksum_failure_count += 1;
         }
         write_output_file(
             config,
-            &file,
+            &file_strat.file,
             &big,
             None,
-            &mut || progress.start_write_for_file(file)
+            &mut || progress.start_write_for_file(&file_strat.file)
         )?;
         if !config.quiet() {
             println!(
                 "successfully decrypted '{}' to '{}' ({} kb)",
-                file.path_str(),
-                file.out_pth.to_string_lossy(),
+                &file_strat.file.path_str(),
+                &file_strat.file.out_pth.to_string_lossy(),
                 big.len() / 1024,
             );
         }

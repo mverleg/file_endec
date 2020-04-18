@@ -74,7 +74,7 @@ impl IndicatifProgress {
             return IndicatifProgress { data: None };
         }
         let mut todo = HashMap::new();
-        for alg in &strategy.key_hash_algorithms {
+        for alg in &file_strat.strategy.key_hash_algorithms {
             //strategy.stretch_count * RATIO_STRETCH_VS_KILOBYTE;
             todo.insert(
                 TaskType::Stretch(alg.clone()),

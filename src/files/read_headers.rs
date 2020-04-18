@@ -15,7 +15,7 @@ impl <'a> FileStrategy<'a> {
         header: Header,
         verbosity: &Verbosity,
     ) -> FedResult<Self> {
-        strategy = get_version_strategy(header.version(), verbosity.debug())?;
+        let strategy = get_version_strategy(header.version(), verbosity.debug())?;
         Ok(FileStrategy {
             file,
             header,

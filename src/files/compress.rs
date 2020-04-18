@@ -3,7 +3,6 @@ use ::std::io::Read;
 use ::brotli::enc::BrotliEncoderParams;
 use ::lazy_static::lazy_static;
 
-use crate::files::file_meta::FileInfo;
 use crate::header::CompressionAlg;
 use crate::util::FedResult;
 

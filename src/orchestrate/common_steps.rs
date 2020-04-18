@@ -2,11 +2,10 @@ use ::std::fs::File;
 use ::std::io::{BufReader, Read};
 
 use crate::files::file_meta::FileInfo;
-use crate::header::strategy::Verbosity;
 use crate::header::HEADER_MARKER;
-use crate::Progress;
-use crate::util::FedResult;
+use crate::header::strategy::Verbosity;
 use crate::util::errors::wrap_io;
+use crate::util::FedResult;
 
 pub fn open_reader(file: &FileInfo, verbosity: Verbosity) -> FedResult<BufReader<File>> {
     match File::open(file.in_path) {

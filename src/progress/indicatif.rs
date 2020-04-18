@@ -51,7 +51,7 @@ impl ProgressData {
 
 impl <'a> FileStrategy for (&'a FileInfo<'a>, &'a Strategy) {
 
-    fn file(&self) -> &FileInfo<'a> {
+    fn file(&self) -> &FileInfo {
         self.0
     }
 
@@ -151,14 +151,14 @@ impl IndicatifProgress {
     }
 
     pub fn new_dec_strategy(file_strategies: &[FileHeader], verbosity: &Verbosity) -> Self {
-        self.new_file_strategy(false, file_strategies, verbosity)
+        IndicatifProgress::new_file_strategy(false, file_strategies, verbosity)
     }
 
     pub fn new_enc_strategy<'a>(strategy: &'a Strategy, files: &'a [FileInfo], verbosity: &Verbosity) -> Self {
         let file_strategies = files.iter()
             .map(|file| (file, strategy) )
             .collect();
-        self.new_file_strategy(true, file_strategies, verbosity)
+        IndicatifProgress::new_file_strategy(true, file_strategies, verbosity)
     }
 }
 

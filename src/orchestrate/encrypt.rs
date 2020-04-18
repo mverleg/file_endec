@@ -4,7 +4,7 @@ use crate::files::compress::compress_file;
 use crate::files::file_meta::inspect_files;
 use crate::files::write_output::write_output_file;
 use crate::header::strategy::get_current_version_strategy;
-use crate::header::{CompressionAlg, Header};
+use crate::header::Header;
 use crate::key::stretch::stretch_key;
 use crate::key::Salt;
 use crate::orchestrate::common_steps::{open_reader, read_file};
@@ -34,7 +34,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
         &salt,
         strategy.stretch_count,
         &strategy.key_hash_algorithms,
-        &mut |alg| progress.start_stretch_alg(&alg, Some(&file))
+        &mut |alg| progress.start_stretch_alg(&alg, None)
     );
     for file in &files_info {
         let mut reader = open_reader(&file, config.verbosity())?;

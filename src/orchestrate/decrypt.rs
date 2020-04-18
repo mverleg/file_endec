@@ -8,14 +8,12 @@ use crate::files::compress::decompress_file;
 use crate::files::file_meta::inspect_files;
 use crate::files::read_headers::read_file_strategies;
 use crate::files::write_output::write_output_file;
-use crate::header::{get_version_strategy, parse_header};
 use crate::header::decode::skip_header;
 use crate::key::key::StretchKey;
 use crate::key::Salt;
 use crate::key::stretch::stretch_key;
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::progress::indicatif::IndicatifProgress;
-use crate::progress::log::LogProgress;
 use crate::progress::Progress;
 use crate::symmetric::decrypt::decrypt_file;
 
@@ -78,9 +76,9 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
             let sk = stretch_key(
                 config.raw_key(),
                 &salt,
-                strategy.stretch_count,
-                &strategy.key_hash_algorithms,
-                &mut progress,
+                file_strat.strategy.stretch_count,
+                &file_strat.strategy.key_hash_algorithms,
+                &mut |alg| progress.start_stretch_alg(&alg, Some(&file_strat.file))
             );
             key_cache.insert(salt.clone(), sk.clone());
             sk

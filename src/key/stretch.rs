@@ -3,7 +3,6 @@ use crate::key::hash::hash;
 use crate::key::key::StretchKey;
 use crate::key::Key;
 use crate::key::Salt;
-use crate::progress::Progress;
 
 pub fn stretch_key<'a>(
     raw_key: &Key,
@@ -31,8 +30,6 @@ mod tests {
     #[cfg(not(debug_assertions))]
     use crate::header::strategy::get_current_version_strategy;
 
-    use crate::progress::log::LogProgress;
-
     #[cfg(not(debug_assertions))]
     use super::*;
 
@@ -40,13 +37,12 @@ mod tests {
     #[test]
     fn stratch_test_password() {
         let strat = get_current_version_strategy(true);
-        let mut progress = LogProgress::new();
         stretch_key(
             &Key::new(&"MY secret p@ssw0rd"),
             &Salt::fixed_for_test(123_456_789),
             strat.stretch_count,
             &strat.key_hash_algorithms,
-            &mut progress,
+            &mut |alg| (),
         );
     }
 

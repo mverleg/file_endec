@@ -1,16 +1,6 @@
-use ::std::collections::HashMap;
-use ::std::mem;
-use ::std::path::PathBuf;
-
-use ::indicatif::ProgressBar;
-use ::indicatif::ProgressStyle;
-
 use crate::files::file_meta::FileInfo;
-use crate::files::read_headers::FileHeader;
-use crate::files::read_headers::FileStrategy;
-use crate::header::{CompressionAlg, KeyHashAlg, Strategy, SymmetricEncryptionAlg};
-use crate::Verbosity;
 use crate::progress::Progress;
+use crate::header::{SymmetricEncryptionAlg, CompressionAlg, KeyHashAlg};
 
 pub struct SilentProgress {}
 

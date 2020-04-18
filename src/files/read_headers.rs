@@ -35,7 +35,7 @@ pub trait FileStrategy {
 
 impl <'a> FileStrategy for FileHeader<'a> {
 
-    fn file(&self) -> &FileInfo<'a> {
+    fn file(&self) -> &FileInfo {
         self.file
     }
 

@@ -105,7 +105,7 @@ mod tests {
     use crate::files::mockfile::generate_test_file_content_for_test;
 
     use super::*;
-    use crate::progress::{log::LogProgress, silent::SilentProgress};
+    use crate::progress::silent::SilentProgress;
 
     #[test]
     fn parse() {

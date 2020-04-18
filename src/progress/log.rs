@@ -1,15 +1,5 @@
-use ::std::collections::HashMap;
-use ::std::mem;
-use ::std::path::PathBuf;
-
-use ::indicatif::ProgressBar;
-use ::indicatif::ProgressStyle;
-
 use crate::files::file_meta::FileInfo;
-use crate::files::read_headers::FileHeader;
-use crate::files::read_headers::FileStrategy;
-use crate::header::{CompressionAlg, KeyHashAlg, Strategy, SymmetricEncryptionAlg};
-use crate::Verbosity;
+use crate::header::{CompressionAlg, KeyHashAlg, SymmetricEncryptionAlg};
 use crate::progress::Progress;
 
 pub struct LogProgress {
@@ -32,7 +22,11 @@ impl LogProgress {
 
 impl Progress for LogProgress {
     fn start_stretch_alg(&mut self, alg: &KeyHashAlg, file: Option<&FileInfo>) {
-        self.next(format!("stretching key for {} using {}", file.file_name(), alg));
+        if let Some(file) = file {
+            self.next(format!("stretching key for {} using {}", file.file_name(), alg));
+        } else {
+            self.next(format!("stretching key using {}", alg));
+        }
     }
 
     fn start_read_for_file(&mut self, file: &FileInfo) {

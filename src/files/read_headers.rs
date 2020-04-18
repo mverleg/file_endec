@@ -1,25 +1,29 @@
 use crate::files::file_meta::FileInfo;
-use crate::header::Strategy;
-use crate::FedResult;
+use crate::header::{Strategy, Header, get_version_strategy};
+use crate::{FedResult, Verbosity};
 
 #[derive(Debug)]
 pub struct FileStrategy<'a> {
-    info: &'a FileInfo<'a>,
-    strategy: &'a Strategy,
+    pub file: &'a FileInfo<'a>,
+    pub header: Header,
+    pub strategy: &'a Strategy,
 }
 
 impl <'a> FileStrategy<'a> {
     pub fn new(
-        info: &'a FileInfo<'a>,
-        strategy: &'a Strategy,
-    ) -> Self {
-        FileStrategy {
-            info,
+        file: &'a FileInfo<'a>,
+        header: Header,
+        verbosity: &Verbosity,
+    ) -> FedResult<Self> {
+        strategy = get_version_strategy(header.version(), verbosity.debug())?;
+        Ok(FileStrategy {
+            file,
+            header,
             strategy,
-        }
+        })
     }
 }
 
 pub fn read_file_strategies<'a>(files: &'a [FileInfo]) -> FedResult<Vec<FileStrategy<'a>>> {
-    unimplemented!()
+    unimplemented!()  //TODO @mark:
 }

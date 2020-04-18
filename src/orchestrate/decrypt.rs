@@ -61,15 +61,15 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
             config.output_dir(),
         )?
     )?;
-    let mut progress = IndicatifProgress::new_file_strategy(&file_strat, &config.verbosity());
+    let mut progress = IndicatifProgress::new_file_strategy(&files_info, &config.verbosity());
     let mut key_cache: HashMap<Salt, StretchKey> = HashMap::new();
     //TODO @mark: if I want to do time logging well, I need to scan headers to see how many salts
     let mut checksum_failure_count = 0;
     for file_strat in &files_info {
-        let mut reader = open_reader(&file.file, config.verbosity())?;
+        let mut reader = open_reader(&file_strat.file, config.verbosity())?;
         skip_header(&mut reader, config.verbosity().debug())?;
-        let version = header.version();
-        let salt = header.salt().clone();
+        let version = file_strat.strategy.version();
+        let salt = file_strat.strategy.salt().clone();
         let strategy = get_version_strategy(&version, config.debug())?;
         let stretched_key = if let Some(sk) = key_cache.get(&salt) {
             sk.clone()
@@ -86,7 +86,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
         };
         let data = read_file(
             &mut reader,
-            &file.path_str(),
+            &file_strat.file.path_str(),
             file.size_kb,
             config.verbosity(),
             &mut || progress.start_read_for_file(file)
@@ -96,7 +96,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
         let actual_checksum = calculate_checksum(&big, &mut || progress.start_checksum_for_file(&file));
         if !validate_checksum_matches(
             &actual_checksum,
-            header.checksum(),
+            file_strat.strategy.checksum(),
             config.verbosity(),
             &file.path_str(),
         ) {

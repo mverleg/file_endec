@@ -152,7 +152,7 @@ impl IndicatifProgress {
 
     pub fn new_one_strategy<'a>(strategy: &'a Strategy, files: &'a [FileInfo], verbosity: &Verbosity) -> Self {
         let file_strategies = files.iter()
-            .map(|file| FileStrategy::new(file, strategy))
+            .map(|file| FileStrategy::new(file, strategy) )
             .collect();
         new_file_strategy(file_strategies, verbosity)
     }

@@ -71,58 +71,58 @@ impl IndicatifProgress {
             return IndicatifProgress { data: None };
         }
         let mut todo = HashMap::new();
-        for file in files {
-            for alg in &file_strat.strategy.key_hash_algorithms {
+        for file_strat in file_strategies {
+            for alg in &file_strat.strategy().key_hash_algorithms {
                 let typ = if is_enc {
                     TaskType::Stretch(alg.clone(), None)
                 } else {
-                    TaskType::Stretch(alg.clone(), Some(file.in_path.to_owned()))
+                    TaskType::Stretch(alg.clone(), Some(file_strat.file().in_path.to_owned()))
                 };
                 todo.insert(
                     typ,
                     TaskInfo {
                         text: format!("{} key stretch", &alg),
-                        size: strategy.stretch_count * 6,
+                        size: file_strat.strategy().stretch_count * 6,
                     },
                 );
             }
             todo.insert(
-                TaskType::Read(file.in_path.to_owned()),
+                TaskType::Read(file_strat.file().in_path.to_owned()),
                 TaskInfo {
-                    text: format!("read {}", &file.file_name()),
-                    size: file.size_kb,
+                    text: format!("read {}", &file_strat.file().file_name()),
+                    size: file_strat.file().size_kb,
                 },
             );
             todo.insert(
-                TaskType::Write(file.in_path.to_owned()),
+                TaskType::Write(file_strat.file().in_path.to_owned()),
                 TaskInfo {
-                    text: format!("write {}", &file.file_name()),
-                    size: file.size_kb * 2,
+                    text: format!("write {}", &file_strat.file().file_name()),
+                    size: file_strat.file().size_kb * 2,
                 },
             );
-            for alg in &strategy.compression_algorithm {
+            for alg in &file_strat.strategy().compression_algorithm {
                 todo.insert(
-                    TaskType::Compress(alg.clone(), file.in_path.to_owned()),
+                    TaskType::Compress(alg.clone(), file_strat.file().in_path.to_owned()),
                     TaskInfo {
-                        text: format!("{} {}", &alg, &file.file_name()),
-                        size: file.size_kb * 3,
+                        text: format!("{} {}", &alg, &file_strat.file().file_name()),
+                        size: file_strat.file().size_kb * 3,
                     },
                 );
             }
-            for alg in &strategy.symmetric_algorithms {
+            for alg in &file_strat.strategy().symmetric_algorithms {
                 todo.insert(
-                    TaskType::Symmetric(alg.clone(), file.in_path.to_owned()),
+                    TaskType::Symmetric(alg.clone(), file_strat.file().in_path.to_owned()),
                     TaskInfo {
-                        text: format!("{} {}", &alg, &file.file_name()),
-                        size: file.size_kb * 3,
+                        text: format!("{} {}", &alg, &file_strat.file().file_name()),
+                        size: file_strat.file().size_kb * 3,
                     },
                 );
             }
             todo.insert(
-                TaskType::Checksum(file.in_path.to_owned()),
+                TaskType::Checksum(file_strat.file().in_path.to_owned()),
                 TaskInfo {
-                    text: format!("checksum {}", &file.file_name()),
-                    size: file.size_kb,
+                    text: format!("checksum {}", &file_strat.file().file_name()),
+                    size: file_strat.file().size_kb,
                 },
             );
         }
@@ -155,10 +155,10 @@ impl IndicatifProgress {
     }
 
     pub fn new_enc_strategy<'a>(strategy: &'a Strategy, files: &'a [FileInfo], verbosity: &Verbosity) -> Self {
-        let file_strategies = files.iter()
-            .map(|file| (file, strategy) )
+        let file_strategies: Vec<_> = files.iter()
+            .map(|file| (file, strategy))
             .collect();
-        IndicatifProgress::new_file_strategy(true, file_strategies, verbosity)
+        IndicatifProgress::new_file_strategy(true, &file_strategies, verbosity)
     }
 }
 

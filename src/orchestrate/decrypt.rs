@@ -53,20 +53,19 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
     if config.delete_input() {
         unimplemented!("deleting input not implemented"); //TODO @mark
     }
-    let files_info = read_file_strategies(
-        &inspect_files(
-            config.files(),
-            config.verbosity(),
-            config.overwrite(),
-            Extension::Strip,
-            config.output_dir(),
-        )?
+    let files_info = inspect_files(
+        config.files(),
+        config.verbosity(),
+        config.overwrite(),
+        Extension::Strip,
+        config.output_dir(),
     )?;
-    let mut progress = IndicatifProgress::new_dec_strategy(&files_info, &config.verbosity());
+    let files_strats = read_file_strategies(&files_info)?;
+    let mut progress = IndicatifProgress::new_dec_strategy(&files_strats, &config.verbosity());
     let mut key_cache: HashMap<Salt, StretchKey> = HashMap::new();
     //TODO @mark: if I want to do time logging well, I need to scan headers to see how many salts
     let mut checksum_failure_count = 0;
-    for file_strat in &files_info {
+    for file_strat in &files_strats {
         let mut reader = open_reader(&file_strat.file, config.verbosity())?;
         skip_header(&mut reader, config.verbosity().debug())?;
         let salt = file_strat.header.salt().clone();
@@ -90,8 +89,8 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file)
         )?;
-        let revealed = decrypt_file(data, &stretched_key, &salt, &strategy.symmetric_algorithms)?;
-        let big = decompress_file(revealed, &strategy.compression_algorithm)?;
+        let revealed = decrypt_file(data, &stretched_key, &salt, &file_strat.strategy.symmetric_algorithms)?;
+        let big = decompress_file(revealed, &file_strat.strategy.compression_algorithm)?;
         let actual_checksum = calculate_checksum(&big, &mut || progress.start_checksum_for_file(&file_strat.file));
         if !validate_checksum_matches(
             &actual_checksum,
@@ -119,7 +118,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
     }
     progress.finish();
     if !config.quiet() {
-        println!("decrypted {} files", files_info.len());
+        println!("decrypted {} files", files_strats.len());
     }
     if checksum_failure_count > 0 {
         return Err(format!(

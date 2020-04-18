@@ -15,8 +15,8 @@ impl LogProgress {
     }
 
     fn next(&mut self, next: String) {
-        println!("finish {}", &self.current);
-        println!("start  {}", &next);
+        println!("> finish {}", &self.current);
+        println!("< start  {}", &next);
         self.current = next;
     }
 }

@@ -12,7 +12,9 @@ use crate::progress::indicatif::IndicatifProgress;
 use crate::progress::Progress;
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
-use crate::{EncryptConfig, FedResult};
+use crate::{EncryptConfig, FedResult, Verbosity};
+use crate::progress::silent::SilentProgress;
+use crate::progress::log::LogProgress;
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     if config.delete_input() {
@@ -27,8 +29,11 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
         Extension::Add(config.output_extension()),
         config.output_dir(),
     )?;
-    let mut progress =
-        IndicatifProgress::new_enc_strategy(&strategy, &files_info, config.verbosity());
+    let mut progress: Box<dyn Progress> = match config.verbosity() {
+        Verbosity::Quiet => Box::new(SilentProgress::new()),
+        Verbosity::Normal => Box::new(IndicatifProgress::new_enc_strategy(&strategy, &files_info, config.verbosity())),
+        Verbosity::Debug => Box::new(LogProgress::new()),
+    };
     let salt = Salt::generate_random()?;
     let stretched_key = stretch_key(
         config.raw_key(),

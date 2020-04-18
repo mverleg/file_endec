@@ -11,6 +11,7 @@ use crate::files::read_headers::FileStrategy;
 use crate::header::{CompressionAlg, KeyHashAlg, Strategy, SymmetricEncryptionAlg};
 use crate::progress::Progress;
 use crate::Verbosity;
+use indicatif::ProgressDrawTarget;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum TaskType {
@@ -131,7 +132,7 @@ impl IndicatifProgress {
         }
         let total_size = todo.iter().map(|task| task.1.size).sum();
         let progress_bar = {
-            let pb = ProgressBar::new(total_size);
+            let pb = ProgressBar::with_draw_target(total_size, ProgressDrawTarget::stderr());
             pb.set_style(
                 ProgressStyle::default_bar()
                     // .template("[{elapsed}] {msg:25<} [{wide_bar:}] {percent:>2}%")
@@ -230,7 +231,6 @@ impl Progress for IndicatifProgress {
 
     fn finish(&mut self) {
         if let Some(data) = &mut self.data {
-            println!("{:?}", &data.todo); //TODO @mark: TEMPORARY! REMOVE THIS!
             assert!(data.todo.is_empty());
             data.next_step(Some(TaskInfo {
                 text: "finished".to_owned(),

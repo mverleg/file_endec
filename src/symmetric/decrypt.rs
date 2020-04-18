@@ -11,10 +11,12 @@ pub fn decrypt_file(
     key: &StretchKey,
     salt: &Salt,
     encrypt_algs: &[SymmetricEncryptionAlg],
+    start_progress: &mut impl FnMut(&SymmetricEncryptionAlg),
 ) -> FedResult<Vec<u8>> {
     assert!(!encrypt_algs.is_empty());
-    for encrypt_alg in encrypt_algs.iter().rev() {
-        data = match encrypt_alg {
+    for decrypt_alg in encrypt_algs.iter().rev() {
+        start_progress(decrypt_alg);
+        data = match decrypt_alg {
             SymmetricEncryptionAlg::Aes256 => decrypt_aes256(&data, key, salt)?,
             SymmetricEncryptionAlg::Twofish => decrypt_twofish(&data, key, salt)?,
         }

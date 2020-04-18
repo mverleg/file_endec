@@ -1,7 +1,7 @@
 use crate::files::file_meta::FileInfo;
-use crate::header::{Strategy, Header, get_version_strategy, parse_header};
-use crate::{FedResult, Verbosity};
 use crate::files::reading::open_reader;
+use crate::header::{get_version_strategy, parse_header, Header, Strategy};
+use crate::{FedResult, Verbosity};
 
 #[derive(Debug)]
 pub struct FileHeader<'a> {
@@ -10,12 +10,8 @@ pub struct FileHeader<'a> {
     pub strategy: &'a Strategy,
 }
 
-impl <'a> FileHeader<'a> {
-    pub fn new(
-        file: &'a FileInfo<'a>,
-        header: Header,
-        verbosity: Verbosity,
-    ) -> FedResult<Self> {
+impl<'a> FileHeader<'a> {
+    pub fn new(file: &'a FileInfo<'a>, header: Header, verbosity: Verbosity) -> FedResult<Self> {
         let strategy = get_version_strategy(header.version(), verbosity.debug())?;
         Ok(FileHeader {
             file,
@@ -25,21 +21,29 @@ impl <'a> FileHeader<'a> {
     }
 }
 
-pub fn read_file_strategies<'a>(files: &'a [FileInfo], verbosity: Verbosity) -> FedResult<Vec<FileHeader<'a>>> {
-    files.iter()
+pub fn read_file_strategies<'a>(
+    files: &'a [FileInfo],
+    verbosity: Verbosity,
+) -> FedResult<Vec<FileHeader<'a>>> {
+    files
+        .iter()
         .map(|fi| (fi, open_reader(&fi, verbosity)))
-        .map(|(fi, reader)| (fi, reader.and_then(|mut r| parse_header(&mut r, verbosity.debug()))))
+        .map(|(fi, reader)| {
+            (
+                fi,
+                reader.and_then(|mut r| parse_header(&mut r, verbosity.debug())),
+            )
+        })
         .map(|(fi, header)| header.and_then(|h| FileHeader::new(fi, h, verbosity)))
         .collect()
 }
 
 pub trait FileStrategy {
     fn file(&self) -> &FileInfo;
-    fn strategy(&self) -> & Strategy;
+    fn strategy(&self) -> &Strategy;
 }
 
-impl <'a> FileStrategy for FileHeader<'a> {
-
+impl<'a> FileStrategy for FileHeader<'a> {
     fn file(&self) -> &FileInfo {
         self.file
     }

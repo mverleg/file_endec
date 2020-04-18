@@ -1,5 +1,3 @@
-
-
 use crate::files::file_meta::FileInfo;
 use crate::header::{CompressionAlg, KeyHashAlg, SymmetricEncryptionAlg};
 

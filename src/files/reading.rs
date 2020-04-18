@@ -2,8 +2,8 @@ use ::std::fs::File;
 use ::std::io::{BufReader, Read};
 
 use crate::files::file_meta::FileInfo;
-use crate::header::HEADER_MARKER;
 use crate::header::strategy::Verbosity;
+use crate::header::HEADER_MARKER;
 use crate::util::errors::wrap_io;
 use crate::util::FedResult;
 

@@ -2,17 +2,17 @@ use crate::config::typ::{EndecConfig, Extension};
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::compress_file;
 use crate::files::file_meta::inspect_files;
+use crate::files::reading::{open_reader, read_file};
 use crate::files::write_output::write_output_file;
 use crate::header::strategy::get_current_version_strategy;
 use crate::header::Header;
 use crate::key::stretch::stretch_key;
 use crate::key::Salt;
-use crate::symmetric::encrypt::encrypt_file;
 use crate::progress::indicatif::IndicatifProgress;
 use crate::progress::Progress;
+use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
 use crate::{EncryptConfig, FedResult};
-use crate::files::reading::{read_file, open_reader};
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     if config.delete_input() {
@@ -27,14 +27,15 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
         Extension::Add(config.output_extension()),
         config.output_dir(),
     )?;
-    let mut progress = IndicatifProgress::new_enc_strategy(&strategy, &files_info, config.verbosity());
+    let mut progress =
+        IndicatifProgress::new_enc_strategy(&strategy, &files_info, config.verbosity());
     let salt = Salt::generate_random()?;
     let stretched_key = stretch_key(
         config.raw_key(),
         &salt,
         strategy.stretch_count,
         &strategy.key_hash_algorithms,
-        &mut |alg| progress.start_stretch_alg(&alg, None)
+        &mut |alg| progress.start_stretch_alg(&alg, None),
     );
     for file in &files_info {
         let mut reader = open_reader(&file, config.verbosity())?;
@@ -43,11 +44,12 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
             &file.path_str(),
             file.size_kb,
             config.verbosity(),
-            &mut || progress.start_read_for_file(&file)
+            &mut || progress.start_read_for_file(&file),
         )?;
         let checksum = calculate_checksum(&data, &mut || progress.start_checksum_for_file(&file));
-        let small = compress_file(data, &strategy.compression_algorithm,
-            &mut |alg| progress.start_compress_alg_for_file(&alg, &file))?;
+        let small = compress_file(data, &strategy.compression_algorithm, &mut |alg| {
+            progress.start_compress_alg_for_file(&alg, &file)
+        })?;
         let secret = encrypt_file(
             small,
             &stretched_key,
@@ -57,8 +59,9 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
         );
         let header = Header::new(version.clone(), salt.clone(), checksum)?;
         if !config.dry_run() {
-            write_output_file(config, &file, &secret, Some(&header),
-                &mut || progress.start_write_for_file(&file))?;
+            write_output_file(config, &file, &secret, Some(&header), &mut || {
+                progress.start_write_for_file(&file)
+            })?;
         } else if !config.quiet() {
             progress.start_write_for_file(&file);
             println!(

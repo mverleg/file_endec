@@ -38,9 +38,9 @@ mod files;
 mod header;
 mod key;
 mod orchestrate;
+mod progress;
 mod symmetric;
 mod util;
-mod progress;
 
 /// The demo used in this blog post:
 /// https://markv.nl/blog/symmetric-encryption-in-rust

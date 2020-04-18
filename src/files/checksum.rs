@@ -76,10 +76,7 @@ impl Display for Checksum {
     }
 }
 
-pub fn calculate_checksum(
-    data: &[u8],
-    start_progress: &mut impl FnMut(),
-) -> Checksum {
+pub fn calculate_checksum(data: &[u8], start_progress: &mut impl FnMut()) -> Checksum {
     start_progress();
     let mut hasher = XxHash64::with_seed(5_771_919_056_451_745_621);
     for b in data {

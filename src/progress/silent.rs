@@ -1,6 +1,6 @@
 use crate::files::file_meta::FileInfo;
+use crate::header::{CompressionAlg, KeyHashAlg, SymmetricEncryptionAlg};
 use crate::progress::Progress;
-use crate::header::{SymmetricEncryptionAlg, CompressionAlg, KeyHashAlg};
 
 pub struct SilentProgress {}
 

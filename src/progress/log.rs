@@ -24,17 +24,18 @@ impl LogProgress {
 impl Progress for LogProgress {
     fn start_stretch_alg(&mut self, alg: &KeyHashAlg, file: Option<&FileInfo>) {
         if let Some(file) = file {
-            self.next(format!("stretching key for {} using {}", file.file_name(), alg));
+            self.next(format!(
+                "stretching key for {} using {}",
+                file.file_name(),
+                alg
+            ));
         } else {
             self.next(format!("stretching key using {}", alg));
         }
     }
 
     fn start_read_for_file(&mut self, file: &FileInfo) {
-        self.next(format!(
-            "reading {}",
-            file.file_name()
-        ));
+        self.next(format!("reading {}", file.file_name()));
     }
 
     fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo) {
@@ -54,17 +55,11 @@ impl Progress for LogProgress {
     }
 
     fn start_checksum_for_file(&mut self, file: &FileInfo) {
-        self.next(format!(
-            "calculating checksum {}",
-            file.file_name()
-        ));
+        self.next(format!("calculating checksum {}", file.file_name()));
     }
 
     fn start_write_for_file(&mut self, file: &FileInfo) {
-        self.next(format!(
-            "writing {}",
-            file.file_name()
-        ));
+        self.next(format!("writing {}", file.file_name()));
     }
 
     fn finish(&mut self) {

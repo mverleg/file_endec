@@ -9,8 +9,8 @@ use crate::files::file_meta::FileInfo;
 use crate::files::read_headers::FileHeader;
 use crate::files::read_headers::FileStrategy;
 use crate::header::{CompressionAlg, KeyHashAlg, Strategy, SymmetricEncryptionAlg};
-use crate::Verbosity;
 use crate::progress::Progress;
+use crate::Verbosity;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum TaskType {
@@ -49,8 +49,7 @@ impl ProgressData {
     }
 }
 
-impl <'a> FileStrategy for (&'a FileInfo<'a>, &'a Strategy) {
-
+impl<'a> FileStrategy for (&'a FileInfo<'a>, &'a Strategy) {
     fn file(&self) -> &FileInfo {
         self.0
     }
@@ -66,7 +65,11 @@ pub struct IndicatifProgress {
 }
 
 impl IndicatifProgress {
-    fn new_file_strategy(is_enc: bool, file_strategies: &[impl FileStrategy], verbosity: Verbosity) -> Self {
+    fn new_file_strategy(
+        is_enc: bool,
+        file_strategies: &[impl FileStrategy],
+        verbosity: Verbosity,
+    ) -> Self {
         if verbosity.quiet() {
             return IndicatifProgress { data: None };
         }
@@ -154,10 +157,12 @@ impl IndicatifProgress {
         IndicatifProgress::new_file_strategy(false, file_strategies, verbosity)
     }
 
-    pub fn new_enc_strategy<'a>(strategy: &'a Strategy, files: &'a [FileInfo], verbosity: Verbosity) -> Self {
-        let file_strategies: Vec<_> = files.iter()
-            .map(|file| (file, strategy))
-            .collect();
+    pub fn new_enc_strategy<'a>(
+        strategy: &'a Strategy,
+        files: &'a [FileInfo],
+        verbosity: Verbosity,
+    ) -> Self {
+        let file_strategies: Vec<_> = files.iter().map(|file| (file, strategy)).collect();
         IndicatifProgress::new_file_strategy(true, &file_strategies, verbosity)
     }
 }
@@ -225,7 +230,7 @@ impl Progress for IndicatifProgress {
 
     fn finish(&mut self) {
         if let Some(data) = &mut self.data {
-            println!("{:?}", &data.todo);  //TODO @mark: TEMPORARY! REMOVE THIS!
+            println!("{:?}", &data.todo); //TODO @mark: TEMPORARY! REMOVE THIS!
             assert!(data.todo.is_empty());
             data.next_step(Some(TaskInfo {
                 text: "finished".to_owned(),

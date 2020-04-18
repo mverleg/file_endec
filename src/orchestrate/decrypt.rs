@@ -1,26 +1,26 @@
 use ::std::collections::HashMap;
 
-use crate::config::DecryptConfig;
 use crate::config::typ::{EndecConfig, Extension};
-use crate::files::Checksum;
+use crate::config::DecryptConfig;
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::decompress_file;
 use crate::files::file_meta::inspect_files;
 use crate::files::read_headers::read_file_strategies;
 use crate::files::write_output::write_output_file;
+use crate::files::Checksum;
 use crate::header::decode::skip_header;
 use crate::key::key::StretchKey;
-use crate::key::Salt;
 use crate::key::stretch::stretch_key;
+use crate::key::Salt;
 use crate::progress::Progress;
 use crate::symmetric::decrypt::decrypt_file;
 
 pub use crate::config::enc::EncryptConfig;
+use crate::files::reading::{open_reader, read_file};
 pub use crate::header::strategy::Verbosity;
 pub use crate::key::{Key, KeySource};
-pub use crate::util::FedResult;
-use crate::files::reading::{open_reader, read_file};
 use crate::progress::indicatif::IndicatifProgress;
+pub use crate::util::FedResult;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,
@@ -77,7 +77,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
                 &salt,
                 file_strat.strategy.stretch_count,
                 &file_strat.strategy.key_hash_algorithms,
-                &mut |alg| progress.start_stretch_alg(&alg, Some(&file_strat.file))
+                &mut |alg| progress.start_stretch_alg(&alg, Some(&file_strat.file)),
             );
             key_cache.insert(salt.clone(), sk.clone());
             sk
@@ -87,10 +87,20 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
             &file_strat.file.path_str(),
             file_strat.file.size_kb,
             config.verbosity(),
-            &mut || progress.start_read_for_file(&file_strat.file)
+            &mut || progress.start_read_for_file(&file_strat.file),
         )?;
-        let revealed = decrypt_file(data, &stretched_key, &salt, &file_strat.strategy.symmetric_algorithms)?;
-        let big = decompress_file(revealed, &file_strat.strategy.compression_algorithm)?;
+        let revealed = decrypt_file(
+            data,
+            &stretched_key,
+            &salt,
+            &file_strat.strategy.symmetric_algorithms,
+            &mut |alg| progress.start_sym_alg_for_file(alg, &file_strat.file)
+        )?;
+        let big = decompress_file(
+            revealed,
+            &file_strat.strategy.compression_algorithm,
+            &mut |alg| progress.start_compress_alg_for_file(alg, &file_strat.file)
+        )?;
         let actual_checksum = calculate_checksum(&big, &mut || progress.start_checksum_for_file(&file_strat.file));
         if !validate_checksum_matches(
             &actual_checksum,
@@ -100,13 +110,9 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
         ) {
             checksum_failure_count += 1;
         }
-        write_output_file(
-            config,
-            &file_strat.file,
-            &big,
-            None,
-            &mut || progress.start_write_for_file(&file_strat.file)
-        )?;
+        write_output_file(config, &file_strat.file, &big, None, &mut || {
+            progress.start_write_for_file(&file_strat.file)
+        })?;
         if !config.quiet() {
             println!(
                 "successfully decrypted '{}' to '{}' ({} kb)",

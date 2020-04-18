@@ -45,10 +45,17 @@ pub fn brotli_compress(data: &[u8]) -> FedResult<Vec<u8>> {
     }
 }
 
-pub fn decompress_file(data: Vec<u8>, alg: &Option<CompressionAlg>) -> FedResult<Vec<u8>> {
+pub fn decompress_file(
+    data: Vec<u8>,
+    alg: &Option<CompressionAlg>,
+    start_progress: &mut impl FnMut(&CompressionAlg),
+) -> FedResult<Vec<u8>> {
     match alg {
-        Some(alg) => match alg {
-            CompressionAlg::Brotli => brotli_decompress(&data),
+        Some(alg) => {
+            start_progress(alg);
+            match alg {
+                CompressionAlg::Brotli => brotli_decompress(&data),
+            }
         },
         None => Ok(data),
     }

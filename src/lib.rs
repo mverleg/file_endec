@@ -40,6 +40,7 @@ mod key;
 mod orchestrate;
 mod symmetric;
 mod util;
+mod progress;
 
 /// The demo used in this blog post:
 /// https://markv.nl/blog/symmetric-encryption-in-rust

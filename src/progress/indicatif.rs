@@ -48,24 +48,6 @@ impl ProgressData {
     }
 }
 
-pub trait Progress {
-    /// For encryption, stretching happens once, while for decryption, stretching pessimistically
-    /// happens per file. As such, provide `file` for decryption, but not for encryption.
-    fn start_stretch_alg(&mut self, alg: &KeyHashAlg, file: Option<&FileInfo>);
-
-    fn start_read_for_file(&mut self, file: &FileInfo);
-
-    fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo);
-
-    fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo);
-
-    fn start_checksum_for_file(&mut self, file: &FileInfo);
-
-    fn start_write_for_file(&mut self, file: &FileInfo);
-
-    fn finish(&mut self);
-}
-
 impl <'a> FileStrategy for (&'a FileInfo<'a>, &'a Strategy) {
 
     fn file(&self) -> &FileInfo<'a> {
@@ -244,94 +226,5 @@ impl Progress for IndicatifProgress {
             }));
             data.bar.finish();
         }
-    }
-}
-
-pub struct SilentProgress {}
-
-impl SilentProgress {
-    pub fn new() -> Self {
-        SilentProgress {}
-    }
-}
-
-impl Progress for SilentProgress {
-    fn start_stretch_alg(&mut self, _alg: &KeyHashAlg, _file: Option<&FileInfo>) {}
-
-    fn start_read_for_file(&mut self, _file: &FileInfo) {}
-
-    fn start_compress_alg_for_file(&mut self, _alg: &CompressionAlg, _file: &FileInfo) {}
-
-    fn start_sym_alg_for_file(&mut self, _alg: &SymmetricEncryptionAlg, _file: &FileInfo) {}
-
-    fn start_checksum_for_file(&mut self, _file: &FileInfo) {}
-
-    fn start_write_for_file(&mut self, _file: &FileInfo) {}
-
-    fn finish(&mut self) {}
-}
-
-pub struct LogProgress {
-    current: String,
-}
-
-impl LogProgress {
-    pub fn new() -> Self {
-        LogProgress {
-            current: "initializing".to_owned(),
-        }
-    }
-
-    fn next(&mut self, next: String) {
-        println!("finish {}", &self.current);
-        println!("start  {}", &next);
-        self.current = next;
-    }
-}
-
-impl Progress for LogProgress {
-    fn start_stretch_alg(&mut self, alg: &KeyHashAlg, file: Option<&FileInfo>) {
-        self.next(format!("stretching key for {} using {}", file.file_name(), alg));
-    }
-
-    fn start_read_for_file(&mut self, file: &FileInfo) {
-        self.next(format!(
-            "reading {}",
-            file.file_name()
-        ));
-    }
-
-    fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo) {
-        self.next(format!(
-            "(de)compressing {} using {}",
-            file.file_name(),
-            alg
-        ));
-    }
-
-    fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo) {
-        self.next(format!(
-            "start en/decrypting {} using {}",
-            file.file_name(),
-            alg
-        ));
-    }
-
-    fn start_checksum_for_file(&mut self, file: &FileInfo) {
-        self.next(format!(
-            "calculating checksum {}",
-            file.file_name()
-        ));
-    }
-
-    fn start_write_for_file(&mut self, file: &FileInfo) {
-        self.next(format!(
-            "writing {}",
-            file.file_name()
-        ));
-    }
-
-    fn finish(&mut self) {
-        self.next(format!("finishing up"));
     }
 }

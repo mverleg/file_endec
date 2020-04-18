@@ -47,9 +47,6 @@ pub fn determine_output_path(
 mod tests {
     use super::*;
 
-    //TODO @mark: tests for stripping extension
-    //TODO @mark: tests for stripping if no extension
-
     #[test]
     fn output_absolute_no_output_dir_add_ext() {
         let out_pth = determine_output_path(

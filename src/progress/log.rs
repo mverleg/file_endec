@@ -7,7 +7,6 @@ pub struct LogProgress {
 }
 
 impl LogProgress {
-    #[allow(dead_code)]
     pub fn new() -> Self {
         LogProgress {
             current: "initializing".to_owned(),

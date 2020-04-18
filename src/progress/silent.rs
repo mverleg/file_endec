@@ -5,7 +5,6 @@ use crate::progress::Progress;
 pub struct SilentProgress {}
 
 impl SilentProgress {
-    #[allow(dead_code)]
     pub fn new() -> Self {
         SilentProgress {}
     }

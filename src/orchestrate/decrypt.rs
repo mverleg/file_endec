@@ -63,7 +63,6 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
     let files_strats = read_file_strategies(&files_info, config.verbosity())?;
     let mut progress = IndicatifProgress::new_dec_strategy(&files_strats, config.verbosity());
     let mut key_cache: HashMap<Salt, StretchKey> = HashMap::new();
-    //TODO @mark: if I want to do time logging well, I need to scan headers to see how many salts
     let mut checksum_failure_count = 0;
     for file_strat in &files_strats {
         let mut reader = open_reader(&file_strat.file, config.verbosity())?;
@@ -220,8 +219,6 @@ mod tests {
         );
         let result = decrypt(&conf);
         assert!(&result.is_err());
-        // dbg!(&result.unwrap_err());  //TODO @mark: TEMPORARY! REMOVE THIS!
-        // panic!();
         assert!(&result.unwrap_err().contains("checksums did not match"));
     }
 

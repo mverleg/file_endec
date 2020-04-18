@@ -36,7 +36,6 @@ struct ProgressData {
     todo: HashMap<TaskType, TaskInfo>,
 }
 
-//TODO @mark: conflicts warnig logging vs progress
 impl ProgressData {
     fn next_step(&mut self, next_task: Option<TaskInfo>) {
         let mut task = next_task.expect("attempted to start progress on a task that is not known");

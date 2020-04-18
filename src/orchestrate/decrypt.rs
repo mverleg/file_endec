@@ -61,7 +61,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
             config.output_dir(),
         )?
     )?;
-    let mut progress = IndicatifProgress::new_one_strategy(&file_strat, &config.verbosity());
+    let mut progress = IndicatifProgress::new_file_strategy(&file_strat, &config.verbosity());
     let mut key_cache: HashMap<Salt, StretchKey> = HashMap::new();
     //TODO @mark: if I want to do time logging well, I need to scan headers to see how many salts
     let mut checksum_failure_count = 0;

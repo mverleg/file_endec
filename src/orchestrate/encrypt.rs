@@ -26,7 +26,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
         Extension::Add(config.output_extension()),
         config.output_dir(),
     )?;
-    let mut progress = IndicatifProgress::new_one_strategy(&config.verbosity(), &strategy, &files_info);
+    let mut progress = IndicatifProgress::new_one_strategy(&strategy, &files_info, &config.verbosity());
     let salt = Salt::generate_random()?;
     let stretched_key = stretch_key(
         config.raw_key(),

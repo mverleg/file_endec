@@ -69,11 +69,6 @@ pub struct IndicatifProgress {
 }
 
 impl IndicatifProgress {
-    pub fn new_one_strategy(strategy: &Strategy, files: &[FileInfo], verbosity: &Verbosity) -> Self {
-
-        return new_file_strategy();
-    }
-
     pub fn new_file_strategy(file_strategies: &[FileStrategy], verbosity: &Verbosity) -> Self {
         if verbosity.quiet() {
             return IndicatifProgress { data: None };
@@ -153,6 +148,13 @@ impl IndicatifProgress {
                 todo,
             }),
         }
+    }
+
+    pub fn new_one_strategy<'a>(strategy: &'a Strategy, files: &'a [FileInfo], verbosity: &Verbosity) -> Self {
+        let file_strategies = files.iter()
+            .map(|file| FileStrategy::new(file, strategy))
+            .collect();
+        new_file_strategy(file_strategies, verbosity)
     }
 }
 

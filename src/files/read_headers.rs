@@ -4,14 +4,14 @@ use crate::FedResult;
 
 #[derive(Debug)]
 pub struct FileStrategy<'a> {
-    info: FileInfo<'a>,
-    strategy: Strategy,
+    info: &'a FileInfo<'a>,
+    strategy: &'a Strategy,
 }
 
-impl FileStrategy {
+impl <'a> FileStrategy<'a> {
     pub fn new(
-        info: FileInfo,
-        strategy: Strategy,
+        info: &'a FileInfo<'a>,
+        strategy: &'a Strategy,
     ) -> Self {
         FileStrategy {
             info,
@@ -20,6 +20,6 @@ impl FileStrategy {
     }
 }
 
-pub fn read_file_strategies(files: &[FileInfo]) -> FedResult<Vec<FileStrategy>> {
+pub fn read_file_strategies<'a>(files: &'a [FileInfo]) -> FedResult<Vec<FileStrategy<'a>>> {
     unimplemented!()
 }

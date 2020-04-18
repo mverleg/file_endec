@@ -12,8 +12,6 @@ use crate::header::decode::skip_header;
 use crate::key::key::StretchKey;
 use crate::key::Salt;
 use crate::key::stretch::stretch_key;
-use crate::orchestrate::reading::{open_reader, read_file};
-use crate::progress::indicatif::IndicatifProgress;
 use crate::progress::Progress;
 use crate::symmetric::decrypt::decrypt_file;
 
@@ -21,6 +19,8 @@ pub use crate::config::enc::EncryptConfig;
 pub use crate::header::strategy::Verbosity;
 pub use crate::key::{Key, KeySource};
 pub use crate::util::FedResult;
+use crate::files::reading::{open_reader, read_file};
+use crate::progress::indicatif::IndicatifProgress;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,

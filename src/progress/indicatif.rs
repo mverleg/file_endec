@@ -225,6 +225,7 @@ impl Progress for IndicatifProgress {
 
     fn finish(&mut self) {
         if let Some(data) = &mut self.data {
+            println!("{:?}", &data.todo);  //TODO @mark: TEMPORARY! REMOVE THIS!
             assert!(data.todo.is_empty());
             data.next_step(Some(TaskInfo {
                 text: "finished".to_owned(),

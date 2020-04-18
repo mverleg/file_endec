@@ -3,20 +3,20 @@ use crate::key::hash::hash;
 use crate::key::key::StretchKey;
 use crate::key::Key;
 use crate::key::Salt;
-use crate::util::progress::Progress;
+use crate::progress::Progress;
 
 pub fn stretch_key<'a>(
     raw_key: &Key,
     salt: &Salt,
     stretch_count: u64,
     key_hash_algorithms: &[KeyHashAlg],
-    progress: &mut impl Progress,
+    start_progress: &mut impl FnMut(&KeyHashAlg),
 ) -> StretchKey {
     assert!(!key_hash_algorithms.is_empty());
     let salt_bytes = salt.salt;
     let mut data = raw_key.key_data.clone().unsecure().as_bytes().to_owned();
     for key_hash_alg in key_hash_algorithms {
-        progress.start_stretch_alg(&key_hash_alg);
+        start_progress(&key_hash_alg);
         data = hash(&data, &salt_bytes, key_hash_alg);
         for i in 0..stretch_count {
             data.extend(&i.to_le_bytes());
@@ -31,7 +31,7 @@ mod tests {
     #[cfg(not(debug_assertions))]
     use crate::header::strategy::get_current_version_strategy;
 
-    use crate::util::progress::LogProgress;
+    use crate::progress::log::LogProgress;
 
     #[cfg(not(debug_assertions))]
     use super::*;

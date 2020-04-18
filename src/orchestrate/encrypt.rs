@@ -9,7 +9,8 @@ use crate::key::stretch::stretch_key;
 use crate::key::Salt;
 use crate::orchestrate::common_steps::{open_reader, read_file};
 use crate::symmetric::encrypt::encrypt_file;
-use crate::util::progress::{IndicatifProgress, Progress};
+use crate::progress::indicatif::IndicatifProgress;
+use crate::progress::Progress;
 use crate::util::version::get_current_version;
 use crate::{EncryptConfig, FedResult};
 

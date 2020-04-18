@@ -10,6 +10,7 @@ use crate::files::read_headers::FileHeader;
 use crate::files::read_headers::FileStrategy;
 use crate::header::{CompressionAlg, KeyHashAlg, Strategy, SymmetricEncryptionAlg};
 use crate::Verbosity;
+use crate::progress::Progress;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum TaskType {
@@ -72,8 +73,13 @@ impl IndicatifProgress {
         let mut todo = HashMap::new();
         for file in files {
             for alg in &file_strat.strategy.key_hash_algorithms {
+                let typ = if is_enc {
+                    TaskType::Stretch(alg.clone(), None)
+                } else {
+                    TaskType::Stretch(alg.clone(), Some(file.in_path.to_owned()))
+                };
                 todo.insert(
-                    TaskType::Stretch(alg.clone(), file.in_path.to_owned()),
+                    typ,
                     TaskInfo {
                         text: format!("{} key stretch", &alg),
                         size: strategy.stretch_count * 6,
@@ -145,14 +151,14 @@ impl IndicatifProgress {
     }
 
     pub fn new_dec_strategy(file_strategies: &[FileHeader], verbosity: &Verbosity) -> Self {
-        new_file_strategy(false, file_strategies, verbosity)
+        self.new_file_strategy(false, file_strategies, verbosity)
     }
 
     pub fn new_enc_strategy<'a>(strategy: &'a Strategy, files: &'a [FileInfo], verbosity: &Verbosity) -> Self {
         let file_strategies = files.iter()
             .map(|file| (file, strategy) )
             .collect();
-        new_file_strategy(true, file_strategies, verbosity)
+        self.new_file_strategy(true, file_strategies, verbosity)
     }
 }
 

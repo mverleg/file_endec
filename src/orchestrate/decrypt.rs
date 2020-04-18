@@ -1,25 +1,28 @@
 use ::std::collections::HashMap;
 
-pub use crate::config::enc::EncryptConfig;
-use crate::config::typ::{EndecConfig, Extension};
 use crate::config::DecryptConfig;
+use crate::config::typ::{EndecConfig, Extension};
+use crate::files::Checksum;
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::decompress_file;
 use crate::files::file_meta::inspect_files;
-use crate::files::write_output::write_output_file;
-use crate::files::Checksum;
-pub use crate::header::strategy::Verbosity;
-use crate::header::{get_version_strategy, parse_header};
-use crate::key::key::StretchKey;
-use crate::key::stretch::stretch_key;
-use crate::key::Salt;
-pub use crate::key::{Key, KeySource};
-use crate::orchestrate::common_steps::{open_reader, read_file};
-use crate::symmetric::decrypt::decrypt_file;
-use crate::util::progress::{LogProgress, IndicatifProgress, Progress};
-pub use crate::util::FedResult;
-use crate::header::decode::skip_header;
 use crate::files::read_headers::read_file_strategies;
+use crate::files::write_output::write_output_file;
+use crate::header::{get_version_strategy, parse_header};
+use crate::header::decode::skip_header;
+use crate::key::key::StretchKey;
+use crate::key::Salt;
+use crate::key::stretch::stretch_key;
+use crate::orchestrate::common_steps::{open_reader, read_file};
+use crate::progress::indicatif::IndicatifProgress;
+use crate::progress::log::LogProgress;
+use crate::progress::Progress;
+use crate::symmetric::decrypt::decrypt_file;
+
+pub use crate::config::enc::EncryptConfig;
+pub use crate::header::strategy::Verbosity;
+pub use crate::key::{Key, KeySource};
+pub use crate::util::FedResult;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,
@@ -61,16 +64,14 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
             config.output_dir(),
         )?
     )?;
-    let mut progress = IndicatifProgress::new_file_strategy(&files_info, &config.verbosity());
+    let mut progress = IndicatifProgress::new_dec_strategy(&files_info, &config.verbosity());
     let mut key_cache: HashMap<Salt, StretchKey> = HashMap::new();
     //TODO @mark: if I want to do time logging well, I need to scan headers to see how many salts
     let mut checksum_failure_count = 0;
     for file_strat in &files_info {
         let mut reader = open_reader(&file_strat.file, config.verbosity())?;
         skip_header(&mut reader, config.verbosity().debug())?;
-        let version = file_strat.header.version();
         let salt = file_strat.header.salt().clone();
-        let strategy = get_version_strategy(&version, config.debug())?;
         let stretched_key = if let Some(sk) = key_cache.get(&salt) {
             sk.clone()
         } else {
@@ -143,6 +144,7 @@ mod tests {
     use ::lazy_static::lazy_static;
     use ::regex::Regex;
     use ::semver::Version;
+    use tempfile::tempdir;
 
     use crate::config::DecryptConfig;
     use crate::decrypt;
@@ -150,7 +152,6 @@ mod tests {
     use crate::files::scan::TEST_FILE_DIR;
     use crate::header::strategy::Verbosity;
     use crate::key::key::Key;
-    use tempfile::tempdir;
 
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");

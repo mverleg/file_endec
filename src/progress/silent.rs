@@ -10,6 +10,7 @@ use crate::files::read_headers::FileHeader;
 use crate::files::read_headers::FileStrategy;
 use crate::header::{CompressionAlg, KeyHashAlg, Strategy, SymmetricEncryptionAlg};
 use crate::Verbosity;
+use crate::progress::Progress;
 
 pub struct SilentProgress {}
 

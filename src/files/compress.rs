@@ -5,7 +5,6 @@ use ::lazy_static::lazy_static;
 
 use crate::files::file_meta::FileInfo;
 use crate::header::CompressionAlg;
-use crate::util::progress::Progress;
 use crate::util::FedResult;
 
 lazy_static! {

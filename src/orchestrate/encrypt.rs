@@ -26,14 +26,14 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
         Extension::Add(config.output_extension()),
         config.output_dir(),
     )?;
-    let mut progress = IndicatifProgress::new_one_strategy(&strategy, &files_info, &config.verbosity());
+    let mut progress = IndicatifProgress::new_enc_strategy(&strategy, &files_info, &config.verbosity());
     let salt = Salt::generate_random()?;
     let stretched_key = stretch_key(
         config.raw_key(),
         &salt,
         strategy.stretch_count,
         &strategy.key_hash_algorithms,
-        &mut |alg| progress.start_stretch_alg(&alg, &file)
+        &mut |alg| progress.start_stretch_alg(&alg, Some(&file))
     );
     for file in &files_info {
         let mut reader = open_reader(&file, config.verbosity())?;

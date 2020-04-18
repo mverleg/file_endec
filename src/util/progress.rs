@@ -13,7 +13,7 @@ use crate::Verbosity;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum TaskType {
-    Stretch(KeyHashAlg, PathBuf),
+    Stretch(KeyHashAlg, Option<PathBuf>),
     Read(PathBuf),
     Compress(CompressionAlg, PathBuf),
     Symmetric(SymmetricEncryptionAlg, PathBuf),
@@ -49,7 +49,9 @@ impl ProgressData {
 }
 
 pub trait Progress {
-    fn start_stretch_alg(&mut self, alg: &KeyHashAlg, file: &FileInfo);
+    /// For encryption, stretching happens once, while for decryption, stretching pessimistically
+    /// happens per file. As such, provide `file` for decryption, but not for encryption.
+    fn start_stretch_alg(&mut self, alg: &KeyHashAlg, file: Option<&FileInfo>);
 
     fn start_read_for_file(&mut self, file: &FileInfo);
 
@@ -81,7 +83,7 @@ pub struct IndicatifProgress {
 }
 
 impl IndicatifProgress {
-    pub fn new_file_strategy(file_strategies: &[impl FileStrategy], verbosity: &Verbosity) -> Self {
+    fn new_file_strategy(is_enc: bool, file_strategies: &[impl FileStrategy], verbosity: &Verbosity) -> Self {
         if verbosity.quiet() {
             return IndicatifProgress { data: None };
         }
@@ -160,18 +162,26 @@ impl IndicatifProgress {
         }
     }
 
-    pub fn new_one_strategy<'a>(strategy: &'a Strategy, files: &'a [FileInfo], verbosity: &Verbosity) -> Self {
+    pub fn new_dec_strategy(file_strategies: &[FileHeader], verbosity: &Verbosity) -> Self {
+        new_file_strategy(false, file_strategies, verbosity)
+    }
+
+    pub fn new_enc_strategy<'a>(strategy: &'a Strategy, files: &'a [FileInfo], verbosity: &Verbosity) -> Self {
         let file_strategies = files.iter()
             .map(|file| (file, strategy) )
             .collect();
-        new_file_strategy(file_strategies, verbosity)
+        new_file_strategy(true, file_strategies, verbosity)
     }
 }
 
 impl Progress for IndicatifProgress {
-    fn start_stretch_alg(&mut self, alg: &KeyHashAlg, file: &FileInfo) {
+    fn start_stretch_alg(&mut self, alg: &KeyHashAlg, file: Option<&FileInfo>) {
         if let Some(ref mut data) = self.data {
-            let typ = TaskType::Stretch(alg.clone(), file.in_path.to_owned());
+            let typ = if let Some(file) = file {
+                TaskType::Stretch(alg.clone(), Some(file.in_path.to_owned()))
+            } else {
+                TaskType::Stretch(alg.clone(), None)
+            };
             match data.todo.remove(&typ) {
                 // This is the first key stretch; use normal progress.
                 Some(info) => data.next_step(Some(info)),
@@ -246,7 +256,7 @@ impl SilentProgress {
 }
 
 impl Progress for SilentProgress {
-    fn start_stretch_alg(&mut self, _alg: &KeyHashAlg, _file: &FileInfo) {}
+    fn start_stretch_alg(&mut self, _alg: &KeyHashAlg, _file: Option<&FileInfo>) {}
 
     fn start_read_for_file(&mut self, _file: &FileInfo) {}
 
@@ -280,7 +290,7 @@ impl LogProgress {
 }
 
 impl Progress for LogProgress {
-    fn start_stretch_alg(&mut self, alg: &KeyHashAlg, file: &FileInfo) {
+    fn start_stretch_alg(&mut self, alg: &KeyHashAlg, file: Option<&FileInfo>) {
         self.next(format!("stretching key for {} using {}", file.file_name(), alg));
     }
 

@@ -1,6 +1,4 @@
 use ::std::fmt;
-use ::std::io::stderr;
-use ::std::io::Write;
 use ::std::path::PathBuf;
 use ::std::process::exit;
 
@@ -111,12 +109,10 @@ impl fmt::Display for EncryptArguments {
             "* logging: {}",
             if self.debug {
                 "verbose"
+            } else if self.quiet {
+                "quiet"
             } else {
-                if self.quiet {
-                    "quiet"
-                } else {
-                    "normal"
-                }
+                "normal"
             }
         )?;
 
@@ -166,7 +162,7 @@ impl fmt::Display for EncryptArguments {
 
 pub fn main() {
     if let Err(err) = go_encrypt() {
-        writeln!(stderr(), "{}", err).unwrap();
+        eprintln!("{}", err);
         exit(1);
     }
 }

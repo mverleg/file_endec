@@ -4,7 +4,7 @@ use crate::key::key::StretchKey;
 use crate::key::Key;
 use crate::key::Salt;
 
-pub fn stretch_key<'a>(
+pub fn stretch_key(
     raw_key: &Key,
     salt: &Salt,
     stretch_count: u64,

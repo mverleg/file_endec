@@ -7,6 +7,7 @@ pub struct LogProgress {
 }
 
 impl LogProgress {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         LogProgress {
             current: "initializing".to_owned(),
@@ -67,6 +68,6 @@ impl Progress for LogProgress {
     }
 
     fn finish(&mut self) {
-        self.next(format!("finishing up"));
+        self.next("finishing up".to_owned());
     }
 }

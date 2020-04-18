@@ -14,7 +14,7 @@ lazy_static! {
     };
 }
 
-pub fn compress_file<'a>(
+pub fn compress_file(
     data: Vec<u8>,
     alg: &Option<CompressionAlg>,
     start_progress: &mut impl FnMut(&CompressionAlg),

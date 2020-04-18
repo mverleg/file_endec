@@ -5,6 +5,7 @@ use crate::header::{SymmetricEncryptionAlg, CompressionAlg, KeyHashAlg};
 pub struct SilentProgress {}
 
 impl SilentProgress {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         SilentProgress {}
     }

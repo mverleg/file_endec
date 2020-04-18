@@ -70,7 +70,7 @@ mod hash {
                         &Salt::fixed_for_test(123_456_789),
                         strat.stretch_count,
                         &strat.key_hash_algorithms,
-                        &mut |alg| (),
+                        &mut |_| (),
                     )
                 })
             })

@@ -93,12 +93,10 @@ impl fmt::Display for DecryptArguments {
             "* logging: {}",
             if self.debug {
                 "verbose"
+            } else if self.quiet {
+                "quiet"
             } else {
-                if self.quiet {
-                    "quiet"
-                } else {
-                    "normal"
-                }
+                "normal"
             }
         )?;
 

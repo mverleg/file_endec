@@ -127,7 +127,7 @@ impl IndicatifProgress {
             );
         }
         let total_size = todo.iter().map(|task| task.1.size).sum();
-        let bar = {
+        let progress_bar = {
             let pb = ProgressBar::new(total_size);
             pb.set_style(
                 ProgressStyle::default_bar()
@@ -140,7 +140,7 @@ impl IndicatifProgress {
         };
         IndicatifProgress {
             data: Some(ProgressData {
-                bar,
+                bar: progress_bar,
                 current: TaskInfo {
                     text: "initialize".to_owned(),
                     size: 1,

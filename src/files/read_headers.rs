@@ -1,6 +1,8 @@
 use crate::files::file_meta::FileInfo;
-use crate::header::{Strategy, Header, get_version_strategy};
+use crate::header::{Strategy, Header, get_version_strategy, parse_header};
 use crate::{FedResult, Verbosity};
+use crate::orchestrate::reading::open_reader;
+use crate::files::reading::open_reader;
 
 #[derive(Debug)]
 pub struct FileHeader<'a> {
@@ -24,8 +26,12 @@ impl <'a> FileHeader<'a> {
     }
 }
 
-pub fn read_file_strategies<'a>(files: &'a [FileInfo]) -> FedResult<Vec<FileHeader<'a>>> {
-    unimplemented!()  //TODO @mark:
+pub fn read_file_strategies<'a>(files: &'a [FileInfo], verbosity: Verbosity) -> FedResult<Vec<FileHeader<'a>>> {
+    let strats = files.iter()
+        .map(|fi| (fi, open_reader(&fi.file, verbosity)?))
+        .map(|(fi, mut reader)| (fi, parse_header(&mut reader, verbosity.debug())))
+        .collect();
+    Ok(strats)
 }
 
 pub trait FileStrategy {

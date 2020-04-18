@@ -5,6 +5,7 @@ pub mod compress;
 pub mod file_meta;
 pub mod mockfile;
 pub mod write_output;
+pub mod reading;
 pub mod read_headers;
 
 #[cfg(test)]

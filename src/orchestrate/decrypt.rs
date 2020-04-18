@@ -12,7 +12,7 @@ use crate::header::decode::skip_header;
 use crate::key::key::StretchKey;
 use crate::key::Salt;
 use crate::key::stretch::stretch_key;
-use crate::orchestrate::common_steps::{open_reader, read_file};
+use crate::orchestrate::reading::{open_reader, read_file};
 use crate::progress::indicatif::IndicatifProgress;
 use crate::progress::Progress;
 use crate::symmetric::decrypt::decrypt_file;
@@ -60,8 +60,8 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
         Extension::Strip,
         config.output_dir(),
     )?;
-    let files_strats = read_file_strategies(&files_info)?;
-    let mut progress = IndicatifProgress::new_dec_strategy(&files_strats, &config.verbosity());
+    let files_strats = read_file_strategies(&files_info, config.verbosity())?;
+    let mut progress = IndicatifProgress::new_dec_strategy(&files_strats, config.verbosity());
     let mut key_cache: HashMap<Salt, StretchKey> = HashMap::new();
     //TODO @mark: if I want to do time logging well, I need to scan headers to see how many salts
     let mut checksum_failure_count = 0;

@@ -66,7 +66,7 @@ pub struct IndicatifProgress {
 }
 
 impl IndicatifProgress {
-    fn new_file_strategy(is_enc: bool, file_strategies: &[impl FileStrategy], verbosity: &Verbosity) -> Self {
+    fn new_file_strategy(is_enc: bool, file_strategies: &[impl FileStrategy], verbosity: Verbosity) -> Self {
         if verbosity.quiet() {
             return IndicatifProgress { data: None };
         }
@@ -150,11 +150,11 @@ impl IndicatifProgress {
         }
     }
 
-    pub fn new_dec_strategy(file_strategies: &[FileHeader], verbosity: &Verbosity) -> Self {
+    pub fn new_dec_strategy(file_strategies: &[FileHeader], verbosity: Verbosity) -> Self {
         IndicatifProgress::new_file_strategy(false, file_strategies, verbosity)
     }
 
-    pub fn new_enc_strategy<'a>(strategy: &'a Strategy, files: &'a [FileInfo], verbosity: &Verbosity) -> Self {
+    pub fn new_enc_strategy<'a>(strategy: &'a Strategy, files: &'a [FileInfo], verbosity: Verbosity) -> Self {
         let file_strategies: Vec<_> = files.iter()
             .map(|file| (file, strategy))
             .collect();

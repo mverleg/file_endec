@@ -9,7 +9,6 @@ use ::twox_hash::XxHash64;
 
 use crate::util::base64::base64str_to_u8s;
 use crate::util::base64::u8s_to_base64str;
-use crate::util::progress::Progress;
 use crate::util::FedResult;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

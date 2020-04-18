@@ -33,7 +33,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
         &salt,
         strategy.stretch_count,
         &strategy.key_hash_algorithms,
-        &mut progress,
+        &mut |alg| progress.start_stretch_alg(&alg, &file)
     );
     for file in &files_info {
         let mut reader = open_reader(&file, config.verbosity())?;

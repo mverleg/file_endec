@@ -6,13 +6,14 @@ use ::indicatif::ProgressBar;
 use ::indicatif::ProgressStyle;
 
 use crate::files::file_meta::FileInfo;
+use crate::files::read_headers::FileHeader;
+use crate::files::read_headers::FileStrategy;
 use crate::header::{CompressionAlg, KeyHashAlg, Strategy, SymmetricEncryptionAlg};
 use crate::Verbosity;
-use crate::files::read_headers::FileStrategy;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum TaskType {
-    Stretch(KeyHashAlg),
+    Stretch(KeyHashAlg, PathBuf),
     Read(PathBuf),
     Compress(CompressionAlg, PathBuf),
     Symmetric(SymmetricEncryptionAlg, PathBuf),
@@ -48,7 +49,7 @@ impl ProgressData {
 }
 
 pub trait Progress {
-    fn start_stretch_alg(&mut self, alg: &KeyHashAlg);
+    fn start_stretch_alg(&mut self, alg: &KeyHashAlg, file: &FileInfo);
 
     fn start_read_for_file(&mut self, file: &FileInfo);
 
@@ -63,29 +64,38 @@ pub trait Progress {
     fn finish(&mut self);
 }
 
+impl <'a> FileStrategy for (&'a FileInfo<'a>, &'a Strategy) {
+
+    fn file(&self) -> &FileInfo<'a> {
+        self.0
+    }
+
+    fn strategy(&self) -> &Strategy {
+        self.1
+    }
+}
+
 #[derive(Debug)]
 pub struct IndicatifProgress {
     data: Option<ProgressData>,
 }
 
 impl IndicatifProgress {
-    pub fn new_file_strategy(file_strategies: &[FileStrategy], verbosity: &Verbosity) -> Self {
+    pub fn new_file_strategy(file_strategies: &[impl FileStrategy], verbosity: &Verbosity) -> Self {
         if verbosity.quiet() {
             return IndicatifProgress { data: None };
         }
         let mut todo = HashMap::new();
-        for alg in &file_strat.strategy.key_hash_algorithms {
-            //strategy.stretch_count * RATIO_STRETCH_VS_KILOBYTE;
-            todo.insert(
-                TaskType::Stretch(alg.clone()),
-                TaskInfo {
-                    text: format!("{} key stretch", &alg),
-                    //size: (strategy.stretch_count as f64 / 1.0).ceil() as u64,
-                    size: strategy.stretch_count * 6,
-                },
-            );
-        }
         for file in files {
+            for alg in &file_strat.strategy.key_hash_algorithms {
+                todo.insert(
+                    TaskType::Stretch(alg.clone(), file.in_path.to_owned()),
+                    TaskInfo {
+                        text: format!("{} key stretch", &alg),
+                        size: strategy.stretch_count * 6,
+                    },
+                );
+            }
             todo.insert(
                 TaskType::Read(file.in_path.to_owned()),
                 TaskInfo {
@@ -152,16 +162,16 @@ impl IndicatifProgress {
 
     pub fn new_one_strategy<'a>(strategy: &'a Strategy, files: &'a [FileInfo], verbosity: &Verbosity) -> Self {
         let file_strategies = files.iter()
-            .map(|file| FileStrategy::new(file, strategy) )
+            .map(|file| (file, strategy) )
             .collect();
         new_file_strategy(file_strategies, verbosity)
     }
 }
 
 impl Progress for IndicatifProgress {
-    fn start_stretch_alg(&mut self, alg: &KeyHashAlg) {
+    fn start_stretch_alg(&mut self, alg: &KeyHashAlg, file: &FileInfo) {
         if let Some(ref mut data) = self.data {
-            let typ = TaskType::Stretch(alg.clone());
+            let typ = TaskType::Stretch(alg.clone(), file.in_path.to_owned());
             match data.todo.remove(&typ) {
                 // This is the first key stretch; use normal progress.
                 Some(info) => data.next_step(Some(info)),
@@ -236,7 +246,7 @@ impl SilentProgress {
 }
 
 impl Progress for SilentProgress {
-    fn start_stretch_alg(&mut self, _alg: &KeyHashAlg) {}
+    fn start_stretch_alg(&mut self, _alg: &KeyHashAlg, _file: &FileInfo) {}
 
     fn start_read_for_file(&mut self, _file: &FileInfo) {}
 
@@ -270,8 +280,8 @@ impl LogProgress {
 }
 
 impl Progress for LogProgress {
-    fn start_stretch_alg(&mut self, alg: &KeyHashAlg) {
-        self.next(format!("stretching key using {}", alg));
+    fn start_stretch_alg(&mut self, alg: &KeyHashAlg, file: &FileInfo) {
+        self.next(format!("stretching key for {} using {}", file.file_name(), alg));
     }
 
     fn start_read_for_file(&mut self, file: &FileInfo) {

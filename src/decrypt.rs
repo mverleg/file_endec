@@ -33,7 +33,7 @@ pub struct DecryptArguments {
         short = "k",
         long = "key",
         default_value = "ask",
-        help = "Where to get the key; one of 'pass:$password', 'env:$var_name', 'file:$path', 'ask', 'askonce', 'pipe'"
+        help = "Where to get the key; one of 'pass:$password', 'env:$var_name', 'file:$path', 'ask', 'ask-once', 'pipe'"
     )]
     key_source: KeySource,
 

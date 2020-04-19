@@ -12,8 +12,15 @@ pub fn test_cmd<I, S>(args: I, input: Option<String>) -> String
     where
         I: IntoIterator<Item = S>,
         S: AsRef<OsStr> {
+    let mut ref_args = vec![];
+    print!("cargo ");
+    for arg in args.into_iter() {
+        print!("{} ", arg.as_ref().to_string_lossy());
+        ref_args.push(arg);
+    }
+    println!();
     let mut command = Command::new("cargo")
-        .args(args)
+        .args(ref_args)
         .stdin(Stdio::piped())
         .spawn()
         .unwrap();

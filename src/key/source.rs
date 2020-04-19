@@ -31,11 +31,11 @@ impl FromStr for KeySource {
         if txt.starts_with("file:") {
             return Ok(KeySource::File(PathBuf::from(txt[5..].to_owned())));
         }
+        if txt == "ask-once" || txt == "askonce" {
+            return Ok(KeySource::AskOnce);
+        }
         if txt == "ask" {
             return Ok(KeySource::AskTwice);
-        }
-        if txt == "ask-once" {
-            return Ok(KeySource::AskOnce);
         }
         if txt == "pipe" {
             return Ok(KeySource::Pipe);
@@ -47,7 +47,7 @@ impl FromStr for KeySource {
         };
         Err(format!(
             "key string was not recognized; got '{}', should be one of \
-        'pass:$password', 'env:$var_name', 'file:$path', 'ask', 'askonce', 'pipe'",
+            'pass:$password', 'env:$var_name', 'file:$path', 'ask', 'ask-once', 'pipe'",
             txt_snip
         ))
     }

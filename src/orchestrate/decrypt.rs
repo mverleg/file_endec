@@ -62,7 +62,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
     let files_strats = read_file_strategies(&files_info, config.verbosity())?;
     let mut progress: Box<dyn Progress> = match config.verbosity() {
         Verbosity::Quiet => Box::new(SilentProgress::new()),
-        Verbosity::Normal => Box::new(IndicatifProgress::new_dec_strategy(&files_strats, config.verbosity())),
+        Verbosity::Normal => Box::new(IndicatifProgress::new_dec_strategy(&files_strats, config.delete_input(), config.verbosity())),
         Verbosity::Debug => Box::new(LogProgress::new()),
     };
     let mut key_cache: HashMap<Salt, StretchKey> = HashMap::new();

@@ -16,5 +16,7 @@ pub trait Progress {
 
     fn start_write_for_file(&mut self, file: &FileInfo);
 
+    fn start_shred_input_for_file(&mut self, file: &FileInfo);
+
     fn finish(&mut self);
 }

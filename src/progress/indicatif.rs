@@ -21,6 +21,7 @@ enum TaskType {
     Symmetric(SymmetricEncryptionAlg, PathBuf),
     Checksum(PathBuf),
     Write(PathBuf),
+    ShredInput(PathBuf),
 }
 
 #[derive(Debug)]
@@ -68,6 +69,7 @@ impl IndicatifProgress {
     fn new_file_strategy(
         is_enc: bool,
         file_strategies: &[impl FileStrategy],
+        delete_input: bool,
         verbosity: Verbosity,
     ) -> Self {
         if verbosity.quiet() {
@@ -103,6 +105,15 @@ impl IndicatifProgress {
                     size: file_strat.file().size_kb * 2,
                 },
             );
+            if delete_input {
+                todo.insert(
+                    TaskType::ShredInput(file_strat.file().in_path.to_owned()),
+                    TaskInfo {
+                        text: format!("shred input {}", &file_strat.file().file_name()),
+                        size: file_strat.file().size_kb * 3,
+                    },
+                );
+            }
             for alg in &file_strat.strategy().compression_algorithm {
                 todo.insert(
                     TaskType::Compress(alg.clone(), file_strat.file().in_path.to_owned()),
@@ -153,17 +164,18 @@ impl IndicatifProgress {
         }
     }
 
-    pub fn new_dec_strategy(file_strategies: &[FileHeader], verbosity: Verbosity) -> Self {
-        IndicatifProgress::new_file_strategy(false, file_strategies, verbosity)
+    pub fn new_dec_strategy(file_strategies: &[FileHeader], delete_input: bool, verbosity: Verbosity) -> Self {
+        IndicatifProgress::new_file_strategy(false, file_strategies, delete_input, verbosity)
     }
 
     pub fn new_enc_strategy<'a>(
         strategy: &'a Strategy,
         files: &'a [FileInfo],
+        delete_input: bool,
         verbosity: Verbosity,
     ) -> Self {
         let file_strategies: Vec<_> = files.iter().map(|file| (file, strategy)).collect();
-        IndicatifProgress::new_file_strategy(true, &file_strategies, verbosity)
+        IndicatifProgress::new_file_strategy(true, &file_strategies, delete_input, verbosity)
     }
 }
 
@@ -223,6 +235,14 @@ impl Progress for IndicatifProgress {
     fn start_write_for_file(&mut self, file: &FileInfo) {
         if let Some(data) = &mut self.data {
             let typ = TaskType::Write(file.in_path.to_owned());
+            let info = data.todo.remove(&typ);
+            data.next_step(info);
+        }
+    }
+
+    fn start_shred_input_for_file(&mut self, file: &FileInfo) {
+        if let Some(data) = &mut self.data {
+            let typ = TaskType::ShredInput(file.in_path.to_owned());
             let info = data.todo.remove(&typ);
             data.next_step(info);
         }

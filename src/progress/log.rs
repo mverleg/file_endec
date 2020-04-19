@@ -64,7 +64,12 @@ impl Progress for LogProgress {
     }
 
     fn start_write_for_file(&mut self, file: &FileInfo) {
+        //TODO @mark: this logs the name of input file, but it writes output file... maybe it's ok though
         self.next(format!("writing {}", file.file_name()));
+    }
+
+    fn start_shred_input_for_file(&mut self, file: &FileInfo) {
+        self.next(format!("shred input {}", file.file_name()));
     }
 
     fn finish(&mut self) {

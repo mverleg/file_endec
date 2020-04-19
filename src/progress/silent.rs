@@ -23,5 +23,7 @@ impl Progress for SilentProgress {
 
     fn start_write_for_file(&mut self, _file: &FileInfo) {}
 
+    fn start_shred_input_for_file(&mut self, _file: &FileInfo) {}
+
     fn finish(&mut self) {}
 }

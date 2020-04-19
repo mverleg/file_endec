@@ -29,7 +29,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     )?;
     let mut progress: Box<dyn Progress> = match config.verbosity() {
         Verbosity::Quiet => Box::new(SilentProgress::new()),
-        Verbosity::Normal => Box::new(IndicatifProgress::new_enc_strategy(&strategy, &files_info, config.verbosity())),
+        Verbosity::Normal => Box::new(IndicatifProgress::new_enc_strategy(&strategy, &files_info, config.delete_input(), config.verbosity())),
         Verbosity::Debug => Box::new(LogProgress::new()),
     };
     let salt = Salt::generate_random()?;

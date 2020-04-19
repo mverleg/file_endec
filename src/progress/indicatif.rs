@@ -101,7 +101,7 @@ impl IndicatifProgress {
             todo.insert(
                 TaskType::Write(file_strat.file().in_path.to_owned()),
                 TaskInfo {
-                    text: format!("write {}", &file_strat.file().file_name()),
+                    text: format!("write {}", file_strat.file().out_pth.file_name().unwrap().to_string_lossy()),
                     size: file_strat.file().size_kb * 2,
                 },
             );

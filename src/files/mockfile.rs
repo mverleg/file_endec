@@ -1,4 +1,9 @@
-#[cfg(any(test, feature = "expose"))]
+#![cfg(any(test, feature = "expose"))]
+
+#[cfg(test)]
+use ::tempfile::{TempDir, NamedTempFile};
+use ::std::fs;
+
 mod tests {
     #[allow(unused_imports)]
     use super::generate_test_file_content_for_test;
@@ -13,7 +18,6 @@ mod tests {
     }
 }
 
-#[cfg(any(test, feature = "expose"))]
 pub fn generate_test_file_content_for_test(len: usize) -> Vec<u8> {
     let mut data = vec![0u8; len];
     let mut a: u32 = 1;
@@ -26,4 +30,13 @@ pub fn generate_test_file_content_for_test(len: usize) -> Vec<u8> {
         b = c;
     }
     data
+}
+
+#[cfg(test)]
+pub fn write_test_file(len: usize) -> NamedTempFile {
+    let dir = TempDir::new().unwrap();
+    let pth = NamedTempFile::new_in(dir.path()).unwrap();
+    let big = generate_test_file_content_for_test(len);
+    fs::write(&pth, big).unwrap();
+    pth
 }

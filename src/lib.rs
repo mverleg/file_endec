@@ -41,9 +41,8 @@ mod orchestrate;
 mod progress;
 mod symmetric;
 mod util;
+mod e2e;
 
-/// The demo used in this blog post:
-/// https://markv.nl/blog/symmetric-encryption-in-rust
 #[cfg(test)]
 mod tests {
     use ::aes::Aes256;
@@ -63,6 +62,8 @@ mod tests {
         static ref COMPAT_FILE_RE: Regex = Regex::new(r"^original_v(\d+\.\d+\.\d+).png$").unwrap();
     }
 
+    /// The demo used in this blog post:
+    /// https://markv.nl/blog/symmetric-encryption-in-rust
     #[test]
     fn demo() {
         // Key must be 32 bytes for Aes256. It should probably be the hashed

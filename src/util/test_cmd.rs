@@ -1,8 +1,25 @@
-#![cfg(test)]
+#![cfg(any(test, feature = "expose"))]
 
+use ::std::ffi::OsStr;
 use ::std::path::Path;
 use ::std::process::Command;
 use ::std::str::from_utf8;
+
+pub fn test_cmd<I, S>(args: I) -> String
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<OsStr> {
+    let enc_out = Command::new("cargo")
+        .args(args)
+        .output()
+        .unwrap();
+    let err = from_utf8(&enc_out.stderr).unwrap();
+    if !err.is_empty() {
+        eprintln!("{}", err);
+    }
+    assert!(enc_out.status.success());
+    from_utf8(&enc_out.stdout).unwrap().to_owned()
+}
 
 pub fn test_encrypt(paths: &[&Path], nonfile_args: &[&str]) -> String {
     let mut args = vec!["run", "--release", "--bin", "fileenc", "--"];
@@ -10,16 +27,7 @@ pub fn test_encrypt(paths: &[&Path], nonfile_args: &[&str]) -> String {
         args.push(pth.to_str().unwrap());
     }
     args.extend_from_slice(nonfile_args);
-    let enc_out = Command::new("cargo")
-        .args(args)
-        .output()
-        .unwrap();
-    assert!(enc_out.status.success());
-    let err = from_utf8(&enc_out.stderr).unwrap();
-    if !err.is_empty() {
-        eprintln!("{}", err);
-    }
-    from_utf8(&enc_out.stdout).unwrap().to_owned()
+    test_cmd(args)
 }
 
 pub fn test_decrypt(paths: &[&Path], nonfile_args: &[&str]) -> String {
@@ -35,15 +43,5 @@ pub fn test_decrypt(paths: &[&Path], nonfile_args: &[&str]) -> String {
         .for_each(|p| args.push(p));
     nonfile_args.into_iter()
         .for_each(|a| args.push((*a).to_owned()));
-    let enc_out = Command::new("cargo")
-        .args(args)
-        .output()
-        .unwrap();
-    assert!(enc_out.status.success());
-    let err = from_utf8(&enc_out.stderr).unwrap();
-    if !err.is_empty() {
-        eprintln!("{}", err);
-    }
-    from_utf8(&enc_out.stdout).unwrap().to_owned()
+    test_cmd(args)
 }
-

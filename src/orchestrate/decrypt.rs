@@ -50,9 +50,6 @@ pub fn validate_checksum_matches(
 }
 
 pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
-    if config.delete_input() {
-        unimplemented!("deleting input not implemented"); //TODO @mark
-    }
     let files_info = inspect_files(
         config.files(),
         config.verbosity(),
@@ -112,6 +109,10 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
         write_output_file(config, &file_strat.file, &big, None, &mut || {
             progress.start_write_for_file(&file_strat.file)
         })?;
+        if config.delete_input() {
+            //TODO @mark:
+            println!("DELETE {:?}", file_strat.file.in_path);
+        }
         if !config.quiet() {
             println!(
                 "successfully decrypted '{}' to '{}' ({} kb)",

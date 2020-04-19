@@ -1,11 +1,12 @@
-use ::std::fs;
 use ::std::fs::File;
 use ::std::io::Write;
 
+use ::file_shred::shred_file;
+
 use crate::config::typ::EndecConfig;
 use crate::files::file_meta::FileInfo;
-use crate::header::write_header;
 use crate::header::Header;
+use crate::header::write_header;
 use crate::util::errors::wrap_io;
 use crate::util::FedResult;
 
@@ -20,7 +21,7 @@ pub fn write_output_file(
     if file.out_pth.exists() {
         if config.overwrite() {
             assert!(file.out_pth.is_file());
-            fs::remove_file(&file.out_pth).map_err(|_| {
+            shred_file(&file.out_pth).map_err(|_| {
                 "Failed to remove previously-existing file that exists in output location"
                     .to_string()
             })?;

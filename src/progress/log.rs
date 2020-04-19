@@ -1,22 +1,28 @@
+use ::std::time::Instant;
+
 use crate::files::file_meta::FileInfo;
 use crate::header::{CompressionAlg, KeyHashAlg, SymmetricEncryptionAlg};
 use crate::progress::Progress;
 
 pub struct LogProgress {
     current: String,
+    started_at: Instant,
 }
 
 impl LogProgress {
     pub fn new() -> Self {
         LogProgress {
             current: "initializing".to_owned(),
+            started_at: Instant::now(),
         }
     }
 
     fn next(&mut self, next: String) {
-        println!("> finish {}", &self.current);
+        let duration = self.started_at.elapsed().as_millis();
+        println!("> finish {} ({} ms)", &self.current, duration);
         println!("< start  {}", &next);
         self.current = next;
+        self.started_at = Instant::now();
     }
 }
 

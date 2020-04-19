@@ -1,7 +1,9 @@
 #![cfg(any(test, feature = "expose"))]
 
+use ::std::path::PathBuf;
+
 #[cfg(test)]
-use ::tempfile::{TempDir, NamedTempFile};
+use ::tempfile::{NamedTempFile, TempDir};
 
 mod tests {
     #[allow(unused_imports)]
@@ -32,11 +34,11 @@ pub fn generate_test_file_content_for_test(len: usize) -> Vec<u8> {
 }
 
 #[cfg(test)]
-pub fn write_test_file(len: usize) -> NamedTempFile {
+pub fn write_test_file(len: usize) -> (TempDir, PathBuf) {
     use ::std::fs;
     let dir = TempDir::new().unwrap();
-    let pth = NamedTempFile::new_in(dir.path()).unwrap();
+    let pth = NamedTempFile::new_in(dir.path()).unwrap().path().to_owned();
     let big = generate_test_file_content_for_test(len);
     fs::write(&pth, big).unwrap();
-    pth
+    (dir, pth)
 }

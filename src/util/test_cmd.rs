@@ -18,7 +18,9 @@ pub fn test_cmd<I, S>(args: I) -> String
         eprintln!("{}", err);
     }
     assert!(enc_out.status.success());
-    from_utf8(&enc_out.stdout).unwrap().to_owned()
+    let out = from_utf8(&enc_out.stdout).unwrap().to_owned();
+    println!("{}", out);
+    out
 }
 
 pub fn test_encrypt(paths: &[&Path], nonfile_args: &[&str]) -> String {
@@ -35,7 +37,7 @@ pub fn test_decrypt(paths: &[&Path], nonfile_args: &[&str]) -> String {
         "run".to_owned(),
         "--release".to_owned(),
         "--bin".to_owned(),
-        "fileenc".to_owned(),
+        "filedec".to_owned(),
         "--".to_owned()];
     paths.iter()
         .map(|p| p.to_str().unwrap())

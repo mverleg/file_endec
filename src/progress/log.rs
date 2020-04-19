@@ -53,7 +53,7 @@ impl Progress for LogProgress {
 
     fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo) {
         self.next(format!(
-            "start en/decrypting {} using {}",
+            "en/decrypting {} using {}",
             file.file_name(),
             alg
         ));

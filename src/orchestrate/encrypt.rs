@@ -66,8 +66,11 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
                 progress.start_write_for_file(&file)
             })?;
             if config.delete_input() {
-                //TODO @mark: progress
+                progress.start_shred_input_for_file(&file);
                 shred_file(&file.in_path)?;
+                if config.verbosity().debug() {
+                    println!("deleted {}", &file.file_name());
+                }
             }
         } else if !config.quiet() {
             progress.start_write_for_file(&file);

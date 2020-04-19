@@ -55,7 +55,7 @@ pub fn write_output_file(
         out_file.write_all(&data),
     )?;
     if config.debug() {
-        println!("encrypted {}", &file.out_pth.to_string_lossy());
+        println!("encrypted {}", &file.file_name());
     }
     Ok(())
 }

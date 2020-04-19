@@ -5,3 +5,4 @@ pub mod base64;
 pub mod errors;
 pub mod pth;
 pub mod version;
+pub mod test_cmd;

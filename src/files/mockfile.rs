@@ -2,7 +2,6 @@
 
 #[cfg(test)]
 use ::tempfile::{TempDir, NamedTempFile};
-use ::std::fs;
 
 mod tests {
     #[allow(unused_imports)]
@@ -34,6 +33,7 @@ pub fn generate_test_file_content_for_test(len: usize) -> Vec<u8> {
 
 #[cfg(test)]
 pub fn write_test_file(len: usize) -> NamedTempFile {
+    use ::std::fs;
     let dir = TempDir::new().unwrap();
     let pth = NamedTempFile::new_in(dir.path()).unwrap();
     let big = generate_test_file_content_for_test(len);

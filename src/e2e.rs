@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use crate::files::mockfile::write_test_file;
-use crate::util::test_cmd::{test_encrypt, test_decrypt};
+use crate::util::test_cmd::{test_encrypt, test_decrypt, append_enc};
 use tempfile::TempDir;
 use std::path::PathBuf;
 
@@ -33,6 +33,8 @@ fn many_files() {
     test_encrypt(&paths, &["-k", "pipe", "-q"], Some(key.to_owned()));
     paths.iter().for_each(|p| assert!(p.exists()));
     test_decrypt(&paths, &["-k", "pipe", "-q"], Some(key.to_owned()));
+    paths.iter().map(|p| append_enc(p)).for_each(|p| assert!(p.exists()));
+    paths.iter().for_each(|p| assert!(p.exists()));
     files.into_iter().for_each(|f| f.0.close().unwrap());
 }
 

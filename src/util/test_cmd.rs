@@ -1,11 +1,12 @@
 #![cfg(any(test, feature = "expose"))]
 
 use ::std::ffi::OsStr;
+use ::std::io::Write;
 use ::std::path::Path;
+use ::std::path::PathBuf;
 use ::std::process::Command;
-use ::std::str::from_utf8;
 use ::std::process::Stdio;
-use ::std::io::{Read, Write};
+use ::std::str::from_utf8;
 
 pub fn test_cmd<I, S>(args: I, input: Option<String>) -> String
     where
@@ -14,23 +15,18 @@ pub fn test_cmd<I, S>(args: I, input: Option<String>) -> String
     let mut command = Command::new("cargo")
         .args(args)
         .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
         .spawn()
         .unwrap();
     if let Some(txt) = input {
-        command.stdin.unwrap().write(txt.as_bytes());
+        command.stdin.as_mut().unwrap().write_all(txt.as_bytes()).unwrap();
     }
-    let mut buffer = Vec::new();
-    command.stderr.unwrap().read_to_end(&mut buffer).unwrap();
-    let err = from_utf8(&buffer).unwrap();
-    if !err.is_empty() {
-        eprintln!("{}", err);
+    let output = command.wait_with_output().unwrap();
+    if !output.stderr.is_empty() {
+        eprintln!("{}", from_utf8(&output.stderr).unwrap());
     }
-    command.stdout.unwrap().read_to_end(&mut buffer).unwrap();
-    let out = from_utf8(&buffer).unwrap().to_owned();
+    let out = from_utf8(&output.stdout).unwrap().to_owned();
     println!("{}", &out);
-    assert!(command.wait().unwrap().success());
+    assert!(output.status.success());
     out
 }
 
@@ -51,10 +47,16 @@ pub fn test_decrypt(paths: &[&Path], nonfile_args: &[&str], input: Option<String
         "filedec".to_owned(),
         "--".to_owned()];
     paths.iter()
-        .map(|p| p.to_str().unwrap())
-        .map(|p| format!("{}.enc", p))
+        .map(|p| append_enc(p).to_string_lossy().to_string())
         .for_each(|p| args.push(p));
     nonfile_args.into_iter()
         .for_each(|a| args.push((*a).to_owned()));
     test_cmd(args, input)
+}
+
+pub fn append_enc(path: &Path) -> PathBuf {
+    let mut p = path.to_owned();
+    let name = path.file_name().unwrap().to_string_lossy();
+    p.set_file_name(format!("{}.enc", name));
+    p
 }

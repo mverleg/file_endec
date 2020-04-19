@@ -52,11 +52,7 @@ impl Progress for LogProgress {
     }
 
     fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo) {
-        self.next(format!(
-            "en/decrypting {} using {}",
-            file.file_name(),
-            alg
-        ));
+        self.next(format!("en/decrypting {} using {}", file.file_name(), alg));
     }
 
     fn start_checksum_for_file(&mut self, file: &FileInfo) {
@@ -64,7 +60,10 @@ impl Progress for LogProgress {
     }
 
     fn start_write_for_file(&mut self, file: &FileInfo) {
-        self.next(format!("writing {}", file.out_pth.file_name().unwrap().to_string_lossy()));
+        self.next(format!(
+            "writing {}",
+            file.out_pth.file_name().unwrap().to_string_lossy()
+        ));
     }
 
     fn start_shred_input_for_file(&mut self, file: &FileInfo) {

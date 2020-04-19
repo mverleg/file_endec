@@ -56,7 +56,7 @@ pub fn decompress_file(
             match alg {
                 CompressionAlg::Brotli => brotli_decompress(&data),
             }
-        },
+        }
         None => Ok(data),
     }
 }

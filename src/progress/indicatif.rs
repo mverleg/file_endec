@@ -101,7 +101,15 @@ impl IndicatifProgress {
             todo.insert(
                 TaskType::Write(file_strat.file().in_path.to_owned()),
                 TaskInfo {
-                    text: format!("write {}", file_strat.file().out_pth.file_name().unwrap().to_string_lossy()),
+                    text: format!(
+                        "write {}",
+                        file_strat
+                            .file()
+                            .out_pth
+                            .file_name()
+                            .unwrap()
+                            .to_string_lossy()
+                    ),
                     size: file_strat.file().size_kb * 2,
                 },
             );
@@ -164,7 +172,11 @@ impl IndicatifProgress {
         }
     }
 
-    pub fn new_dec_strategy(file_strategies: &[FileHeader], delete_input: bool, verbosity: Verbosity) -> Self {
+    pub fn new_dec_strategy(
+        file_strategies: &[FileHeader],
+        delete_input: bool,
+        verbosity: Verbosity,
+    ) -> Self {
         IndicatifProgress::new_file_strategy(false, file_strategies, delete_input, verbosity)
     }
 

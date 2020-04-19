@@ -9,9 +9,10 @@ use ::std::process::Stdio;
 use ::std::str::from_utf8;
 
 pub fn test_cmd<I, S>(args: I, input: Option<String>) -> String
-    where
-        I: IntoIterator<Item = S>,
-        S: AsRef<OsStr> {
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
     let mut ref_args = vec![];
     print!("cargo ");
     for arg in args.into_iter() {
@@ -27,7 +28,12 @@ pub fn test_cmd<I, S>(args: I, input: Option<String>) -> String
         .spawn()
         .unwrap();
     if let Some(txt) = input {
-        command.stdin.as_mut().unwrap().write_all(txt.as_bytes()).unwrap();
+        command
+            .stdin
+            .as_mut()
+            .unwrap()
+            .write_all(txt.as_bytes())
+            .unwrap();
         command.stdin.as_mut().unwrap().flush().unwrap();
     }
     let output = command.wait_with_output().unwrap();
@@ -49,18 +55,32 @@ pub fn test_encrypt(paths: &[&Path], nonfile_args: &[&str], input: Option<String
     test_cmd(args, input)
 }
 
-pub fn test_decrypt(paths: &[&Path], nonfile_args: &[&str], input: Option<String>, add_ext: bool) -> String {
+pub fn test_decrypt(
+    paths: &[&Path],
+    nonfile_args: &[&str],
+    input: Option<String>,
+    add_ext: bool,
+) -> String {
     let mut args = vec![
         "run".to_owned(),
         "--release".to_owned(),
         "--bin".to_owned(),
         "filedec".to_owned(),
-        "--".to_owned()];
-    paths.iter()
-        .map(|p| if add_ext { filename_append_enc(p) } else { p.to_path_buf() })
+        "--".to_owned(),
+    ];
+    paths
+        .iter()
+        .map(|p| {
+            if add_ext {
+                filename_append_enc(p)
+            } else {
+                p.to_path_buf()
+            }
+        })
         .map(|p| p.to_str().unwrap().to_string())
         .for_each(|p| args.push(p));
-    nonfile_args.into_iter()
+    nonfile_args
+        .into_iter()
         .for_each(|a| args.push((*a).to_owned()));
     test_cmd(args, input)
 }

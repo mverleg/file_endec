@@ -1,6 +1,7 @@
 use crate::config::typ::{EndecConfig, Extension};
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::compress_file;
+use crate::files::delete::delete_input_file;
 use crate::files::file_meta::inspect_files;
 use crate::files::reading::{open_reader, read_file};
 use crate::files::write_output::write_output_file;
@@ -9,13 +10,12 @@ use crate::header::Header;
 use crate::key::stretch::stretch_key;
 use crate::key::Salt;
 use crate::progress::indicatif::IndicatifProgress;
+use crate::progress::log::LogProgress;
+use crate::progress::silent::SilentProgress;
 use crate::progress::Progress;
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
 use crate::{EncryptConfig, FedResult, Verbosity};
-use crate::progress::silent::SilentProgress;
-use crate::progress::log::LogProgress;
-use crate::files::delete::delete_input_file;
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     let version = get_current_version();
@@ -29,7 +29,12 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     )?;
     let mut progress: Box<dyn Progress> = match config.verbosity() {
         Verbosity::Quiet => Box::new(SilentProgress::new()),
-        Verbosity::Normal => Box::new(IndicatifProgress::new_enc_strategy(&strategy, &files_info, config.delete_input(), config.verbosity())),
+        Verbosity::Normal => Box::new(IndicatifProgress::new_enc_strategy(
+            &strategy,
+            &files_info,
+            config.delete_input(),
+            config.verbosity(),
+        )),
         Verbosity::Debug => Box::new(LogProgress::new()),
     };
     let salt = Salt::generate_random()?;
@@ -70,7 +75,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
                 config.delete_input(),
                 file,
                 &mut || progress.start_shred_input_for_file(&file),
-                    config.verbosity(),
+                config.verbosity(),
             )?;
         } else if !config.quiet() {
             progress.start_write_for_file(&file);

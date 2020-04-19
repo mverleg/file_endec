@@ -36,6 +36,7 @@ pub use crate::symmetric::encrypt::encrypt_twofish;
 pub use crate::util::FedResult;
 
 mod config;
+mod e2e;
 mod files;
 mod header;
 mod key;
@@ -43,7 +44,6 @@ mod orchestrate;
 mod progress;
 mod symmetric;
 mod util;
-mod e2e;
 
 #[cfg(test)]
 mod tests {

@@ -16,14 +16,14 @@ use crate::progress::Progress;
 use crate::symmetric::decrypt::decrypt_file;
 
 pub use crate::config::enc::EncryptConfig;
+use crate::files::delete::delete_input_file;
 use crate::files::reading::{open_reader, read_file};
 pub use crate::header::strategy::Verbosity;
 pub use crate::key::{Key, KeySource};
 use crate::progress::indicatif::IndicatifProgress;
-pub use crate::util::FedResult;
-use crate::progress::silent::SilentProgress;
 use crate::progress::log::LogProgress;
-use crate::files::delete::delete_input_file;
+use crate::progress::silent::SilentProgress;
+pub use crate::util::FedResult;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,
@@ -63,7 +63,11 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
     let files_strats = read_file_strategies(&files_info, config.verbosity())?;
     let mut progress: Box<dyn Progress> = match config.verbosity() {
         Verbosity::Quiet => Box::new(SilentProgress::new()),
-        Verbosity::Normal => Box::new(IndicatifProgress::new_dec_strategy(&files_strats, config.delete_input(), config.verbosity())),
+        Verbosity::Normal => Box::new(IndicatifProgress::new_dec_strategy(
+            &files_strats,
+            config.delete_input(),
+            config.verbosity(),
+        )),
         Verbosity::Debug => Box::new(LogProgress::new()),
     };
     let mut key_cache: HashMap<Salt, StretchKey> = HashMap::new();
@@ -97,14 +101,16 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
             &stretched_key,
             &salt,
             &file_strat.strategy.symmetric_algorithms,
-            &mut |alg| progress.start_sym_alg_for_file(alg, &file_strat.file)
+            &mut |alg| progress.start_sym_alg_for_file(alg, &file_strat.file),
         )?;
         let big = decompress_file(
             revealed,
             &file_strat.strategy.compression_algorithm,
-            &mut |alg| progress.start_compress_alg_for_file(alg, &file_strat.file)
+            &mut |alg| progress.start_compress_alg_for_file(alg, &file_strat.file),
         )?;
-        let actual_checksum = calculate_checksum(&big, &mut || progress.start_checksum_for_file(&file_strat.file));
+        let actual_checksum = calculate_checksum(&big, &mut || {
+            progress.start_checksum_for_file(&file_strat.file)
+        });
         if !validate_checksum_matches(
             &actual_checksum,
             file_strat.header.checksum(),

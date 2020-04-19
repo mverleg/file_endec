@@ -2,12 +2,12 @@ pub use checksum::Checksum;
 
 pub mod checksum;
 pub mod compress;
+pub mod delete;
 pub mod file_meta;
 pub mod mockfile;
 pub mod read_headers;
 pub mod reading;
 pub mod write_output;
-pub mod delete;
 
 #[cfg(test)]
 pub mod scan;

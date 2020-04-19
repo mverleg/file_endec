@@ -2,12 +2,12 @@ use ::std::fs::File;
 use ::std::io::Write;
 
 use crate::config::typ::EndecConfig;
+use crate::files::delete::delete_existing_file_in_output_location;
 use crate::files::file_meta::FileInfo;
-use crate::header::Header;
 use crate::header::write_header;
+use crate::header::Header;
 use crate::util::errors::wrap_io;
 use crate::util::FedResult;
-use crate::files::delete::delete_existing_file_in_output_location;
 
 pub fn write_output_file(
     config: &impl EndecConfig,

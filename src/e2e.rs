@@ -1,55 +1,70 @@
 #![cfg(test)]
 
 use crate::files::mockfile::write_test_file;
-use crate::util::test_cmd::{test_encrypt, test_decrypt, append_enc};
-use tempfile::TempDir;
+use crate::util::test_cmd::{test_encrypt, test_decrypt, filename_append_enc};
+use tempfile::{TempDir, NamedTempFile};
 use std::path::PathBuf;
+use std::fs;
 
 #[ignore]  //TODO @mark: TEMPORARY! REMOVE THIS!
 #[test]
 fn large_file() {
     let key = "pass:abc123";
     let (tmp, file) = write_test_file(128 * 1024 * 1024);
-    let enc_pth = {
-        let mut p = file.clone();
-        p.set_file_name(format!("{}.enc", file.file_name().unwrap().to_string_lossy()));
-        p
-    };
+    let enc_pth = filename_append_enc(file.as_path());
     test_encrypt(&vec![file.as_path()], &["-k", key, "--accept-weak-key", "-d", "-v"], None);
     assert!(enc_pth.as_path().exists());
     assert!(!file.as_path().exists());
     test_decrypt(&vec![file.as_path()], &["-k", key, "-d", "-v"], None);
     assert!(!enc_pth.as_path().exists());
     assert!(file.as_path().exists());
-    tmp.close().unwrap()
+    tmp.close().unwrap();
 }
 
 #[test]
 fn many_files() {
     let key = "!&R$ Eq1\n473L19XTGK'K7#be7\0Rl b62U8R2";
-    let key = "1234567890";  //TODO @mark: TEMPORARY! REMOVE THIS!
     let files: Vec<(TempDir, PathBuf)> = (50..200)
         .map(|i| write_test_file(i * 1024))
         .collect();
     let paths: Vec<_> = files.iter().map(|f| f.1.as_path()).collect();
-    test_encrypt(&paths, &["-k", "ask-once", "-q"], Some(format!("{0}\n{0}", key)));
+    test_encrypt(&paths, &["-k", "pipe", "-q"], Some(format!("{0}\n{0}\n", key)));
     paths.iter().for_each(|p| assert!(p.exists()));
-    test_decrypt(&paths, &["-k", "ask", "-q"], Some(key.to_owned()));
-    paths.iter().map(|p| append_enc(p)).for_each(|p| assert!(p.exists()));
+    test_decrypt(&paths, &["-k", "pipe", "-q"], Some(key.to_owned()));
+    paths.iter().map(|p| filename_append_enc(p)).for_each(|p| assert!(p.exists()));
     paths.iter().for_each(|p| assert!(p.exists()));
     files.into_iter().for_each(|f| f.0.close().unwrap());
+}
+
+//TODO @mark: many files different keys
+
+#[ignore]  //TODO @mark: TEMPORARY! REMOVE THIS!
+#[test]
+fn dry_run_passfile() {
+    let key = "pass:Lp0aY_=f9&zLEN-!D&jfdZPQH709-%N+";
+    let (dir, file) = write_test_file(100 * 1024);
+    // Key file
+    let key_pth = NamedTempFile::new_in(dir.path()).unwrap().path().to_owned();
+    fs::write(&key_pth, key.as_bytes()).unwrap();
+    // File in output location
+    let tmp = NamedTempFile::new_in(dir.path()).unwrap().path().to_owned();
+    let collision_file = filename_append_enc(&tmp);
+    fs::rename(&tmp, &collision_file).unwrap();
+    fs::write(&collision_file, b"hello world").unwrap();
+    // Encrypt the test file
+    //TODO @mark: make sure dry_run does not overwrite file in target location
+    test_encrypt(&vec![file.as_path()], &["-k", &format!("file:{}", &key_pth.to_str().unwrap()), "--dry-run", "-d", "-f"], None);
+    //assert!(!enc_pth.as_path().exists());
+    assert!(file.as_path().exists());
+    dir.close().unwrap();
 }
 
 //TODO @mark: try all/most CLI args
 //TODO @mark: can I try version compatibiltiy here?
 
 
-//pass:$password
 //env:$var_name
 //file:$path
-//ask
-//askonce
-//pipe
 
 
 // USAGE:

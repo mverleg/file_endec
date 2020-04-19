@@ -26,6 +26,7 @@ pub fn test_cmd<I, S>(args: I, input: Option<String>) -> String
         .unwrap();
     if let Some(txt) = input {
         command.stdin.as_mut().unwrap().write_all(txt.as_bytes()).unwrap();
+        command.stdin.as_mut().unwrap().flush().unwrap();
     }
     let output = command.wait_with_output().unwrap();
     if !output.stderr.is_empty() {
@@ -54,14 +55,14 @@ pub fn test_decrypt(paths: &[&Path], nonfile_args: &[&str], input: Option<String
         "filedec".to_owned(),
         "--".to_owned()];
     paths.iter()
-        .map(|p| append_enc(p).to_string_lossy().to_string())
+        .map(|p| filename_append_enc(p).to_string_lossy().to_string())
         .for_each(|p| args.push(p));
     nonfile_args.into_iter()
         .for_each(|a| args.push((*a).to_owned()));
     test_cmd(args, input)
 }
 
-pub fn append_enc(path: &Path) -> PathBuf {
+pub fn filename_append_enc(path: &Path) -> PathBuf {
     let mut p = path.to_owned();
     let name = path.file_name().unwrap().to_string_lossy();
     p.set_file_name(format!("{}.enc", name));

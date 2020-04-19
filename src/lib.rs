@@ -1,13 +1,17 @@
-//TODO @mark: limit api
-
+pub use crate::orchestrate::encrypt::encrypt;
+pub use crate::orchestrate::decrypt::decrypt;
 pub use crate::config::DecryptConfig;
 pub use crate::config::EncryptConfig;
 pub use crate::config::EndecConfig;
+pub use crate::header::strategy::Verbosity;
+pub use crate::key::Key;
+pub use crate::key::KeySource;
+pub use crate::util::FedResult;
+
 #[cfg(feature = "expose")]
 pub use crate::files::mockfile::generate_test_file_content_for_test;
 #[cfg(feature = "expose")]
 pub use crate::header::strategy::get_current_version_strategy;
-pub use crate::header::strategy::Verbosity;
 #[cfg(feature = "expose")]
 pub use crate::key::hash::hash_argon2i;
 #[cfg(feature = "expose")]
@@ -18,13 +22,8 @@ pub use crate::key::hash::hash_sha256;
 pub use crate::key::key::StretchKey;
 #[cfg(feature = "expose")]
 pub use crate::key::stretch::stretch_key;
-pub use crate::key::Key;
-pub use crate::key::KeySource;
 #[cfg(feature = "expose")]
 pub use crate::key::Salt;
-pub use crate::orchestrate::decrypt::decrypt;
-// These two methods are the main entry points.
-pub use crate::orchestrate::encrypt::encrypt;
 #[cfg(feature = "expose")]
 pub use crate::symmetric::decrypt::decrypt_aes256;
 #[cfg(feature = "expose")]
@@ -33,7 +32,6 @@ pub use crate::symmetric::decrypt::decrypt_twofish;
 pub use crate::symmetric::encrypt::encrypt_aes256;
 #[cfg(feature = "expose")]
 pub use crate::symmetric::encrypt::encrypt_twofish;
-pub use crate::util::FedResult;
 
 mod config;
 mod e2e;

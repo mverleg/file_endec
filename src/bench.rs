@@ -147,8 +147,6 @@ pub fn need_expose_feature(_: &mut Criterion) {
     panic!("benchmarks require feature 'expose' to be enabled")
 }
 
-//TODO @mark: fully encrypt and decrypt large file
-
 #[cfg(feature = "expose")]
 criterion_group!(
     hash_bench,

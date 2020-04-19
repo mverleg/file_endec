@@ -1,7 +1,7 @@
 #![cfg(any(test, feature = "expose"))]
 
+#[cfg(test)]
 use ::std::path::PathBuf;
-
 #[cfg(test)]
 use ::tempfile::{NamedTempFile, TempDir};
 

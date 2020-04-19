@@ -15,7 +15,7 @@ fn large_file() {
     let (tmp, file, data) = write_test_file(128 * 1024 * 1024);
     let enc_pth = filename_append_enc(file.as_path());
     test_encrypt(
-        &vec![file.as_path()],
+        &[file.as_path()],
         &[
             "-k",
             &format!("pass:{}", key),
@@ -29,7 +29,7 @@ fn large_file() {
     assert!(!file.as_path().exists());
     env::set_var("FED_E2E_LARGE_FILE_TESTKEY", key);
     test_decrypt(
-        &vec![file.as_path()],
+        &[file.as_path()],
         &["-k", "env:FED_E2E_LARGE_FILE_TESTKEY", "-d", "-v"],
         None,
         true,
@@ -74,7 +74,7 @@ fn dry_run_passfile() {
     fs::write(&collision_file, b"hello world").unwrap();
     // Encrypt the test file
     test_encrypt(
-        &vec![file.as_path()],
+        &[file.as_path()],
         &[
             "-k",
             &format!("file:{}", &key_pth.to_str().unwrap()),
@@ -105,7 +105,7 @@ fn output_dir_multi_salt() {
             &extension
         ));
         test_encrypt(
-            &vec![in_file.as_path()],
+            &[in_file.as_path()],
             &[
                 "-k",
                 "pipe",
@@ -133,12 +133,15 @@ fn output_dir_multi_salt() {
         false,
     );
     for path in paths {
-        let mut enc_pth = path.2.clone();
-        let name = enc_pth.file_name().unwrap().to_str().unwrap();
-        enc_pth.set_file_name(name[..name.len() - 4].to_owned());
+        let enc_pth = {
+            let mut p = path.2.clone();
+            let name = p.file_name().unwrap().to_str().unwrap().to_owned();
+            p.set_file_name(&name[..name.len() - 4].to_owned());
+            p
+        };
         assert!(enc_pth.exists());
         assert_eq!(fs::read(&enc_pth).unwrap(), path.3);
-        path.0.close();
+        path.0.close().unwrap();
     }
     out_dir.close().unwrap();
 }

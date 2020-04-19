@@ -1,4 +1,4 @@
-#![cfg(any(test, feature = "expose"))]
+#![cfg(test)]
 
 use ::std::ffi::OsStr;
 use ::std::io::Write;
@@ -80,7 +80,7 @@ pub fn test_decrypt(
         .map(|p| p.to_str().unwrap().to_string())
         .for_each(|p| args.push(p));
     nonfile_args
-        .into_iter()
+        .iter()
         .for_each(|a| args.push((*a).to_owned()));
     test_cmd(args, input)
 }

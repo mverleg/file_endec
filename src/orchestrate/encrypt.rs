@@ -15,7 +15,7 @@ use crate::util::version::get_current_version;
 use crate::{EncryptConfig, FedResult, Verbosity};
 use crate::progress::silent::SilentProgress;
 use crate::progress::log::LogProgress;
-use file_shred::shred_file;
+use crate::files::delete::delete_input_file;
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     let version = get_current_version();
@@ -65,13 +65,13 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
             write_output_file(config, &file, &secret, Some(&header), &mut || {
                 progress.start_write_for_file(&file)
             })?;
-            if config.delete_input() {
-                progress.start_shred_input_for_file(&file);
-                shred_file(&file.in_path)?;
-                if config.verbosity().debug() {
-                    println!("deleted {}", &file.file_name());
-                }
-            }
+            //TODO @mark: test that file is removed?
+            delete_input_file(
+                config.delete_input(),
+                file,
+                &mut || progress.start_shred_input_for_file(&file),
+                    config.verbosity(),
+            )?;
         } else if !config.quiet() {
             progress.start_write_for_file(&file);
             println!(

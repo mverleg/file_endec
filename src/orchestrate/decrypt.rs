@@ -23,7 +23,7 @@ use crate::progress::indicatif::IndicatifProgress;
 pub use crate::util::FedResult;
 use crate::progress::silent::SilentProgress;
 use crate::progress::log::LogProgress;
-use file_shred::shred_file;
+use crate::files::delete::delete_input_file;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,
@@ -117,11 +117,12 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
             progress.start_write_for_file(&file_strat.file)
         })?;
         if config.delete_input() {
-            progress.start_shred_input_for_file(&file_strat.file);
-            shred_file(&file_strat.file.in_path)?;
-            if config.verbosity().debug() {
-                println!("deleted {}", &file_strat.file.file_name());
-            }
+            delete_input_file(
+                config.delete_input(),
+                &file_strat.file,
+                &mut || progress.start_shred_input_for_file(&file_strat.file),
+                config.verbosity(),
+            )?;
         }
         if !config.quiet() {
             println!(
@@ -232,6 +233,4 @@ mod tests {
         assert!(&result.is_err());
         assert!(&result.unwrap_err().contains("checksums did not match"));
     }
-
-    //TODO @mark: check that invalid checksum will fail decryption
 }

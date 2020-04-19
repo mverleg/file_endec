@@ -7,6 +7,7 @@ pub mod mockfile;
 pub mod read_headers;
 pub mod reading;
 pub mod write_output;
+pub mod delete;
 
 #[cfg(test)]
 pub mod scan;

@@ -22,6 +22,8 @@ pub fn test_cmd<I, S>(args: I, input: Option<String>) -> String
     let mut command = Command::new("cargo")
         .args(ref_args)
         .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .spawn()
         .unwrap();
     if let Some(txt) = input {

@@ -49,7 +49,7 @@ pub fn test_encrypt(paths: &[&Path], nonfile_args: &[&str], input: Option<String
     test_cmd(args, input)
 }
 
-pub fn test_decrypt(paths: &[&Path], nonfile_args: &[&str], input: Option<String>) -> String {
+pub fn test_decrypt(paths: &[&Path], nonfile_args: &[&str], input: Option<String>, add_ext: bool) -> String {
     let mut args = vec![
         "run".to_owned(),
         "--release".to_owned(),
@@ -57,7 +57,8 @@ pub fn test_decrypt(paths: &[&Path], nonfile_args: &[&str], input: Option<String
         "filedec".to_owned(),
         "--".to_owned()];
     paths.iter()
-        .map(|p| filename_append_enc(p).to_string_lossy().to_string())
+        .map(|p| if add_ext { filename_append_enc(p) } else { p.to_path_buf() })
+        .map(|p| p.to_str().unwrap().to_string())
         .for_each(|p| args.push(p));
     nonfile_args.into_iter()
         .for_each(|a| args.push((*a).to_owned()));

@@ -61,6 +61,47 @@ fn dry_run_passfile() {
     dir.close().unwrap();
 }
 
+#[test]
+fn output_dir_multi_salt() {
+    let key = "!zEtt8M$vC6hJ9T@";
+    let out_dir = TempDir::new().unwrap();
+    let mut paths = vec![];
+    //TODO @mark: more iters
+    for i in 0..1 {
+        let extension = format!("e{0}{0}", i);
+        let (dir, in_file, data) = write_test_file((10 + i) * 800);
+        let mut out_file = in_file.clone();
+        out_file.set_file_name(format!("{0}.{1}", in_file.file_name().unwrap().to_string_lossy(), &extension));
+        test_encrypt(
+            &vec![in_file.as_path()],
+            &["-k", "pipe", "-v",
+                "--output-dir", out_dir.path().to_str().unwrap(),
+                "--output-extension", &extension],
+            Some(key.to_owned())
+        );
+        paths.push((dir, in_file, out_file, data));
+    }
+    let out_paths: Vec<_> = paths.iter().map(|t| t.2.as_path()).collect();
+    //TODO @mark: output-dir
+    test_decrypt(&out_paths, &["-k", &format!("pass:{}", key)], None);
+
+    paths.into_iter().for_each(|f| f.0.close().unwrap());
+    out_dir.close().unwrap();
+
+    // // Key file
+    // let key_pth = NamedTempFile::new_in(out_dir.path()).unwrap().path().to_owned();
+    // fs::write(&key_pth, key.as_bytes()).unwrap();
+    // // File in output location
+    // let collision_file = filename_append_enc(&file);
+    // fs::write(&collision_file, b"hello world").unwrap();
+    // // Encrypt the test file
+    // test_encrypt(&vec![file.as_path()], &["-k", key], None);
+    // test_decrypt(&vec![file1.as_path()], &["-k", key], None);
+    // assert!(file.as_path().exists());
+    // assert!(collision_file.as_path().exists());
+    // assert_eq!(fs::read(&collision_file).unwrap(), b"hello world");
+    // out_dir.close().unwrap();
+}
+
 //TODO @mark: test wrong key (error msg) - should that be e2e?
 //TODO @mark: multiple files different keys
-//TODO @mark: 2x --output-dir

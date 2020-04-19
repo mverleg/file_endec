@@ -21,6 +21,8 @@ pub use crate::header::strategy::Verbosity;
 pub use crate::key::{Key, KeySource};
 use crate::progress::indicatif::IndicatifProgress;
 pub use crate::util::FedResult;
+use crate::progress::silent::SilentProgress;
+use crate::progress::log::LogProgress;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,
@@ -58,7 +60,11 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
         config.output_dir(),
     )?;
     let files_strats = read_file_strategies(&files_info, config.verbosity())?;
-    let mut progress = IndicatifProgress::new_dec_strategy(&files_strats, config.verbosity());
+    let mut progress: Box<dyn Progress> = match config.verbosity() {
+        Verbosity::Quiet => Box::new(SilentProgress::new()),
+        Verbosity::Normal => Box::new(IndicatifProgress::new_dec_strategy(&files_strats, config.verbosity())),
+        Verbosity::Debug => Box::new(LogProgress::new()),
+    };
     let mut key_cache: HashMap<Salt, StretchKey> = HashMap::new();
     let mut checksum_failure_count = 0;
     for file_strat in &files_strats {

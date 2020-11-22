@@ -1,4 +1,8 @@
 
+[![Tests](https://github.com/mverleg/file_shred/workflows/Test%20file_endec/badge.svg)](https://github.com/mverleg/file_endec/actions)
+
+[![Dependencies](https://deps.rs/repo/github/mverleg/file_endec/status.svg)](https://deps.rs/repo/github/mverleg/file_endec)
+
 File encrypt/decrypt
 ===============================
 
@@ -17,7 +21,22 @@ Functionality
 * Warnings for weak keys.
 * Shredding of deleted files.
 
-How to use
+In Docker
+-------------------------------
+
+Run the encrypter with Docker::
+
+    docker run --rm -it -v "$(pwd):/data" file_endec -- encrypt file.txt
+
+You can mount any directory in which you want to encrypt files; the above example uses the current directory `$(pwd)`. Use `decrypt` instead of `encrypt` for decryption.
+
+To build the image yourself (instead of downloading from Dockerhub), clone the Github project and run::
+
+    docker build -t file_endec .
+
+This will also run the tests and lints, to verify that your version is okay.
+
+Options
 -------------------------------
 
 Use `fileenc --help` and `filedec --help` to see CLI arguments. For `fileenc`:

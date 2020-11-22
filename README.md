@@ -1,5 +1,5 @@
 
-[![Tests](https://github.com/mverleg/file_shred/workflows/Test%20file_endec/badge.svg)](https://github.com/mverleg/file_endec/actions)
+[![Tests](https://github.com/mverleg/file_endec/workflows/Test%20file_endec/badge.svg)](https://github.com/mverleg/file_endec/actions)
 
 [![Dependencies](https://deps.rs/repo/github/mverleg/file_endec/status.svg)](https://deps.rs/repo/github/mverleg/file_endec)
 
@@ -24,7 +24,7 @@ Functionality
 In Docker
 -------------------------------
 
-Run the encrypter with Docker::
+Run the encryptor with Docker::
 
     docker run --rm -it -v "$(pwd):/data" file_endec -- encrypt file.txt
 

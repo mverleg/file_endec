@@ -26,13 +26,13 @@ In Docker
 
 Run the encryptor with Docker::
 
-    docker run --rm -it -v "$(pwd):/data" file_endec -- encrypt file.txt
+    docker run --rm -it -v "$(pwd):/data" file-endec -- encrypt file.txt
 
 You can mount any directory in which you want to encrypt files; the above example uses the current directory `$(pwd)`. Use `decrypt` instead of `encrypt` for decryption.
 
 To build the image yourself (instead of downloading from Dockerhub), clone the Github project and run::
 
-    docker build -t file_endec .
+    docker build -t file-endec .
 
 This will also run the tests and lints, to verify that your version is okay.
 

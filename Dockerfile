@@ -22,25 +22,27 @@ RUN mkdir -p ./src && \
     printf 'fn main() { println!("placeholder for compiling dependencies") }' | tee src/encrypt.rs | tee src/decrypt.rs | tee src/bench.rs && \
     printf '' | tee src/lib.rs
 
-RUN cargo build --all-targets --all-features --release --tests --bin fileenc
-RUN cargo build --all-targets --all-features --release --tests --bin filedec
+RUN cargo build --all-targets --all-features --release --tests
 
 # Code changes invalidate cache beyond here main code separately
 
 COPY ./src/ src/
-RUN bash -c 'touch -c src/*'
+RUN bash -c 'touch -c src/* test_files/*'
 
 # Build
 
+RUN cargo --offline build --all-targets --all-features --release --bin fileenc
+RUN cargo --offline build --all-targets --all-features --release --bin filedec
+
 RUN cargo --offline run --all-features --release --bin fileenc -- --help
 RUN cargo --offline run --all-features --release --bin filedec -- --help
-
-RUN cargo --offline build --all-targets --all-features --release
 
 RUN mv "$(find . -executable -name fileenc)" "$(find . -executable -name filedec)" .
 
 # Run checks
 
+COPY ./test_files/ test_files/
+ENV ENDEC_TEST_FILE_DIR=/app/test_files/
 RUN cargo --offline test --release --all-targets --all-features
 
 RUN cargo --offline clippy --release --all-targets --all-features -- -D warnings

@@ -74,7 +74,7 @@ mod hash {
                     )
                 })
             })
-            .sample_size(5),
+            .sample_size(10),
         );
     }
 }

@@ -1,11 +1,11 @@
-pub use crate::orchestrate::encrypt::encrypt;
-pub use crate::orchestrate::decrypt::decrypt;
 pub use crate::config::DecryptConfig;
 pub use crate::config::EncryptConfig;
 pub use crate::config::EndecConfig;
 pub use crate::header::strategy::Verbosity;
 pub use crate::key::Key;
 pub use crate::key::KeySource;
+pub use crate::orchestrate::decrypt::decrypt;
+pub use crate::orchestrate::encrypt::encrypt;
 pub use crate::util::FedResult;
 
 #[cfg(feature = "expose")]

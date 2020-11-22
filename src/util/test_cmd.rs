@@ -79,9 +79,7 @@ pub fn test_decrypt(
         })
         .map(|p| p.to_str().unwrap().to_string())
         .for_each(|p| args.push(p));
-    nonfile_args
-        .iter()
-        .for_each(|a| args.push((*a).to_owned()));
+    nonfile_args.iter().for_each(|a| args.push((*a).to_owned()));
     test_cmd(args, input)
 }
 

@@ -22,14 +22,14 @@ impl FromStr for KeySource {
     type Err = String;
 
     fn from_str(txt: &str) -> Result<Self, Self::Err> {
-        if txt.starts_with("pass:") {
-            return Ok(KeySource::CliArg(Key::new(&txt[5..])));
+        if let Some(stripped) = txt.strip_prefix("pass:") {
+            return Ok(KeySource::CliArg(Key::new(stripped)));
         }
-        if txt.starts_with("env:") {
-            return Ok(KeySource::EnvVar(txt[4..].to_owned()));
+        if let Some(stripped) = txt.strip_prefix("env:") {
+            return Ok(KeySource::EnvVar(stripped.to_owned()));
         }
-        if txt.starts_with("file:") {
-            return Ok(KeySource::File(PathBuf::from(txt[5..].to_owned())));
+        if let Some(stripped) = txt.strip_prefix("file:") {
+            return Ok(KeySource::File(PathBuf::from(stripped.to_owned())));
         }
         if txt == "ask-once" || txt == "askonce" {
             return Ok(KeySource::AskOnce);

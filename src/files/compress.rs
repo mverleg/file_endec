@@ -7,10 +7,9 @@ use crate::header::CompressionAlg;
 use crate::util::FedResult;
 
 lazy_static! {
-    static ref BROTLI_CONFIG: BrotliEncoderParams = {
-        let mut param = BrotliEncoderParams::default();
-        param.quality = 6;
-        param
+    static ref BROTLI_CONFIG: BrotliEncoderParams = BrotliEncoderParams {
+        quality: 6,
+        ..Default::default()
     };
 }
 

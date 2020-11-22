@@ -85,7 +85,13 @@ fn key_from_file(file_path: &Path) -> FedResult<Key> {
 
 fn ask_key_from_prompt(message: &str) -> FedResult<Key> {
     match rpassword::read_password_from_tty(Some(message)) {
-        Ok(pw) => Ok(Key::new(pw.trim())),
+        Ok(pw) => {
+            let pw = pw.trim();
+            if pw.is_empty() {
+                return Err("password from interactive console was empty".to_string());
+            }
+            Ok(Key::new(pw))
+        }
         Err(_) => Err("failed to get password from interactive console".to_string()),
     }
 }

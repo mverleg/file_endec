@@ -51,7 +51,7 @@ RUN cargo --offline fmt --all -- --check
 
 RUN cargo --offline doc --no-deps --all-features --release
 
-RUN cargo --offline audit --deny-warnings
+RUN cargo --offline audit --deny warnings
 RUN cargo --offline deny check advisories
 RUN cargo --offline deny check bans
 RUN cargo --offline outdated --exit-code 1
@@ -65,7 +65,7 @@ WORKDIR /data
 
 ENV RUST_BACKTRACE=1
 
-COPY --from=build /app/encrypt /app/decrypt /
+COPY --from=build /app/fileenc /app/filedec /
 
-ENTRYPOINT ["printf", "use either 'encrypt --help' or 'decrypt --help' for for more information"]
+CMD ["/fileenc", "--help"]
 

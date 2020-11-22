@@ -19,9 +19,11 @@ WORKDIR /app
 COPY ./Cargo.toml ./Cargo.lock ./
 
 RUN mkdir -p ./src && \
-    printf 'fn main() { println!("placeholder for compiling dependencies") }' | tee src/main.rs | tee src/lib.rs
+    printf 'fn main() { println!("placeholder for compiling dependencies") }' | tee src/encrypt.rs | tee src/decrypt.rs | tee src/bench.rs && \
+    printf '' | tee src/lib.rs
 
-RUN cargo build --all-targets --all-features --release --tests
+RUN cargo build --all-targets --all-features --release --tests --bin fileenc
+RUN cargo build --all-targets --all-features --release --tests --bin filedec
 
 # Code changes invalidate cache beyond here main code separately
 
@@ -30,11 +32,12 @@ RUN bash -c 'touch -c src/*'
 
 # Build
 
-RUN cargo --offline run --all-features --release -- --help
+RUN cargo --offline run --all-features --release --bin fileenc -- --help
+RUN cargo --offline run --all-features --release --bin filedec -- --help
 
 RUN cargo --offline build --all-targets --all-features --release
 
-RUN mv "$(find . -executable -name encrypt)" "$(find . -executable -name decrypt)" .
+RUN mv "$(find . -executable -name fileenc)" "$(find . -executable -name filedec)" .
 
 # Run checks
 

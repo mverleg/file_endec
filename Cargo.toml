@@ -1,6 +1,6 @@
 [package]
 name = "file_endec"
-version = "1.0.0"
+version = "1.0.1"
 description = "Secure file encryption and decryption from the command line."
 authors = ["Mark <mverleg.noreply@gmail.com>"]
 edition = "2018"

@@ -1,8 +1,9 @@
+use ::std::cmp::Ordering;
+use ::std::collections::btree_set::Iter;
+use ::std::collections::BTreeSet;
 use ::std::fmt;
 use ::std::fmt::Formatter;
 use ::std::str::FromStr;
-use std::collections::BTreeSet;
-use std::cmp::Ordering;
 
 #[derive(Debug)]
 pub struct EncOptions {
@@ -12,8 +13,22 @@ pub struct EncOptions {
 impl EncOptions {
     pub fn new(options: Vec<EncOption>) -> Self {
         EncOptions {
-            options: options.into(),
+            options: options.iter().cloned().collect(),
         }
+    }
+
+    pub fn empty() -> Self {
+        EncOptions {
+            options: BTreeSet::new(),
+        }
+    }
+
+    pub fn has(&self, option: &EncOption) -> bool {
+        self.options.contains(option)
+    }
+
+    pub fn iter(&self) -> Iter<'_, EncOption> {
+        self.options.iter()
     }
 }
 
@@ -63,6 +78,39 @@ impl FromStr for EncOption {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    mod collection {
+        use super::*;
+
+        #[test]
+        fn deduplicate() {
+            let options = EncOptions::new(vec![
+                EncOption::Fast,
+                EncOption::HideMeta,
+                EncOption::Fast,
+            ]);
+            assert_eq!(options.iter().count(), 2);
+        }
+
+        #[test]
+        fn ordered() {
+            let mut options_iter = EncOptions::new(vec![
+                EncOption::HideMeta,
+                EncOption::Fast,
+            ]).iter();
+            assert_eq!(options_iter.next(), Some(&EncOption::Fast));
+            assert_eq!(options_iter.next(), Some(&EncOption::HideMeta));
+        }
+
+        #[test]
+        fn ordered() {
+            let mut options_iter = EncOptions::new(vec![
+                EncOption::HideMeta,
+            ]);
+            assert!(!options_iter.has(&EncOption::Fast));
+            assert!(options_iter.has(&EncOption::HideMeta));
+        }
+    }
 
     mod ordering {
         use super::*;

@@ -1,13 +1,12 @@
 use ::std::fmt;
+use ::std::fmt::Formatter;
 
 use ::lazy_static::lazy_static;
 use ::semver::Version;
 
-use crate::util::version::get_current_version;
 use crate::util::FedResult;
-use std::fmt::Formatter;
-use crate::util::option::EncOption;
 use crate::util::option::EncOptions;
+use crate::util::version::get_current_version;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Verbosity {

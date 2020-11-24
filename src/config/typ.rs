@@ -4,7 +4,6 @@ use ::std::path::PathBuf;
 
 use crate::header::strategy::Verbosity;
 use crate::key::Key;
-use crate::util::option::EncOptions;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Extension<'a> {
@@ -16,8 +15,6 @@ pub trait EndecConfig: Debug {
     fn files(&self) -> &[PathBuf];
 
     fn raw_key(&self) -> &Key;
-
-    fn options(&self) -> &EncOptions;
 
     fn verbosity(&self) -> Verbosity;
 

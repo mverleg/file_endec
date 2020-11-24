@@ -98,21 +98,22 @@ mod tests {
 
         #[test]
         fn ordered() {
-            let mut options_iter = EncOptions::new(vec![
+            let options = EncOptions::new(vec![
                 EncOption::HideMeta,
                 EncOption::Fast,
-            ]).iter();
+            ]);
+            let mut options_iter = options.iter();
             assert_eq!(options_iter.next(), Some(&EncOption::Fast));
             assert_eq!(options_iter.next(), Some(&EncOption::HideMeta));
         }
 
         #[test]
         fn has() {
-            let mut options_iter = EncOptions::new(vec![
+            let options = EncOptions::new(vec![
                 EncOption::HideMeta,
             ]);
-            assert!(!options_iter.has(&EncOption::Fast));
-            assert!(options_iter.has(&EncOption::HideMeta));
+            assert!(!options.has(&EncOption::Fast));
+            assert!(options.has(&EncOption::HideMeta));
         }
     }
 

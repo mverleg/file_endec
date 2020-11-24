@@ -49,6 +49,10 @@ impl EncryptConfig {
         }
     }
 
+    pub fn options(&self) -> &EncOptions {
+        &self.options
+    }
+
     pub fn output_extension(&self) -> &str {
         &self.output_extension
     }

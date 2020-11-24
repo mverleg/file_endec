@@ -16,7 +16,6 @@ use crate::progress::Progress;
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
 use crate::{EncryptConfig, FedResult, Verbosity};
-use crate::util::option::EncOptions;
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     let version = get_current_version();

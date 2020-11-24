@@ -12,7 +12,7 @@ pub struct FileHeader<'a> {
 
 impl<'a> FileHeader<'a> {
     pub fn new(file: &'a FileInfo<'a>, header: Header, verbosity: Verbosity) -> FedResult<Self> {
-        let strategy = get_version_strategy(header.version(), header.options, verbosity.debug())?;
+        let strategy = get_version_strategy(header.version(), header.options(), verbosity.debug())?;
         Ok(FileHeader {
             file,
             header,

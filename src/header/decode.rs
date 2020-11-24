@@ -1,4 +1,5 @@
 use ::std::io::BufRead;
+use ::std::str::FromStr;
 
 use ::semver::Version;
 
@@ -9,11 +10,12 @@ use crate::header::HEADER_DATA_MARKER;
 use crate::header::HEADER_MARKER;
 use crate::header::HEADER_SALT_MARKER;
 use crate::header::HEADER_VERSION_MARKER;
+use crate::header::types::HEADER_OPTION_MARKER;
 use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
-use crate::util::option::EncOptions;
-use crate::header::types::HEADER_OPTION_MARKER;
+use crate::util::option::{EncOption, EncOptions};
+use crate::util::version::options_introduced_in_version;
 
 fn read_line(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<()> {
     line.clear();
@@ -75,7 +77,7 @@ fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> 
     if let Ok(options_str) = check_prefix(line, HEADER_OPTION_MARKER, verbose) {
         let mut option_vec = vec![];
         for option_str in options_str.split_whitespace() {
-            match EncOptions::from_str(option_str) {
+            match EncOption::from_str(option_str) {
                 Ok(option) => option_vec.push(option),
                 Err(err) => return Err(add_err(
                     format!("could not determine the options of fileenc that encrypted this file (got {} which is unknown); maybe it was encrypted with a newer version?", option_str),
@@ -90,7 +92,7 @@ fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> 
             return Err(add_err(
                 format!("there were duplicate encryption options in the file header; it is possible the header has been meddled with"),
                 verbose,
-                err,
+                format!("found {}", options_str),
             ));
         }
         Ok(options)
@@ -123,10 +125,10 @@ pub fn parse_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<Head
     let salt = parse_salt(reader, &mut line, verbose)?;
     let checksum = parse_checksum(reader, &mut line, verbose)?;
     read_line(reader, &mut line, verbose)?;
-    let options = if version >= OPTIONS_INTORDUCED_IN_VERSION {
+    let options = if version >= options_introduced_in_version() {
         parse_options(reader, &mut line, verbose)?
     } else {
-        EncOptions::empty();
+        EncOptions::empty()
     };
     check_prefix(&line, HEADER_DATA_MARKER, verbose).unwrap();
     Header::new(version, salt, checksum, options)
@@ -148,12 +150,12 @@ mod tests {
     use ::semver::Version;
 
     use crate::files::Checksum;
+    use crate::header::decode::skip_header;
     use crate::header::Header;
     use crate::key::salt::Salt;
+    use crate::util::option::EncOptions;
 
     use super::parse_header;
-    use crate::header::decode::skip_header;
-    use crate::util::option::EncOptions;
 
     #[test]
     fn stop_read_after_header() {

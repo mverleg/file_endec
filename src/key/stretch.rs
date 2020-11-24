@@ -31,13 +31,16 @@ mod tests {
     use crate::header::strategy::get_current_version_strategy;
 
     #[cfg(not(debug_assertions))]
+    use crate::util::option::EncOptions;
+
+    #[cfg(not(debug_assertions))]
     use super::*;
 
     #[cfg(not(debug_assertions))]
     #[test]
     fn stratch_test_password() {
         //TODO @mark: more options?
-        let strat = get_current_version_strategy(EncOptions::empty(), true);
+        let strat = get_current_version_strategy(&EncOptions::empty(), true);
         stretch_key(
             &Key::new(&"MY secret p@ssw0rd"),
             &Salt::fixed_for_test(123_456_789),

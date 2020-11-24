@@ -36,7 +36,8 @@ mod tests {
     #[cfg(not(debug_assertions))]
     #[test]
     fn stratch_test_password() {
-        let strat = get_current_version_strategy(true);
+        //TODO @mark: more options?
+        let strat = get_current_version_strategy(EncOptions::empty(), true);
         stretch_key(
             &Key::new(&"MY secret p@ssw0rd"),
             &Salt::fixed_for_test(123_456_789),

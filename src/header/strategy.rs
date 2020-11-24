@@ -121,8 +121,8 @@ mod tests {
 
     #[test]
     fn test_current_version_strategy() {
-        //TODO @mark:
-        get_current_version_strategy(EncOptions::new(), true);
-        get_current_version_strategy(EncOptions::new(), false);
+        //TODO @mark: more options?
+        get_current_version_strategy(&EncOptions::empty(), true);
+        get_current_version_strategy(&EncOptions::empty(), false);
     }
 }

@@ -5,7 +5,7 @@ use ::std::fmt;
 use ::std::fmt::Formatter;
 use ::std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EncOptions {
     options: BTreeSet<EncOption>,
 }
@@ -103,7 +103,7 @@ mod tests {
         }
 
         #[test]
-        fn ordered() {
+        fn has() {
             let mut options_iter = EncOptions::new(vec![
                 EncOption::HideMeta,
             ]);

@@ -12,6 +12,7 @@ use crate::header::HEADER_VERSION_MARKER;
 use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
+use crate::util::option::EncOptions;
 
 fn read_line(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<()> {
     line.clear();
@@ -53,14 +54,31 @@ fn parse_marker(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> F
 
 fn parse_version(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Version> {
     read_line(reader, line, verbose)?;
-    let verion_str = check_prefix(line, HEADER_VERSION_MARKER, verbose)?;
-    match Version::parse(verion_str) {
+    let version_str = check_prefix(line, HEADER_VERSION_MARKER, verbose)?;
+    match Version::parse(version_str) {
         Ok(version) => Ok(version),
         Err(err) => Err(add_err(
             format!(
                 "could not determine the version \
             of fileenc that encrypted this file; got {} which is invalid",
-                verion_str
+                version_str
+            ),
+            verbose,
+            err,
+        )),
+    }
+}
+
+fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Version> {
+    read_line(reader, line, verbose)?;
+    let option_str = check_prefix(line, HEADER_VERSION_MARKER, verbose)?;
+    match Version::parse(option_str) {
+        Ok(version) => Ok(version),
+        Err(err) => Err(add_err(
+            format!(
+                "could not determine the version \
+            of fileenc that encrypted this file; got {} which is invalid",
+                option_str
             ),
             verbose,
             err,
@@ -91,8 +109,13 @@ pub fn parse_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<Head
     let salt = parse_salt(reader, &mut line, verbose)?;
     let checksum = parse_checksum(reader, &mut line, verbose)?;
     read_line(reader, &mut line, verbose)?;
+    let options = if version >= OPTIONS_INTORDUCED_IN_VERSION {
+        parse_options(reader, &mut line, verbose)?
+    } else {
+        EncOptions::empty();
+    };
     check_prefix(&line, HEADER_DATA_MARKER, verbose).unwrap();
-    Header::new(version, salt, checksum)
+    Header::new(version, salt, checksum, options)
 }
 
 pub fn skip_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<()> {

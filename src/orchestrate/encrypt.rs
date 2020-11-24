@@ -16,10 +16,11 @@ use crate::progress::Progress;
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
 use crate::{EncryptConfig, FedResult, Verbosity};
+use crate::util::option::EncOptions;
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     let version = get_current_version();
-    let strategy = get_current_version_strategy(config.debug());
+    let strategy = get_current_version_strategy(config.options(), config.debug());
     let files_info = inspect_files(
         config.files(),
         config.verbosity(),
@@ -65,7 +66,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
             &strategy.symmetric_algorithms,
             &mut |alg| progress.start_sym_alg_for_file(&alg, &file),
         );
-        let header = Header::new(version.clone(), salt.clone(), checksum)?;
+        let header = Header::new(version.clone(), salt.clone(), checksum, config.options().clone())?;
         if !config.dry_run() {
             write_output_file(config, &file, &secret, Some(&header), &mut || {
                 progress.start_write_for_file(&file)
@@ -110,6 +111,7 @@ mod tests {
     use crate::header::strategy::Verbosity;
     use crate::key::key::Key;
     use crate::util::version::get_current_version;
+    use crate::util::option::EncOptions;
 
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");
@@ -129,6 +131,8 @@ mod tests {
         let conf = EncryptConfig::new(
             vec![in_pth],
             COMPAT_KEY.clone(),
+            //TODO @mark: try different options
+            EncOptions::empty(),
             Verbosity::Debug,
             true,
             false,

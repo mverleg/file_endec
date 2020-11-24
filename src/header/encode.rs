@@ -15,6 +15,7 @@ use crate::header::types::HEADER_OPTION_MARKER;
 use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
+use crate::util::version::version_has_options;
 
 fn wrap_err(res: Result<usize, impl Error>, verbose: bool) -> FedResult<()> {
     if let Err(err) = res {
@@ -72,7 +73,9 @@ fn write_checksum(writer: &mut impl Write, checksum: &Checksum, verbose: bool) -
 pub fn write_header(writer: &mut impl Write, header: &Header, verbose: bool) -> FedResult<()> {
     write_marker(writer, verbose)?;
     write_version(writer, header.version(), verbose)?;
-    write_options(writer, header.options(), verbose)?;
+    if version_has_options(header.version()) {
+        write_options(writer, header.options(), verbose)?;
+    }
     write_salt(writer, header.salt(), verbose)?;
     write_checksum(writer, header.checksum(), verbose)?;
     write_line(writer, HEADER_DATA_MARKER, None, verbose)?;
@@ -91,6 +94,7 @@ mod tests {
     use crate::util::option::EncOptionSet;
 
     use super::write_header;
+    use crate::EncOption;
 
     #[test]
     fn write_v1_0_0_one() {
@@ -125,5 +129,36 @@ mod tests {
         assert_eq!(expected, from_utf8(&buf).unwrap());
     }
 
-    //TODO @mark: test v1_1 with options
+    #[test]
+    fn write_v1_1_vanilla() {
+        let version = Version::parse("1.1.0").unwrap();
+        let header = Header::new(
+            version,
+            Salt::fixed_for_test(1),
+            Checksum::fixed_for_test(vec![2]),
+            EncOptionSet::empty(),
+        )
+        .unwrap();
+        let mut buf: Vec<u8> = Vec::new();
+        write_header(&mut buf, &header, true).unwrap();
+        let expected =
+            "github.com/mverleg/file_endec\0\nv 1.1.0\nopts \nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\ncheck xx_sha256 Ag\ndata:\n";
+        assert_eq!(expected, from_utf8(&buf).unwrap());
+    }
+
+    #[test]
+    fn write_v1_1_options() {
+        let version = Version::parse("1.1.0").unwrap();
+        let header = Header::new(
+            version,
+            Salt::fixed_for_test(123_456_789_123_456_789),
+            Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
+            vec![EncOption::Fast, EncOption::HideMeta].into(),
+        )
+        .unwrap();
+        let mut buf: Vec<u8> = Vec::new();
+        write_header(&mut buf, &header, true).unwrap();
+        let expected = "github.com/mverleg/file_endec\0\nv 1.1.0\nopts fast hide-meta\nsalt FV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2AQ\ncheck xx_sha256 AAUABQAFAAUABQAF\ndata:\n";
+        assert_eq!(expected, from_utf8(&buf).unwrap());
+    }
 }

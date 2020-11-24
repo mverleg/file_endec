@@ -10,8 +10,8 @@ pub fn get_current_version() -> Version {
     CURRENT_VERSION.clone()
 }
 
-pub fn options_introduced_in_version() -> Version {
-    OPTIONS_INTORDUCED_IN_VERSION.clone()
+pub fn version_has_options(version: &Version) -> bool {
+    version >= &*OPTIONS_INTORDUCED_IN_VERSION
 }
 
 #[cfg(test)]

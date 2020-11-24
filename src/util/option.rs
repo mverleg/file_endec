@@ -66,6 +66,7 @@ impl PartialOrd for EncOption {
 
 impl fmt::Display for EncOption {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        // Should NOT contain whitespace (whitespace is used as separator in the file header).
         write!(f, "{}", match self {
             EncOption::Fast => "fast",
             EncOption::HideMeta => "hide-meta",

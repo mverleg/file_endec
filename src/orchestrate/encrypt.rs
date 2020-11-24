@@ -105,7 +105,7 @@ mod tests {
     use tempfile::tempdir;
 
     use crate::config::EncryptConfig;
-    use crate::encrypt;
+    use crate::{encrypt, EncOption};
     use crate::files::scan::TEST_FILE_DIR;
     use crate::header::strategy::Verbosity;
     use crate::key::key::Key;
@@ -115,6 +115,25 @@ mod tests {
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");
         static ref COMPAT_FILE_RE: Regex = Regex::new(r"^original_v(\d+\.\d+\.\d+).png$").unwrap();
+    }
+
+    struct Variation {
+        postfix: String,
+        options: EncOptionSet,
+    }
+
+    fn variations() -> Vec<Variation> {
+        // Options Fast and HideMeta are supported from version 1.1.0
+        vec![
+            Variation {
+                postfix: "".to_owned(),
+                options: vec![].into(),
+            },
+            Variation {
+                postfix: "_fast".to_owned(),
+                options: vec![EncOption::Fast, EncOption::HideMeta].into(),
+            },
+        ]
     }
 
     #[test]
@@ -127,40 +146,42 @@ mod tests {
             p
         };
         assert!(in_pth.exists());
-        let conf = EncryptConfig::new(
-            vec![in_pth],
-            COMPAT_KEY.clone(),
-            //TODO @mark: try different options
-            EncOptionSet::empty(),
-            Verbosity::Debug,
-            true,
-            false,
-            Some(dir.path().to_owned()),
-            ".enc".to_string(),
-            false,
-        );
-        let tmp_pth = {
-            let mut p = dir.into_path();
-            p.push("original.png.enc");
-            p
-        };
-        encrypt(&conf).unwrap();
-        assert!(tmp_pth.is_file(), "encrypted file was not created");
-        let store_pth = {
-            let mut p = TEST_FILE_DIR.clone();
-            p.push(format!("original_v{}.png.enc", version));
-            p
-        };
-        if !store_pth.exists() {
-            println!("storing file for new version {} as part of backward compatibility test files:\n{} -> {}",
-                     version, &tmp_pth.to_string_lossy(), &store_pth.to_string_lossy());
-            fs::copy(&tmp_pth, &store_pth).unwrap();
+        for variation in variations() {
+            let conf = EncryptConfig::new(
+                vec![in_pth.clone()],
+                COMPAT_KEY.clone(),
+                //TODO @mark: try different options
+                variation.options,
+                Verbosity::Debug,
+                true,
+                false,
+                Some(dir.path().to_owned()),
+                ".enc".to_string(),
+                false,
+            );
+            let tmp_pth = {
+                let mut p = dir.path().to_owned();
+                p.push("original.png.enc");
+                p
+            };
+            encrypt(&conf).unwrap();
+            assert!(tmp_pth.is_file(), "encrypted file was not created");
+            let store_pth = {
+                let mut p = TEST_FILE_DIR.clone();
+                p.push(format!("original_v{}{}.png.enc", version, &variation.postfix));
+                p
+            };
+            if !store_pth.exists() {
+                println!("storing file for new version {} as part of backward compatibility test files:\n{} -> {}",
+                         version, &tmp_pth.to_string_lossy(), &store_pth.to_string_lossy());
+                fs::copy(&tmp_pth, &store_pth).unwrap();
+            }
+            // Remove the temporary file (as a courtesy, not critical).
+            println!(
+                "removing temporary file {} for version {}",
+                &tmp_pth.to_string_lossy(),
+                version
+            );
         }
-        // Remove the temporary file (as a courtesy, not critical).
-        println!(
-            "removing temporary file {} for version {}",
-            &tmp_pth.to_string_lossy(),
-            version
-        );
     }
 }

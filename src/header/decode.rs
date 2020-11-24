@@ -122,14 +122,14 @@ pub fn parse_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<Head
     let mut line = String::new();
     parse_marker(reader, &mut line, verbose)?;
     let version = parse_version(reader, &mut line, verbose)?;
-    let salt = parse_salt(reader, &mut line, verbose)?;
-    let checksum = parse_checksum(reader, &mut line, verbose)?;
-    read_line(reader, &mut line, verbose)?;
     let options = if version >= options_introduced_in_version() {
         parse_options(reader, &mut line, verbose)?
     } else {
         EncOptionSet::empty()
     };
+    let salt = parse_salt(reader, &mut line, verbose)?;
+    let checksum = parse_checksum(reader, &mut line, verbose)?;
+    read_line(reader, &mut line, verbose)?;
     check_prefix(&line, HEADER_DATA_MARKER, verbose).unwrap();
     Header::new(version, salt, checksum, options)
 }

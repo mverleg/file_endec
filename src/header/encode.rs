@@ -3,6 +3,7 @@ use ::std::io::Write;
 
 use ::semver::Version;
 
+use crate::EncOptionSet;
 use crate::files::Checksum;
 use crate::header::Header;
 use crate::header::HEADER_CHECKSUM_MARKER;
@@ -10,6 +11,7 @@ use crate::header::HEADER_DATA_MARKER;
 use crate::header::HEADER_MARKER;
 use crate::header::HEADER_SALT_MARKER;
 use crate::header::HEADER_VERSION_MARKER;
+use crate::header::types::HEADER_OPTION_MARKER;
 use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
@@ -45,6 +47,17 @@ fn write_version(writer: &mut impl Write, version: &Version, verbose: bool) -> F
     write_line(writer, HEADER_VERSION_MARKER, Some(version_str), verbose)
 }
 
+fn write_options(writer: &mut impl Write, options: &EncOptionSet, verbose: bool) -> FedResult<()> {
+    if options.len() == 0 {
+        return Ok(())
+    }
+    let options_txt = options.iter()
+        .map(|opt| opt.to_string())
+        .collect::<Vec<_>>()
+        .join(" ");
+    write_line(writer, HEADER_OPTION_MARKER, Some(options_txt), verbose)
+}
+
 fn write_salt(writer: &mut impl Write, salt: &Salt, verbose: bool) -> FedResult<()> {
     let salt_str = salt.as_base64();
     write_line(writer, HEADER_SALT_MARKER, Some(salt_str), verbose)
@@ -62,6 +75,7 @@ fn write_checksum(writer: &mut impl Write, checksum: &Checksum, verbose: bool) -
 pub fn write_header(writer: &mut impl Write, header: &Header, verbose: bool) -> FedResult<()> {
     write_marker(writer, verbose)?;
     write_version(writer, header.version(), verbose)?;
+    write_options(writer, header.options(), verbose)?;
     write_salt(writer, header.salt(), verbose)?;
     write_checksum(writer, header.checksum(), verbose)?;
     write_line(writer, HEADER_DATA_MARKER, None, verbose)?;
@@ -77,9 +91,9 @@ mod tests {
     use crate::files::Checksum;
     use crate::header::Header;
     use crate::key::salt::Salt;
+    use crate::util::option::EncOptionSet;
 
     use super::write_header;
-    use crate::util::option::EncOptionSet;
 
     #[test]
     fn write_v1_0_0_one() {

@@ -79,7 +79,7 @@ mod tests {
     use crate::key::salt::Salt;
 
     use super::write_header;
-    use crate::util::option::EncOptions;
+    use crate::util::option::EncOptionSet;
 
     #[test]
     fn write_v1_0_0_one() {
@@ -88,7 +88,7 @@ mod tests {
             version,
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
-            EncOptions::empty(),  // always empty for v1.0
+            EncOptionSet::empty(),  // always empty for v1.0
         )
         .unwrap();
         let mut buf: Vec<u8> = Vec::new();
@@ -105,7 +105,7 @@ mod tests {
             version,
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
-            EncOptions::empty(),  // always empty for v1.0
+            EncOptionSet::empty(),  // always empty for v1.0
         )
         .unwrap();
         let mut buf: Vec<u8> = Vec::new();

@@ -4,13 +4,13 @@ use ::std::path::PathBuf;
 use crate::config::typ::EndecConfig;
 use crate::header::strategy::Verbosity;
 use crate::key::Key;
-use crate::util::option::EncOptions;
+use crate::util::option::EncOptionSet;
 
 #[derive(Debug)]
 pub struct EncryptConfig {
     files: Vec<PathBuf>,
     raw_key: Key,
-    options: EncOptions,
+    options: EncOptionSet,
     verbosity: Verbosity,
     overwrite: bool,
     delete_input: bool,
@@ -24,7 +24,7 @@ impl EncryptConfig {
     pub fn new(
         files: Vec<PathBuf>,
         raw_key: Key,
-        options: EncOptions,
+        options: EncOptionSet,
         verbosity: Verbosity,
         overwrite: bool,
         mut delete_input: bool,
@@ -49,7 +49,7 @@ impl EncryptConfig {
         }
     }
 
-    pub fn options(&self) -> &EncOptions {
+    pub fn options(&self) -> &EncOptionSet {
         &self.options
     }
 

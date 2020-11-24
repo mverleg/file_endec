@@ -4,6 +4,8 @@ use ::std::process::exit;
 
 use ::structopt::StructOpt;
 
+use ::file_endec::EncOption;
+use ::file_endec::EncOptionSet;
 use ::file_endec::encrypt;
 use ::file_endec::EncryptConfig;
 use ::file_endec::FedResult;
@@ -190,6 +192,13 @@ impl EncryptArguments {
             (false, true) => Verbosity::Quiet,
             (false, false) => Verbosity::Normal,
         };
+        let mut options = vec![];
+        if self.fast {
+            options.push(EncOption::Fast);
+        }
+        if self.hide_meta {
+            options.push(EncOption::HideMeta);
+        }
         let extension = if self.output_extension.starts_with('.') {
             self.output_extension
         } else {
@@ -198,6 +207,7 @@ impl EncryptArguments {
         Ok(EncryptConfig::new(
             self.files,
             key,
+            options.into(),
             verbosity,
             self.overwrite,
             self.delete_input,
@@ -233,8 +243,9 @@ fn go_encrypt() -> FedResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ::file_endec::EndecConfig;
+
+    use super::*;
 
     #[test]
     fn parse_args_minimal() {

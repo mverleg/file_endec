@@ -131,7 +131,7 @@ mod tests {
     use crate::key::Key;
 
     use super::*;
-    use crate::util::option::EncOptions;
+    use crate::util::option::EncOptionSet;
 
     #[test]
     fn output_path() {
@@ -141,7 +141,7 @@ mod tests {
         let config = EncryptConfig::new(
             vec![in_file_1.path().to_owned(), in_file_2.path().to_owned()],
             Key::new("secret"),
-            EncOptions::empty(),
+            EncOptionSet::empty(),
             Verbosity::Debug,
             true,
             true,

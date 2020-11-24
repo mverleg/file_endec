@@ -1,7 +1,7 @@
 use crate::header::KeyHashAlg;
 use crate::key::hash::hash;
-use crate::key::key::StretchKey;
 use crate::key::Key;
+use crate::key::key::StretchKey;
 use crate::key::Salt;
 
 pub fn stretch_key(
@@ -31,7 +31,7 @@ mod tests {
     use crate::header::strategy::get_current_version_strategy;
 
     #[cfg(not(debug_assertions))]
-    use crate::util::option::EncOptions;
+    use crate::util::option::EncOptionSet;
 
     #[cfg(not(debug_assertions))]
     use super::*;
@@ -40,7 +40,7 @@ mod tests {
     #[test]
     fn stratch_test_password() {
         //TODO @mark: more options?
-        let strat = get_current_version_strategy(&EncOptions::empty(), true);
+        let strat = get_current_version_strategy(&EncOptionSet::empty(), true);
         stretch_key(
             &Key::new(&"MY secret p@ssw0rd"),
             &Salt::fixed_for_test(123_456_789),

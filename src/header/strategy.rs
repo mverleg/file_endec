@@ -5,7 +5,7 @@ use ::lazy_static::lazy_static;
 use ::semver::Version;
 
 use crate::util::FedResult;
-use crate::util::option::EncOptions;
+use crate::util::option::{EncOptionSet, EncOption};
 use crate::util::version::get_current_version;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -87,7 +87,7 @@ pub struct Strategy {
 }
 
 lazy_static! {
-    static ref STRATEGY_1_0_0: Strategy = Strategy {
+    static ref STRATEGY_1_0: Strategy = Strategy {
         stretch_count: 5,
         compression_algorithm: Some(CompressionAlg::Brotli),
         key_hash_algorithms: vec![KeyHashAlg::BCrypt, KeyHashAlg::Argon2i, KeyHashAlg::Sha512],
@@ -96,10 +96,20 @@ lazy_static! {
             SymmetricEncryptionAlg::Twofish
         ],
     };
+    static ref STRATEGY_1_1_FAST: Strategy = Strategy {
+        stretch_count: 5,
+        compression_algorithm: Some(CompressionAlg::Brotli),
+        key_hash_algorithms: vec![
+            KeyHashAlg::Sha512
+        ],
+        symmetric_algorithms: vec![
+            SymmetricEncryptionAlg::Aes256,
+        ],
+    };
 }
 
 /// Get the encryption strategy used for a specific code version.
-pub fn get_version_strategy(version: &Version, options: &EncOptions, verbose: bool) -> FedResult<&'static Strategy> {
+pub fn get_version_strategy(version: &Version, options: &EncOptionSet, verbose: bool) -> FedResult<&'static Strategy> {
     // This should return the strategy for all old versions - don't delete any, just add new ones!
     if version < &Version::parse("1.0.0").unwrap() {
         return Err(if verbose {
@@ -108,10 +118,14 @@ pub fn get_version_strategy(version: &Version, options: &EncOptions, verbose: bo
             format!("non-existent version {} (minimum is 1.0.0)", version)
         });
     }
-    Ok(&*STRATEGY_1_0_0)
+    if options.has(&EncOption::Fast) {
+        Ok(&*STRATEGY_1_1_FAST)
+    } else {
+        Ok(&*STRATEGY_1_0)
+    }
 }
 
-pub fn get_current_version_strategy(options: &EncOptions, verbose: bool) -> &'static Strategy {
+pub fn get_current_version_strategy(options: &EncOptionSet, verbose: bool) -> &'static Strategy {
     get_version_strategy(&get_current_version(), options, verbose).unwrap()
 }
 
@@ -122,7 +136,7 @@ mod tests {
     #[test]
     fn test_current_version_strategy() {
         //TODO @mark: more options?
-        get_current_version_strategy(&EncOptions::empty(), true);
-        get_current_version_strategy(&EncOptions::empty(), false);
+        get_current_version_strategy(&EncOptionSet::empty(), true);
+        get_current_version_strategy(&EncOptionSet::empty(), false);
     }
 }

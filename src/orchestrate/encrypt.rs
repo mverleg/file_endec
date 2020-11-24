@@ -110,7 +110,7 @@ mod tests {
     use crate::header::strategy::Verbosity;
     use crate::key::key::Key;
     use crate::util::version::get_current_version;
-    use crate::util::option::EncOptions;
+    use crate::util::option::EncOptionSet;
 
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");
@@ -131,7 +131,7 @@ mod tests {
             vec![in_pth],
             COMPAT_KEY.clone(),
             //TODO @mark: try different options
-            EncOptions::empty(),
+            EncOptionSet::empty(),
             Verbosity::Debug,
             true,
             false,

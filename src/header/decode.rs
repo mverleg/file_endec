@@ -14,7 +14,7 @@ use crate::header::types::HEADER_OPTION_MARKER;
 use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
-use crate::util::option::{EncOption, EncOptions};
+use crate::util::option::{EncOption, EncOptionSet};
 use crate::util::version::options_introduced_in_version;
 
 fn read_line(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<()> {
@@ -72,7 +72,7 @@ fn parse_version(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> 
     }
 }
 
-fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<EncOptions> {
+fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<EncOptionSet> {
     read_line(reader, line, verbose)?;
     if let Ok(options_str) = check_prefix(line, HEADER_OPTION_MARKER, verbose) {
         let mut option_vec = vec![];
@@ -87,7 +87,7 @@ fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> 
             }
         }
         let option_count = option_vec.len();
-        let options = EncOptions::new(option_vec);
+        let options: EncOptionSet = option_vec.into();
         if options.len() != option_count {
             return Err(add_err(
                 format!("there were duplicate encryption options in the file header; it is possible the header has been meddled with"),
@@ -98,7 +98,7 @@ fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> 
         Ok(options)
     } else {
         // no option header found, so there are no options
-        Ok(EncOptions::empty())
+        Ok(EncOptionSet::empty())
     }
 }
 
@@ -128,7 +128,7 @@ pub fn parse_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<Head
     let options = if version >= options_introduced_in_version() {
         parse_options(reader, &mut line, verbose)?
     } else {
-        EncOptions::empty()
+        EncOptionSet::empty()
     };
     check_prefix(&line, HEADER_DATA_MARKER, verbose).unwrap();
     Header::new(version, salt, checksum, options)
@@ -153,7 +153,7 @@ mod tests {
     use crate::header::decode::skip_header;
     use crate::header::Header;
     use crate::key::salt::Salt;
-    use crate::util::option::EncOptions;
+    use crate::util::option::EncOptionSet;
 
     use super::parse_header;
 
@@ -198,7 +198,7 @@ mod tests {
             version,
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
-            EncOptions::empty(),  // always empty for v1.0
+            EncOptionSet::empty(),  // always empty for v1.0
         )
         .unwrap();
         let mut buf = input.as_bytes();
@@ -214,7 +214,7 @@ mod tests {
             version,
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
-            EncOptions::empty(),  // always empty for v1.0
+            EncOptionSet::empty(),  // always empty for v1.0
         )
         .unwrap();
         let mut buf = input.as_bytes();

@@ -3,18 +3,18 @@ use ::semver::Version;
 use crate::files::Checksum;
 use crate::key::Salt;
 use crate::util::FedResult;
-use crate::util::option::EncOptions;
+use crate::util::option::EncOptionSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Header {
     version: Version,
     salt: Salt,
     checksum: Checksum,
-    options: EncOptions,
+    options: EncOptionSet,
 }
 
 impl Header {
-    pub fn new(version: Version, salt: Salt, checksum: Checksum, options: EncOptions,) -> FedResult<Self> {
+    pub fn new(version: Version, salt: Salt, checksum: Checksum, options: EncOptionSet,) -> FedResult<Self> {
         Ok(Header {
             version,
             salt,
@@ -32,7 +32,7 @@ impl Header {
     pub fn checksum(&self) -> &Checksum {
         &self.checksum
     }
-    pub fn options(&self) -> &EncOptions {
+    pub fn options(&self) -> &EncOptionSet {
         &self.options
     }
 }

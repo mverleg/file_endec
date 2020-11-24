@@ -6,19 +6,25 @@ use ::std::fmt::Formatter;
 use ::std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct EncOptions {
+pub struct EncOptionSet {
     options: BTreeSet<EncOption>,
 }
 
-impl EncOptions {
+impl From<Vec<EncOption>> for EncOptionSet {
+    fn from(vector: Vec<EncOption>) -> Self {
+        EncOptionSet::new(vector)
+    }
+}
+
+impl EncOptionSet {
     pub fn new(options: Vec<EncOption>) -> Self {
-        EncOptions {
+        EncOptionSet {
             options: options.iter().cloned().collect(),
         }
     }
 
     pub fn empty() -> Self {
-        EncOptions {
+        EncOptionSet {
             options: BTreeSet::new(),
         }
     }
@@ -88,7 +94,7 @@ mod tests {
 
         #[test]
         fn deduplicate() {
-            let options = EncOptions::new(vec![
+            let options = EncOptionSet::new(vec![
                 EncOption::Fast,
                 EncOption::HideMeta,
                 EncOption::Fast,
@@ -98,7 +104,7 @@ mod tests {
 
         #[test]
         fn ordered() {
-            let options = EncOptions::new(vec![
+            let options = EncOptionSet::new(vec![
                 EncOption::HideMeta,
                 EncOption::Fast,
             ]);
@@ -109,7 +115,7 @@ mod tests {
 
         #[test]
         fn has() {
-            let options = EncOptions::new(vec![
+            let options = EncOptionSet::new(vec![
                 EncOption::HideMeta,
             ]);
             assert!(!options.has(&EncOption::Fast));

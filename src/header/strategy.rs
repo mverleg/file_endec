@@ -97,10 +97,10 @@ lazy_static! {
         ],
     };
     static ref STRATEGY_1_1_FAST: Strategy = Strategy {
-        stretch_count: 5,
+        stretch_count: 0,
         compression_algorithm: Some(CompressionAlg::Brotli),
         key_hash_algorithms: vec![
-            KeyHashAlg::Sha512
+            KeyHashAlg::Argon2i
         ],
         symmetric_algorithms: vec![
             SymmetricEncryptionAlg::Aes256,

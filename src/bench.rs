@@ -1,9 +1,6 @@
 use ::criterion::criterion_group;
 use ::criterion::criterion_main;
 
-#[cfg(not(feature = "expose"))]
-use criterion::Criterion;
-
 #[cfg(all(test, feature = "expose"))]
 mod hash {
     use ::criterion::black_box;
@@ -64,7 +61,7 @@ mod hash {
             "stretch",
             Benchmark::new("stretch", |b| {
                 b.iter(|| {
-                    let strat = get_current_version_strategy(true);
+                    let strat = get_current_version_strategy(&vec![].into(), false);
                     stretch_key(
                         &Key::new(&"MY secret p@ssw0rd"),
                         &Salt::fixed_for_test(123_456_789),

@@ -28,7 +28,7 @@ fn read_line(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedR
 }
 
 fn check_prefix<'a>(line: &'a str, prefix: &str, verbose: bool) -> FedResult<&'a str> {
-    if prefix.len() <= line.len() && &line[..prefix.len()] == prefix {
+    if line.starts_with(prefix) {
         Ok(&line[prefix.len()..])
     } else {
         Err(if verbose {
@@ -74,32 +74,28 @@ fn parse_version(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> 
 
 fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<EncOptionSet> {
     read_line(reader, line, verbose)?;
-    if let Ok(options_str) = check_prefix(line, HEADER_OPTION_MARKER, verbose) {
-        let mut option_vec = vec![];
-        for option_str in options_str.split_whitespace() {
-            match EncOption::from_str(option_str) {
-                Ok(option) => option_vec.push(option),
-                Err(err) => return Err(add_err(
-                    format!("could not determine the options of fileenc that encrypted this file (got {} which is unknown); maybe it was encrypted with a newer version?", option_str),
-                    verbose,
-                    err,
-                )),
-            }
-        }
-        let option_count = option_vec.len();
-        let options: EncOptionSet = option_vec.into();
-        if options.len() != option_count {
-            return Err(add_err(
-                format!("there were duplicate encryption options in the file header; it is possible the header has been meddled with"),
+    let options_str = check_prefix(line, HEADER_OPTION_MARKER, verbose)?;
+    let mut option_vec = vec![];
+    for option_str in options_str.split_whitespace() {
+        match EncOption::from_str(option_str) {
+            Ok(option) => option_vec.push(option),
+            Err(err) => return Err(add_err(
+                format!("could not determine the options of fileenc that encrypted this file (got {} which is unknown); maybe it was encrypted with a newer version?", option_str),
                 verbose,
-                format!("found {}", options_str),
-            ));
+                err,
+            )),
         }
-        Ok(options)
-    } else {
-        // no option header found, so there are no options
-        Ok(EncOptionSet::empty())
     }
+    let option_count = option_vec.len();
+    let options: EncOptionSet = option_vec.into();
+    if options.len() != option_count {
+        return Err(add_err(
+            format!("there were duplicate encryption options in the file header; it is possible the header has been meddled with"),
+            verbose,
+            format!("found {}", options_str),
+        ));
+    }
+    Ok(options)
 }
 
 fn parse_salt(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Salt> {

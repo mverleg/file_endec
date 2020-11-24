@@ -15,9 +15,11 @@ use crate::progress::silent::SilentProgress;
 use crate::progress::Progress;
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
-use crate::{EncryptConfig, FedResult, Verbosity};
+use crate::{EncryptConfig, FedResult, Verbosity, EncOption};
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
+    assert!(!config.options().has(&EncOption::HideMeta), "metadata hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
+    assert!(!config.options().has(&EncOption::Fast), "fast mode not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
     let version = get_current_version();
     let strategy = get_current_version_strategy(config.options(), config.debug());
     let files_info = inspect_files(
@@ -124,6 +126,7 @@ mod tests {
 
     fn variations() -> Vec<Variation> {
         // Options Fast and HideMeta are supported from version 1.1.0
+        // Prefix should be unique, and either empty in regex ^_\w+$
         vec![
             Variation {
                 postfix: "".to_owned(),

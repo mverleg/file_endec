@@ -224,8 +224,6 @@ fn go_encrypt() -> FedResult<()> {
     if args.debug {
         println!("arguments provided:\n{}", args);
     }
-    assert!(!args.hide_meta, "metadata hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
-    assert!(!args.fast, "fast mode not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
     let key = args.key_source.obtain_key()?;
     if args.debug {
         println!("approximate time to crack key: {}", key.time_to_crack());

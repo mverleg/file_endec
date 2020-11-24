@@ -13,6 +13,7 @@ use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
 use crate::util::option::EncOptions;
+use crate::header::types::HEADER_OPTION_MARKER;
 
 fn read_line(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<()> {
     line.clear();
@@ -69,20 +70,33 @@ fn parse_version(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> 
     }
 }
 
-fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Version> {
+fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<EncOptions> {
     read_line(reader, line, verbose)?;
-    let option_str = check_prefix(line, HEADER_VERSION_MARKER, verbose)?;
-    match Version::parse(option_str) {
-        Ok(version) => Ok(version),
-        Err(err) => Err(add_err(
-            format!(
-                "could not determine the version \
-            of fileenc that encrypted this file; got {} which is invalid",
-                option_str
-            ),
-            verbose,
-            err,
-        )),
+    if let Ok(options_str) = check_prefix(line, HEADER_OPTION_MARKER, verbose) {
+        let mut option_vec = vec![];
+        for option_str in options_str.split_whitespace() {
+            match EncOptions::from_str(option_str) {
+                Ok(option) => option_vec.push(option),
+                Err(err) => return Err(add_err(
+                    format!("could not determine the options of fileenc that encrypted this file (got {} which is unknown); maybe it was encrypted with a newer version?", option_str),
+                    verbose,
+                    err,
+                )),
+            }
+        }
+        let option_count = option_vec.len();
+        let options = EncOptions::new(option_vec);
+        if options.len() != option_count {
+            return Err(add_err(
+                format!("there were duplicate encryption options in the file header; it is possible the header has been meddled with"),
+                verbose,
+                err,
+            ));
+        }
+        Ok(options)
+    } else {
+        // no option header found, so there are no options
+        Ok(EncOptions::empty())
     }
 }
 
@@ -139,6 +153,7 @@ mod tests {
 
     use super::parse_header;
     use crate::header::decode::skip_header;
+    use crate::util::option::EncOptions;
 
     #[test]
     fn stop_read_after_header() {
@@ -181,6 +196,7 @@ mod tests {
             version,
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
+            EncOptions::empty(),  // always empty for v1.0
         )
         .unwrap();
         let mut buf = input.as_bytes();
@@ -196,6 +212,7 @@ mod tests {
             version,
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
+            EncOptions::empty(),  // always empty for v1.0
         )
         .unwrap();
         let mut buf = input.as_bytes();

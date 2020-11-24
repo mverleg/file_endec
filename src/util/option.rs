@@ -23,6 +23,10 @@ impl EncOptions {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.options.len()
+    }
+
     pub fn has(&self, option: &EncOption) -> bool {
         self.options.contains(option)
     }

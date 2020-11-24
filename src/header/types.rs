@@ -32,6 +32,9 @@ impl Header {
     pub fn checksum(&self) -> &Checksum {
         &self.checksum
     }
+    pub fn options(&self) -> &EncOptions {
+        &self.options
+    }
 }
 
 pub const HEADER_MARKER: &str = "github.com/mverleg/file_endec\0";

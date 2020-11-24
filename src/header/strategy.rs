@@ -6,6 +6,8 @@ use ::semver::Version;
 use crate::util::version::get_current_version;
 use crate::util::FedResult;
 use std::fmt::Formatter;
+use crate::util::option::EncOption;
+use crate::util::option::EncOptions;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Verbosity {
@@ -98,7 +100,7 @@ lazy_static! {
 }
 
 /// Get the encryption strategy used for a specific code version.
-pub fn get_version_strategy(version: &Version, verbose: bool) -> FedResult<&'static Strategy> {
+pub fn get_version_strategy(version: &Version, options: &EncOptions, verbose: bool) -> FedResult<&'static Strategy> {
     // This should return the strategy for all old versions - don't delete any, just add new ones!
     if version < &Version::parse("1.0.0").unwrap() {
         return Err(if verbose {
@@ -110,8 +112,8 @@ pub fn get_version_strategy(version: &Version, verbose: bool) -> FedResult<&'sta
     Ok(&*STRATEGY_1_0_0)
 }
 
-pub fn get_current_version_strategy(verbose: bool) -> &'static Strategy {
-    get_version_strategy(&get_current_version(), verbose).unwrap()
+pub fn get_current_version_strategy(options: &EncOptions, verbose: bool) -> &'static Strategy {
+    get_version_strategy(&get_current_version(), options, verbose).unwrap()
 }
 
 #[cfg(test)]
@@ -120,7 +122,8 @@ mod tests {
 
     #[test]
     fn test_current_version_strategy() {
-        get_current_version_strategy(true);
-        get_current_version_strategy(false);
+        //TODO @mark:
+        get_current_version_strategy(EncOptions::new(), true);
+        get_current_version_strategy(EncOptions::new(), false);
     }
 }

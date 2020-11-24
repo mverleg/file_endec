@@ -76,10 +76,25 @@ pub struct EncryptArguments {
     output_extension: String,
 
     #[structopt(
+        short="m",
         long,
         help = "Test encryption, but do not save encrypted files (nor delete input, if --delete-input)."
     )]
     dry_run: bool,
+
+    #[structopt(
+        short="x",
+        long,
+        default_value = "best",
+        help = "Encryption method to use: 'best', 'fast' or old versions (see --list-methods)."
+    )]
+    method: String,
+
+    #[structopt(
+        long,
+        help = "List the supported values for --method, then exit."
+    )]
+    list_methods: bool,
 
     #[structopt(long, help = "Suppress warning if the encryption key is not strong.")]
     accept_weak_key: bool,
@@ -191,6 +206,10 @@ impl EncryptArguments {
             self.dry_run,
         ))
     }
+}
+
+fn list_methods() -> FedResult<()> {
+
 }
 
 //TODO: if wildcards or directories are ever supported, then skip files that have the encrypted extension (i.e. .enc)

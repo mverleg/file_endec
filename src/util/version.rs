@@ -3,6 +3,10 @@ use ::semver::Version;
 
 lazy_static! {
     static ref CURRENT_VERSION: Version = Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
+    static ref SUPPORTED_VERSIONS: Vec<Version> = vec![
+        Version::parse(env!("1.0.0")).unwrap(),
+        CURRENT_VERSION,
+    ];
 }
 
 pub fn get_current_version() -> Version {

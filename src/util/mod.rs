@@ -6,3 +6,4 @@ pub mod errors;
 pub mod pth;
 pub mod test_cmd;
 pub mod version;
+pub mod method;

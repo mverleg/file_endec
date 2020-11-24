@@ -61,7 +61,6 @@ pub struct EncryptArguments {
     delete_input: bool,
 
     #[structopt(
-        short = "m",
         long,
         help = "Hide name, timestamp and permissions."
     )]
@@ -260,6 +259,8 @@ mod tests {
             "-q",
             "-d",
             "-f",
+            "-s",
+            "--hide-meta",
             "-o",
             "/tmp/hello",
             "--output-extension",

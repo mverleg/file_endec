@@ -61,6 +61,20 @@ pub struct EncryptArguments {
     delete_input: bool,
 
     #[structopt(
+        short = "m",
+        long,
+        help = "Hide name, timestamp and permissions."
+    )]
+    hide_meta: bool,
+
+    #[structopt(
+        short = "s",
+        long,
+        help = "Use good instead of great encryption for a significant speedup."
+    )]
+    fast: bool,
+
+    #[structopt(
         parse(from_os_str),
         short = "o",
         long,
@@ -76,25 +90,10 @@ pub struct EncryptArguments {
     output_extension: String,
 
     #[structopt(
-        short="m",
         long,
         help = "Test encryption, but do not save encrypted files (nor delete input, if --delete-input)."
     )]
     dry_run: bool,
-
-    #[structopt(
-        short="x",
-        long,
-        default_value = "best",
-        help = "Encryption method to use: 'best', 'fast' or old versions (see --list-methods)."
-    )]
-    method: String,
-
-    #[structopt(
-        long,
-        help = "List the supported values for --method, then exit."
-    )]
-    list_methods: bool,
 
     #[structopt(long, help = "Suppress warning if the encryption key is not strong.")]
     accept_weak_key: bool,
@@ -119,6 +118,10 @@ impl fmt::Display for EncryptArguments {
 
         writeln!(f, "* extension: {}", &self.output_extension)?;
 
+        writeln!(f, "* hide metadata: {}", if self.hide_meta { "yes" } else { "no" })?;
+
+        writeln!(f, "* fast mode: {}", if self.fast { "YES" } else { "no" })?;
+
         writeln!(
             f,
             "* logging: {}",
@@ -130,8 +133,6 @@ impl fmt::Display for EncryptArguments {
                 "normal"
             }
         )?;
-
-        writeln!(f, "* dry run: {}", if self.dry_run { "YES" } else { "no" })?;
 
         writeln!(
             f,
@@ -208,10 +209,6 @@ impl EncryptArguments {
     }
 }
 
-fn list_methods() -> FedResult<()> {
-
-}
-
 //TODO: if wildcards or directories are ever supported, then skip files that have the encrypted extension (i.e. .enc)
 
 fn go_encrypt() -> FedResult<()> {
@@ -219,6 +216,8 @@ fn go_encrypt() -> FedResult<()> {
     if args.debug {
         println!("arguments provided:\n{}", args);
     }
+    assert!(!args.hide_meta, "metadata hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
+    assert!(!args.fast, "fast mode not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
     let key = args.key_source.obtain_key()?;
     if args.debug {
         println!("approximate time to crack key: {}", key.time_to_crack());

@@ -7,7 +7,7 @@ pub use self::strategy::Strategy;
 pub use self::strategy::SymmetricEncryptionAlg;
 pub use self::types::Header;
 pub use self::types::HEADER_CHECKSUM_MARKER;
-pub use self::types::HEADER_DATA_MARKER;
+pub use self::types::HEADER_PURE_DATA_MARKER;
 pub use self::types::HEADER_MARKER;
 pub use self::types::HEADER_SALT_MARKER;
 pub use self::types::HEADER_VERSION_MARKER;

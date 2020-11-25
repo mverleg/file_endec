@@ -7,11 +7,10 @@ use crate::EncOptionSet;
 use crate::files::Checksum;
 use crate::header::Header;
 use crate::header::HEADER_CHECKSUM_MARKER;
-use crate::header::HEADER_DATA_MARKER;
 use crate::header::HEADER_MARKER;
 use crate::header::HEADER_SALT_MARKER;
 use crate::header::HEADER_VERSION_MARKER;
-use crate::header::types::HEADER_OPTION_MARKER;
+use crate::header::types::{HEADER_META_DATA_MARKER, HEADER_OPTION_MARKER};
 use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
@@ -78,7 +77,7 @@ pub fn write_header(writer: &mut impl Write, header: &Header, verbose: bool) -> 
     }
     write_salt(writer, header.salt(), verbose)?;
     write_checksum(writer, header.checksum(), verbose)?;
-    write_line(writer, HEADER_DATA_MARKER, None, verbose)?;
+    write_line(writer, HEADER_META_DATA_MARKER, None, verbose)?;
     Ok(())
 }
 

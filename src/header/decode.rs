@@ -6,11 +6,11 @@ use ::semver::Version;
 use crate::files::Checksum;
 use crate::header::Header;
 use crate::header::HEADER_CHECKSUM_MARKER;
-use crate::header::HEADER_DATA_MARKER;
+use crate::header::HEADER_PURE_DATA_MARKER;
 use crate::header::HEADER_MARKER;
 use crate::header::HEADER_SALT_MARKER;
 use crate::header::HEADER_VERSION_MARKER;
-use crate::header::types::HEADER_OPTION_MARKER;
+use crate::header::types::{HEADER_OPTION_MARKER, HEADER_META_DATA_MARKER};
 use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
@@ -118,7 +118,8 @@ pub fn parse_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<Head
     let mut line = String::new();
     parse_marker(reader, &mut line, verbose)?;
     let version = parse_version(reader, &mut line, verbose)?;
-    let options = if version_has_options(&version) {
+    let has_options = version_has_options(&version);
+    let options = if has_options {
         parse_options(reader, &mut line, verbose)?
     } else {
         EncOptionSet::empty()
@@ -126,13 +127,18 @@ pub fn parse_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<Head
     let salt = parse_salt(reader, &mut line, verbose)?;
     let checksum = parse_checksum(reader, &mut line, verbose)?;
     read_line(reader, &mut line, verbose)?;
-    check_prefix(&line, HEADER_DATA_MARKER, verbose).unwrap();
+    if has_options {
+        check_prefix(&line, HEADER_META_DATA_MARKER, verbose).unwrap();
+    } else {
+        check_prefix(&line, HEADER_PURE_DATA_MARKER, verbose).unwrap();
+    }
     Header::new(version, salt, checksum, options)
 }
 
 pub fn skip_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<()> {
     let mut line = String::new();
-    while !line.starts_with(HEADER_DATA_MARKER) {
+    //TODO @mark: should this also skip meta header?
+    while !line.starts_with(HEADER_META_DATA_MARKER) && !line.starts_with(HEADER_PURE_DATA_MARKER) {
         read_line(reader, &mut line, verbose)?;
     }
     Ok(())

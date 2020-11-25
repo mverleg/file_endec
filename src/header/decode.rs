@@ -137,7 +137,6 @@ pub fn parse_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<Head
 
 pub fn skip_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<()> {
     let mut line = String::new();
-    //TODO @mark: should this also skip meta header?
     while !line.starts_with(HEADER_META_DATA_MARKER) && !line.starts_with(HEADER_PURE_DATA_MARKER) {
         read_line(reader, &mut line, verbose)?;
     }

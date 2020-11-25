@@ -95,40 +95,7 @@ mod tests {
     use super::write_header;
 
     #[test]
-    fn write_v1_0_0_one() {
-        let version = Version::parse("1.0.0").unwrap();
-        let header = Header::new(
-            version,
-            Salt::fixed_for_test(1),
-            Checksum::fixed_for_test(vec![2]),
-            EncOptionSet::empty(),  // always empty for v1.0
-        )
-        .unwrap();
-        let mut buf: Vec<u8> = Vec::new();
-        write_header(&mut buf, &header, true).unwrap();
-        let expected =
-            "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\ncheck xx_sha256 Ag\ndata:\n";
-        assert_eq!(expected, from_utf8(&buf).unwrap());
-    }
-
-    #[test]
-    fn write_v1_0_0_two() {
-        let version = Version::parse("1.0.0").unwrap();
-        let header = Header::new(
-            version,
-            Salt::fixed_for_test(123_456_789_123_456_789),
-            Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
-            EncOptionSet::empty(),  // always empty for v1.0
-        )
-        .unwrap();
-        let mut buf: Vec<u8> = Vec::new();
-        write_header(&mut buf, &header, true).unwrap();
-        let expected = "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt FV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2AQ\ncheck xx_sha256 AAUABQAFAAUABQAF\ndata:\n";
-        assert_eq!(expected, from_utf8(&buf).unwrap());
-    }
-
-    #[test]
-    fn write_v1_1_vanilla() {
+    fn write_vanilla() {
         let version = Version::parse("1.1.0").unwrap();
         let header = Header::new(
             version,
@@ -140,12 +107,12 @@ mod tests {
         let mut buf: Vec<u8> = Vec::new();
         write_header(&mut buf, &header, true).unwrap();
         let expected =
-            "github.com/mverleg/file_endec\0\nv 1.1.0\nopts \nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\ncheck xx_sha256 Ag\ndata:\n";
+            "github.com/mverleg/file_endec\0\nv 1.1.0\nopts \nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\ncheck xx_sha256 Ag\nmeta1+data:\n";
         assert_eq!(expected, from_utf8(&buf).unwrap());
     }
 
     #[test]
-    fn write_v1_1_options() {
+    fn write_options() {
         let version = Version::parse("1.1.0").unwrap();
         let header = Header::new(
             version,
@@ -156,7 +123,7 @@ mod tests {
         .unwrap();
         let mut buf: Vec<u8> = Vec::new();
         write_header(&mut buf, &header, true).unwrap();
-        let expected = "github.com/mverleg/file_endec\0\nv 1.1.0\nopts fast hide-meta pad-size\nsalt FV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2AQ\ncheck xx_sha256 AAUABQAFAAUABQAF\ndata:\n";
+        let expected = "github.com/mverleg/file_endec\0\nv 1.1.0\nopts fast hide-meta pad-size\nsalt FV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2AQ\ncheck xx_sha256 AAUABQAFAAUABQAF\nmeta1+data:\n";
         assert_eq!(expected, from_utf8(&buf).unwrap());
     }
 }

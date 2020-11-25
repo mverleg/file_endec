@@ -246,6 +246,7 @@ fn go_encrypt() -> FedResult<()> {
     }
     let config = args.convert(key)?;
     encrypt(&config)?;
+    Ok(())
 }
 
 #[cfg(test)]

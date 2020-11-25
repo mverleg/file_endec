@@ -142,29 +142,35 @@ mod encrypt {
 #[cfg(all(test, feature = "expose"))]
 mod back_and_forth {
     use ::std::fs::File;
+    use ::std::io::BufWriter;
     use ::std::io::Write;
     use ::std::path::PathBuf;
 
     use ::criterion::Benchmark;
-    use ::criterion::black_box;
     use ::criterion::Criterion;
     use ::rand::RngCore;
     use ::tempfile::tempdir;
 
+    use ::file_endec::decrypt;
+    use ::file_endec::DecryptConfig;
+    use ::file_endec::EncOption;
+    use ::file_endec::EncOptionSet;
     use ::file_endec::encrypt;
     use ::file_endec::EncryptConfig;
     use ::file_endec::Key;
-    use file_endec::{EncOptionSet, Verbosity, DecryptConfig, decrypt};
+    use ::file_endec::Verbosity;
 
     fn create_test_file() -> PathBuf {
         //TODO @mark: reusable somewhere?
         let mut pth = tempdir().unwrap().into_path();
         pth.push("source.data");
+        let mut writer = BufWriter::new(File::create(&pth).unwrap());
+        for _ in 0 .. 10 * 1024 {
+            let mut data = [0; 1024];
+            rand::thread_rng().fill_bytes(&mut data);
+            writer.write(&data).unwrap();
+        }
         assert!(pth.exists());
-        let mut data = [0; 1024 * 1024];
-        rand::thread_rng().fill_bytes(&mut data);
-        let mut file = File::create(&pth).unwrap();
-        file.write_all(&data).unwrap();
         return pth
     }
 
@@ -174,9 +180,9 @@ mod back_and_forth {
             key.clone(),
             options,
             Verbosity::Quiet,
-            false,
             true,
-            Some(pth.path().to_owned()),
+            true,
+            None,
             ".enc".to_string(),
             false,
         );
@@ -200,10 +206,9 @@ mod back_and_forth {
         c.bench(
             "v1_0",
             Benchmark::new("v1_0", |b| {
-                let key = Key::new("s$j2d@PBBajiX$1+&hMEEij@+XNrUR4u");;
-                let version = get_current_version();
+                let key = Key::new("s$j2d@PBBajiX$1+&hMEEij@+XNrUR4u");
                 let test_file = create_test_file();
-                b.iter(|| enc_dec_files_with_options(key, test_file, EncOptionSet::empty()))
+                b.iter(|| enc_dec_files_with_options(key.clone(), test_file.clone(), EncOptionSet::empty()))
             })
             .sample_size(10),
         );
@@ -213,10 +218,9 @@ mod back_and_forth {
         c.bench(
             "v1_0",
             Benchmark::new("v1_0", |b| {
-                let key = Key::new("TzBdMjzA8%++lSUdwxlak83jZg=veF4!");;
-                let version = get_current_version();
+                let key = Key::new("TzBdMjzA8%++lSUdwxlak83jZg=veF4!");
                 let test_file = create_test_file();
-                b.iter(|| enc_dec_files_with_options(key, test_file, EncOptionSet::all_for_test()))
+                b.iter(|| enc_dec_files_with_options(key.clone(), test_file.clone(), EncOptionSet::new(vec![EncOption::Fast])))
             })
             .sample_size(10),
         );
@@ -252,7 +256,8 @@ criterion_group!(
 );
 
 #[cfg(feature = "expose")]
-criterion_main!(hash_bench, encrypt_bench, back_and_forth_bench);
+criterion_main!(back_and_forth_bench);
+// criterion_main!(hash_bench, encrypt_bench, back_and_forth_bench);
 
 #[cfg(not(feature = "expose"))]
 criterion_group!(need_expose_feature_group, need_expose_feature);

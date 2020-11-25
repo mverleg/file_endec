@@ -155,7 +155,8 @@ fn go_decrypt() -> FedResult<()> {
         println!("approximate time to crack key: {}", key.time_to_crack());
     }
     let config = args.convert(key)?;
-    decrypt(&config)
+    decrypt(&config)?;
+    Ok(())
 }
 
 #[cfg(test)]

@@ -4,13 +4,13 @@ use ::std::str::FromStr;
 use ::semver::Version;
 
 use crate::files::Checksum;
-use crate::header::Header;
+use crate::header::PublicHeader;
 use crate::header::HEADER_CHECKSUM_MARKER;
 use crate::header::HEADER_PURE_DATA_MARKER;
 use crate::header::HEADER_MARKER;
 use crate::header::HEADER_SALT_MARKER;
 use crate::header::HEADER_VERSION_MARKER;
-use crate::header::types::{HEADER_OPTION_MARKER, HEADER_META_DATA_MARKER};
+use crate::header::public_header_type::{HEADER_OPTION_MARKER, HEADER_META_DATA_MARKER};
 use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
@@ -114,7 +114,7 @@ fn parse_checksum(
     Checksum::parse(checksum_str)
 }
 
-pub fn parse_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<Header> {
+pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<PublicHeader> {
     let mut line = String::new();
     parse_marker(reader, &mut line, verbose)?;
     let version = parse_version(reader, &mut line, verbose)?;
@@ -132,7 +132,7 @@ pub fn parse_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<Head
     } else {
         check_prefix(&line, HEADER_PURE_DATA_MARKER, verbose).unwrap();
     }
-    Header::new(version, salt, checksum, options)
+    PublicHeader::new(version, salt, checksum, options)
 }
 
 pub fn skip_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<()> {
@@ -151,12 +151,12 @@ mod tests {
     use ::semver::Version;
 
     use crate::files::Checksum;
-    use crate::header::decode::skip_header;
-    use crate::header::Header;
+    use crate::header::public_decode::skip_header;
+    use crate::header::PublicHeader;
     use crate::key::salt::Salt;
     use crate::util::option::EncOptionSet;
 
-    use super::parse_header;
+    use super::parse_public_header;
 
     #[test]
     fn stop_read_after_header() {
@@ -165,7 +165,7 @@ mod tests {
             "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\
             \ncheck xx_sha256 Ag\ndata:\nthis is the data and should not be read!\nthe end of the data";
         let mut reader = BufReader::new(input.as_bytes());
-        parse_header(&mut reader, true).unwrap();
+        parse_public_header(&mut reader, true).unwrap();
         let mut remainder = vec![];
         reader.read_to_end(&mut remainder).unwrap();
         let expected = "this is the data and should not be read!\nthe end of the data"
@@ -195,7 +195,7 @@ mod tests {
         let version = Version::parse("1.0.0").unwrap();
         let input =
             "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\ncheck xx_sha256 Ag\ndata:\n";
-        let expected = Header::new(
+        let expected = PublicHeader::new(
             version,
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
@@ -203,7 +203,7 @@ mod tests {
         )
         .unwrap();
         let mut buf = input.as_bytes();
-        let header = parse_header(&mut buf, true).unwrap();
+        let header = parse_public_header(&mut buf, true).unwrap();
         assert_eq!(expected, header);
     }
 
@@ -211,7 +211,7 @@ mod tests {
     fn read_v1_0_0_two() {
         let version = Version::parse("1.0.0").unwrap();
         let input = "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt FV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2AQ\ncheck xx_sha256 AAUABQAFAAUABQAF\ndata:\n";
-        let expected = Header::new(
+        let expected = PublicHeader::new(
             version,
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
@@ -219,7 +219,7 @@ mod tests {
         )
         .unwrap();
         let mut buf = input.as_bytes();
-        let header = parse_header(&mut buf, true).unwrap();
+        let header = parse_public_header(&mut buf, true).unwrap();
         assert_eq!(expected, header);
     }
 }

@@ -1,17 +1,17 @@
 use crate::files::file_meta::FileInfo;
 use crate::files::reading::open_reader;
-use crate::header::{get_version_strategy, parse_header, Header, Strategy};
+use crate::header::{get_version_strategy, parse_public_header, PublicHeader, Strategy};
 use crate::{FedResult, Verbosity};
 
 #[derive(Debug)]
 pub struct FileHeader<'a> {
     pub file: &'a FileInfo<'a>,
-    pub header: Header,
+    pub header: PublicHeader,
     pub strategy: &'a Strategy,
 }
 
 impl<'a> FileHeader<'a> {
-    pub fn new(file: &'a FileInfo<'a>, header: Header, verbosity: Verbosity) -> FedResult<Self> {
+    pub fn new(file: &'a FileInfo<'a>, header: PublicHeader, verbosity: Verbosity) -> FedResult<Self> {
         let strategy = get_version_strategy(header.version(), header.options(), verbosity.debug())?;
         Ok(FileHeader {
             file,
@@ -31,7 +31,7 @@ pub fn read_file_strategies<'a>(
         .map(|(fi, reader)| {
             (
                 fi,
-                reader.and_then(|mut r| parse_header(&mut r, verbosity.debug())),
+                reader.and_then(|mut r| parse_public_header(&mut r, verbosity.debug())),
             )
         })
         .map(|(fi, header)| header.and_then(|h| FileHeader::new(fi, h, verbosity)))

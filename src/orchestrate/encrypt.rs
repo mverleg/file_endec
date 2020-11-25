@@ -8,7 +8,7 @@ use crate::files::delete::delete_input_file;
 use crate::files::file_meta::inspect_files;
 use crate::files::reading::{open_reader, read_file};
 use crate::files::write_output::write_output_file;
-use crate::header::Header;
+use crate::header::PublicHeader;
 use crate::header::strategy::get_current_version_strategy;
 use crate::key::Salt;
 use crate::key::stretch::stretch_key;
@@ -71,7 +71,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             &strategy.symmetric_algorithms,
             &mut |alg| progress.start_sym_alg_for_file(&alg, &file),
         );
-        let header = Header::new(version.clone(), salt.clone(), checksum, config.options().clone())?;
+        let header = PublicHeader::new(version.clone(), salt.clone(), checksum, config.options().clone())?;
         if !config.dry_run() {
             write_output_file(config, &file, &secret, Some(&header), &mut || {
                 progress.start_write_for_file(&file)

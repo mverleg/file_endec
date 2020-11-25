@@ -6,16 +6,16 @@ use crate::util::FedResult;
 use crate::util::option::EncOptionSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Header {
+pub struct PublicHeader {
     version: Version,
     salt: Salt,
     checksum: Checksum,
     options: EncOptionSet,
 }
 
-impl Header {
+impl PublicHeader {
     pub fn new(version: Version, salt: Salt, checksum: Checksum, options: EncOptionSet,) -> FedResult<Self> {
-        Ok(Header {
+        Ok(PublicHeader {
             version,
             salt,
             checksum,

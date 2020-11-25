@@ -12,7 +12,7 @@ use crate::files::file_meta::inspect_files;
 use crate::files::read_headers::read_file_strategies;
 use crate::files::reading::{open_reader, read_file};
 use crate::files::write_output::write_output_file;
-use crate::header::decode::skip_header;
+use crate::header::public_decode::skip_header;
 pub use crate::header::strategy::Verbosity;
 pub use crate::key::{Key, KeySource};
 use crate::key::key::StretchKey;

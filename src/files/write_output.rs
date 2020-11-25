@@ -4,8 +4,8 @@ use ::std::io::Write;
 use crate::config::typ::EndecConfig;
 use crate::files::delete::delete_existing_file_in_output_location;
 use crate::files::file_meta::FileInfo;
-use crate::header::write_header;
-use crate::header::Header;
+use crate::header::write_public_header;
+use crate::header::PublicHeader;
 use crate::util::errors::wrap_io;
 use crate::util::FedResult;
 
@@ -13,7 +13,7 @@ pub fn write_output_file(
     config: &impl EndecConfig,
     file: &FileInfo,
     data: &[u8],
-    header: Option<&Header>,
+    header: Option<&PublicHeader>,
     start_progress: &mut impl FnMut(),
 ) -> FedResult<()> {
     start_progress();
@@ -37,7 +37,7 @@ pub fn write_output_file(
         File::create(&file.out_pth),
     )?;
     if let Some(header) = header {
-        write_header(&mut out_file, &header, config.debug())?;
+        write_public_header(&mut out_file, &header, config.debug())?;
     }
     wrap_io(
         || {

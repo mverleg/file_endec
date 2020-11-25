@@ -121,8 +121,8 @@ mod tests {
             ]);
             let mut options_iter = options.iter();
             assert_eq!(options_iter.next(), Some(&EncOption::Fast));
-            assert_eq!(options_iter.next(), Some(&EncOption::PadSize));
             assert_eq!(options_iter.next(), Some(&EncOption::HideMeta));
+            assert_eq!(options_iter.next(), Some(&EncOption::PadSize));
         }
 
         #[test]

@@ -3,17 +3,17 @@ use ::criterion::criterion_main;
 
 #[cfg(all(test, feature = "expose"))]
 mod hash {
-    use ::criterion::black_box;
     use ::criterion::Benchmark;
+    use ::criterion::black_box;
     use ::criterion::Criterion;
 
     use ::file_endec::get_current_version_strategy;
     use ::file_endec::hash_argon2i;
     use ::file_endec::hash_bcrypt;
     use ::file_endec::hash_sha256;
-    use ::file_endec::stretch_key;
     use ::file_endec::Key;
     use ::file_endec::Salt;
+    use ::file_endec::stretch_key;
 
     fn get_data() -> Vec<u8> {
         black_box(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
@@ -78,8 +78,8 @@ mod hash {
 
 #[cfg(all(test, feature = "expose"))]
 mod encrypt {
-    use ::criterion::black_box;
     use ::criterion::Benchmark;
+    use ::criterion::black_box;
     use ::criterion::Criterion;
 
     use ::file_endec::decrypt_aes256;
@@ -139,6 +139,90 @@ mod encrypt {
     }
 }
 
+#[cfg(all(test, feature = "expose"))]
+mod back_and_forth {
+    use ::std::fs::File;
+    use ::std::io::Write;
+    use ::std::path::PathBuf;
+
+    use ::criterion::Benchmark;
+    use ::criterion::black_box;
+    use ::criterion::Criterion;
+    use ::rand::RngCore;
+    use ::tempfile::tempdir;
+
+    use ::file_endec::encrypt;
+    use ::file_endec::EncryptConfig;
+    use ::file_endec::Key;
+    use file_endec::{EncOptionSet, Verbosity, DecryptConfig, decrypt};
+
+    fn create_test_file() -> PathBuf {
+        //TODO @mark: reusable somewhere?
+        let mut pth = tempdir().unwrap().into_path();
+        pth.push("source.data");
+        assert!(pth.exists());
+        let mut data = [0; 1024 * 1024];
+        rand::thread_rng().fill_bytes(&mut data);
+        let mut file = File::create(&pth).unwrap();
+        file.write_all(&data).unwrap();
+        return pth
+    }
+
+    fn enc_dec_files_with_options(key: Key, test_file: PathBuf, options: EncOptionSet) {
+        let conf = EncryptConfig::new(
+            vec![test_file],
+            key.clone(),
+            options,
+            Verbosity::Quiet,
+            false,
+            true,
+            Some(pth.path().to_owned()),
+            ".enc".to_string(),
+            false,
+        );
+        let enc_files = encrypt(&conf).unwrap();
+
+        let conf = DecryptConfig::new(
+            enc_files,
+            key,
+            Verbosity::Quiet,
+            false,
+            false,
+            None,
+        );
+        decrypt(&conf).unwrap();
+    }
+
+    pub fn v1_0(c: &mut Criterion) {
+        // Note: this just uses current version without options, which is the same for v1.0.
+        // There is currently no way to encrypt using older versions, so if defaults change,
+        // this test might have to be scrapped.
+        c.bench(
+            "v1_0",
+            Benchmark::new("v1_0", |b| {
+                let key = Key::new("s$j2d@PBBajiX$1+&hMEEij@+XNrUR4u");;
+                let version = get_current_version();
+                let test_file = create_test_file();
+                b.iter(|| enc_dec_files_with_options(key, test_file, EncOptionSet::empty()))
+            })
+            .sample_size(10),
+        );
+    }
+
+    pub fn v1_1_fast(c: &mut Criterion) {
+        c.bench(
+            "v1_0",
+            Benchmark::new("v1_0", |b| {
+                let key = Key::new("TzBdMjzA8%++lSUdwxlak83jZg=veF4!");;
+                let version = get_current_version();
+                let test_file = create_test_file();
+                b.iter(|| enc_dec_files_with_options(key, test_file, EncOptionSet::all_for_test()))
+            })
+            .sample_size(10),
+        );
+    }
+}
+
 #[cfg(not(feature = "expose"))]
 pub fn need_expose_feature(_: &mut Criterion) {
     panic!("benchmarks require feature 'expose' to be enabled")
@@ -161,7 +245,14 @@ criterion_group!(
 );
 
 #[cfg(feature = "expose")]
-criterion_main!(hash_bench, encrypt_bench,);
+criterion_group!(
+    back_and_forth_bench,
+    back_and_forth::v1_0,
+    back_and_forth::v1_1_fast,
+);
+
+#[cfg(feature = "expose")]
+criterion_main!(hash_bench, encrypt_bench, back_and_forth_bench);
 
 #[cfg(not(feature = "expose"))]
 criterion_group!(need_expose_feature_group, need_expose_feature);

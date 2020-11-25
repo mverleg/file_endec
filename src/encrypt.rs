@@ -245,7 +245,7 @@ fn go_encrypt() -> FedResult<()> {
         );
     }
     let config = args.convert(key)?;
-    encrypt(&config)
+    encrypt(&config)?;
 }
 
 #[cfg(test)]
@@ -279,6 +279,7 @@ mod tests {
             "-f",
             "-s",
             "--hide-meta",
+            "--hide-size",
             "-o",
             "/tmp/hello",
             "--output-extension",

@@ -68,6 +68,12 @@ pub struct EncryptArguments {
     hide_meta: bool,
 
     #[structopt(
+        long,
+        help = "Hide the exact compressed file size, by padding it to the next power of two."
+    )]
+    hide_size: bool,
+
+    #[structopt(
         short = "s",
         long,
         help = "Use good instead of great encryption for a significant speedup."
@@ -119,6 +125,7 @@ impl fmt::Display for EncryptArguments {
         writeln!(f, "* extension: {}", &self.output_extension)?;
 
         writeln!(f, "* hide metadata: {}", if self.hide_meta { "yes" } else { "no" })?;
+        writeln!(f, "* hide size: {}", if self.hide_meta { "yes" } else { "no" })?;
 
         writeln!(f, "* fast mode: {}", if self.fast { "YES" } else { "no" })?;
 
@@ -197,6 +204,9 @@ impl EncryptArguments {
         }
         if self.hide_meta {
             options.push(EncOption::HideMeta);
+        }
+        if self.hide_size {
+            options.push(EncOption::PadSize);
         }
         let extension = if self.output_extension.starts_with('.') {
             self.output_extension

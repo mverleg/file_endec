@@ -19,6 +19,7 @@ use crate::{EncryptConfig, FedResult, Verbosity, EncOption};
 
 pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
     assert!(!config.options().has(&EncOption::HideMeta), "metadata hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
+    assert!(!config.options().has(&EncOption::PadSize), "size hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
     assert!(!config.options().has(&EncOption::Fast), "fast mode not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
     let version = get_current_version();
     let strategy = get_current_version_strategy(config.options(), config.debug());
@@ -107,7 +108,7 @@ mod tests {
     use tempfile::tempdir;
 
     use crate::config::EncryptConfig;
-    use crate::{encrypt, EncOption};
+    use crate::encrypt;
     use crate::files::scan::TEST_FILE_DIR;
     use crate::header::strategy::Verbosity;
     use crate::key::key::Key;
@@ -134,7 +135,7 @@ mod tests {
             },
             Variation {
                 postfix: "_fast".to_owned(),
-                options: vec![EncOption::Fast, EncOption::HideMeta].into(),
+                options: EncOptionSet::all_for_test(),
             },
         ]
     }

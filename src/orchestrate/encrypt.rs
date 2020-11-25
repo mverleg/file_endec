@@ -23,7 +23,6 @@ use crate::util::version::get_current_version;
 pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
     assert!(!config.options().has(&EncOption::HideMeta), "metadata hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
     assert!(!config.options().has(&EncOption::PadSize), "size hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
-    assert!(!config.options().has(&EncOption::Fast), "fast mode not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
     let version = get_current_version();
     let strategy = get_current_version_strategy(config.options(), config.debug());
     let files_info = inspect_files(

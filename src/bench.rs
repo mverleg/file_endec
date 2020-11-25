@@ -216,8 +216,8 @@ mod back_and_forth {
 
     pub fn v1_1_fast(c: &mut Criterion) {
         c.bench(
-            "v1_0",
-            Benchmark::new("v1_0", |b| {
+            "v1_1_fast",
+            Benchmark::new("v1_1_fast", |b| {
                 let key = Key::new("TzBdMjzA8%++lSUdwxlak83jZg=veF4!");
                 let test_file = create_test_file();
                 b.iter(|| enc_dec_files_with_options(key.clone(), test_file.clone(), EncOptionSet::new(vec![EncOption::Fast])))
@@ -256,8 +256,7 @@ criterion_group!(
 );
 
 #[cfg(feature = "expose")]
-criterion_main!(back_and_forth_bench);
-// criterion_main!(hash_bench, encrypt_bench, back_and_forth_bench);
+criterion_main!(hash_bench, encrypt_bench, back_and_forth_bench);
 
 #[cfg(not(feature = "expose"))]
 criterion_group!(need_expose_feature_group, need_expose_feature);

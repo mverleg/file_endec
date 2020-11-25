@@ -1,28 +1,28 @@
 use ::std::collections::HashMap;
+use ::std::path::PathBuf;
 
-use crate::config::typ::{EndecConfig, Extension};
 use crate::config::DecryptConfig;
+pub use crate::config::enc::EncryptConfig;
+use crate::config::typ::{EndecConfig, Extension};
+use crate::files::Checksum;
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::decompress_file;
+use crate::files::delete::delete_input_file;
 use crate::files::file_meta::inspect_files;
 use crate::files::read_headers::read_file_strategies;
-use crate::files::write_output::write_output_file;
-use crate::files::Checksum;
-use crate::header::decode::skip_header;
-use crate::key::key::StretchKey;
-use crate::key::stretch::stretch_key;
-use crate::key::Salt;
-use crate::progress::Progress;
-use crate::symmetric::decrypt::decrypt_file;
-
-pub use crate::config::enc::EncryptConfig;
-use crate::files::delete::delete_input_file;
 use crate::files::reading::{open_reader, read_file};
+use crate::files::write_output::write_output_file;
+use crate::header::decode::skip_header;
 pub use crate::header::strategy::Verbosity;
 pub use crate::key::{Key, KeySource};
+use crate::key::key::StretchKey;
+use crate::key::Salt;
+use crate::key::stretch::stretch_key;
 use crate::progress::indicatif::IndicatifProgress;
 use crate::progress::log::LogProgress;
+use crate::progress::Progress;
 use crate::progress::silent::SilentProgress;
+use crate::symmetric::decrypt::decrypt_file;
 pub use crate::util::FedResult;
 
 pub fn validate_checksum_matches(
@@ -52,7 +52,8 @@ pub fn validate_checksum_matches(
     false
 }
 
-pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
+/// Decrypt one or more files and return the new paths.
+pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
     let files_info = inspect_files(
         config.files(),
         config.verbosity(),
@@ -72,6 +73,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
     };
     let mut key_cache: HashMap<Salt, StretchKey> = HashMap::new();
     let mut checksum_failure_count = 0;
+    let mut out_pths = vec![];
     for file_strat in &files_strats {
         let mut reader = open_reader(&file_strat.file, config.verbosity())?;
         skip_header(&mut reader, config.verbosity().debug())?;
@@ -138,6 +140,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
                 big.len() / 1024,
             );
         }
+        out_pths.push(file_strat.file.out_pth.clone());
     }
     progress.finish();
     if !config.quiet() {
@@ -150,7 +153,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<()> {
             checksum_failure_count
         ));
     }
-    Ok(())
+    Ok(out_pths)
 }
 
 /// The demo used in this blog post:

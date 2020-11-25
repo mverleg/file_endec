@@ -1,3 +1,6 @@
+use ::std::path::PathBuf;
+
+use crate::{EncOption, EncryptConfig, FedResult, Verbosity};
 use crate::config::typ::{EndecConfig, Extension};
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::compress_file;
@@ -5,19 +8,19 @@ use crate::files::delete::delete_input_file;
 use crate::files::file_meta::inspect_files;
 use crate::files::reading::{open_reader, read_file};
 use crate::files::write_output::write_output_file;
-use crate::header::strategy::get_current_version_strategy;
 use crate::header::Header;
-use crate::key::stretch::stretch_key;
+use crate::header::strategy::get_current_version_strategy;
 use crate::key::Salt;
+use crate::key::stretch::stretch_key;
 use crate::progress::indicatif::IndicatifProgress;
 use crate::progress::log::LogProgress;
-use crate::progress::silent::SilentProgress;
 use crate::progress::Progress;
+use crate::progress::silent::SilentProgress;
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
-use crate::{EncryptConfig, FedResult, Verbosity, EncOption};
 
-pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
+/// Encrypt one or more files and return the new paths.
+pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
     assert!(!config.options().has(&EncOption::HideMeta), "metadata hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
     assert!(!config.options().has(&EncOption::PadSize), "size hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
     assert!(!config.options().has(&EncOption::Fast), "fast mode not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
@@ -48,6 +51,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
         &strategy.key_hash_algorithms,
         &mut |alg| progress.start_stretch_alg(&alg, None),
     );
+    let mut out_pths = vec![];
     for file in &files_info {
         let mut reader = open_reader(&file, config.verbosity())?;
         let data = read_file(
@@ -89,12 +93,13 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<()> {
                 &file.out_pth.to_string_lossy(),
             );
         }
+        out_pths.push(file.out_pth.clone());
     }
     progress.finish();
     if !config.quiet() {
         println!("encrypted {} files", files_info.len());
     }
-    Ok(())
+    Ok(out_pths)
 }
 
 /// The demo used in this blog post:
@@ -112,8 +117,8 @@ mod tests {
     use crate::files::scan::TEST_FILE_DIR;
     use crate::header::strategy::Verbosity;
     use crate::key::key::Key;
-    use crate::util::version::get_current_version;
     use crate::util::option::EncOptionSet;
+    use crate::util::version::get_current_version;
 
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");
@@ -134,7 +139,7 @@ mod tests {
                 options: vec![].into(),
             },
             Variation {
-                postfix: "_fast".to_owned(),
+                postfix: "_fast_hide".to_owned(),
                 options: EncOptionSet::all_for_test(),
             },
         ]

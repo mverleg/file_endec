@@ -38,16 +38,30 @@ mod tests {
 
     #[cfg(not(debug_assertions))]
     #[test]
-    fn stratch_test_password() {
-        //TODO @mark: more options?
+    fn stratch_test_password_v1_0() {
         let strat = get_current_version_strategy(&EncOptionSet::empty(), true);
-        stretch_key(
+        let stretched = stretch_key(
             &Key::new(&"MY secret p@ssw0rd"),
             &Salt::fixed_for_test(123_456_789),
             strat.stretch_count,
             &strat.key_hash_algorithms,
             &mut |_| (),
         );
+        assert_eq!(stretched.unsecure_slice(16), StretchKey::new(&[54, 114, 70, 167, 155, 254, 12, 193, 207, 39, 32, 139, 34, 157, 121, 67]).unsecure_slice(16));
+    }
+
+    #[cfg(not(debug_assertions))]
+    #[test]
+    fn stratch_test_password_v1_1_fast() {
+        let strat = get_current_version_strategy(&EncOptionSet::all_for_test(), true);
+        let stretched = stretch_key(
+            &Key::new(&"MY secret p@ssw0rd"),
+            &Salt::fixed_for_test(123_456_789),
+            strat.stretch_count,
+            &strat.key_hash_algorithms,
+            &mut |_| (),
+        );
+        assert_eq!(stretched.unsecure_slice(16), StretchKey::new(&[112, 209, 30, 127, 161, 177, 105, 199, 59, 230, 70, 150, 183, 12, 238, 220]).unsecure_slice(16));
     }
 
     #[cfg(debug_assertions)]

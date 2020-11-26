@@ -25,9 +25,9 @@ pub fn decrypt_file(
 }
 
 pub fn decrypt_aes256(data: &[u8], key: &StretchKey, salt: &Salt) -> FedResult<Vec<u8>> {
-    debug_assert!(key.key_data.unsecure().len() >= 32);
+    debug_assert!(key.len() >= 32);
     debug_assert!(salt.salt.len() >= 16);
-    let cipher = Aes256Cbc::new_var(&key.key_data.unsecure()[..32], &salt.salt[..16]).unwrap();
+    let cipher = Aes256Cbc::new_var(&key.unsecure_slice(32), &salt.salt[..16]).unwrap();
     match cipher.decrypt_vec(data) {
         Ok(plain) => Ok(plain),
         Err(err) => Err(format!("Decryption algorithm failed: {}", err)),
@@ -35,9 +35,9 @@ pub fn decrypt_aes256(data: &[u8], key: &StretchKey, salt: &Salt) -> FedResult<V
 }
 
 pub fn decrypt_twofish(data: &[u8], key: &StretchKey, salt: &Salt) -> FedResult<Vec<u8>> {
-    debug_assert!(key.key_data.unsecure().len() >= 16);
+    debug_assert!(key.len() >= 16);
     debug_assert!(salt.salt.len() >= 16);
-    let cipher = TwofishCbc::new_var(&key.key_data.unsecure()[..16], &salt.salt[..16]).unwrap();
+    let cipher = TwofishCbc::new_var(&key.unsecure_slice(16), &salt.salt[..16]).unwrap();
     match cipher.decrypt_vec(data) {
         Ok(plain) => Ok(plain),
         Err(err) => Err(format!("Decryption algorithm failed: {}", err)),

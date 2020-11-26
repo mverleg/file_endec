@@ -179,13 +179,11 @@ mod tests {
 
     /// Open the files in 'test_files/' that were encrypted with previous versions,
     /// and make sure they can still be decrypted (and match the original).
-
     #[datatest::files("test_files", {
         input in r"/original_v(?:\d+\.\d+\.\d+)(?:_\w+)?.png.enc$",
     })]
     #[test]
     fn load_version(input: &Path) {
-        //TODO @mark: test that at least one match
         let mut original_pth = TEST_FILE_DIR.clone();
         original_pth.push("original.png".to_owned());
         let conf = DecryptConfig::new(

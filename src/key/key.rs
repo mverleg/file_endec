@@ -45,7 +45,7 @@ impl Eq for Key {}
 
 #[derive(Debug, Clone)]
 pub struct StretchKey {
-    pub key_data: SecVec<u8>,
+    key_data: SecVec<u8>,
 }
 
 impl StretchKey {
@@ -59,5 +59,13 @@ impl StretchKey {
     #[cfg(any(test, feature = "expose"))]
     pub fn mock_stretch(key_data: &[u8]) -> Self {
         StretchKey::new(&fastish_hash(key_data))
+    }
+
+    pub fn len(&self) -> usize {
+        self.key_data.unsecure().len()
+    }
+
+    pub fn unsecure_slice(&self, upto: usize) -> &[u8] {
+        &self.key_data.unsecure()[..upto]
     }
 }

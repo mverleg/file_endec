@@ -14,6 +14,7 @@ pub struct PrivateHeader {
 
 impl PrivateHeader {
     pub fn new(filename: String, permissions: u32, created_ns: u128, changed_ns: u128, size: u64,) -> Self {
+        assert!(!filename.contains('\n'));
         PrivateHeader {
             filename,
             permissions,

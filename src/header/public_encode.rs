@@ -21,7 +21,7 @@ fn write_marker(writer: &mut impl Write, verbose: bool) -> FedResult<()> {
 
 fn write_version(writer: &mut impl Write, version: &Version, verbose: bool) -> FedResult<()> {
     let version_str = format!("{}.{}.{}", version.major, version.minor, version.patch);
-    write_line(writer, PUB_HEADER_VERSION_MARKER, Some(version_str), verbose)
+    write_line(writer, PUB_HEADER_VERSION_MARKER, Some(&version_str), verbose)
 }
 
 fn write_options(writer: &mut impl Write, options: &EncOptionSet, verbose: bool) -> FedResult<()> {
@@ -32,7 +32,7 @@ fn write_options(writer: &mut impl Write, options: &EncOptionSet, verbose: bool)
         .map(|opt| opt.to_string())
         .collect::<Vec<_>>()
         .join(" ");
-    write_line(writer, PUB_HEADER_OPTION_MARKER, Some(options_txt), verbose)
+    write_line(writer, PUB_HEADER_OPTION_MARKER, Some(&options_txt), verbose)
 }
 
 fn write_salt(writer: &mut impl Write, salt: &Salt, verbose: bool) -> FedResult<()> {

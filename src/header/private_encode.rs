@@ -2,14 +2,16 @@ use ::std::io::Write;
 
 use crate::header::encode_util::write_line;
 use crate::header::private_header_type::{PRIV_HEADER_CHANGED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE, PrivateHeader};
+use crate::util::base64::u64_to_base64str;
+use crate::util::base64::u128_to_base64str;
 use crate::util::FedResult;
 
 pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, verbose: bool) -> FedResult<()> {
     write_line(writer, PRIV_HEADER_FILENAME, Some(header.filename()), verbose)?;
-    write_line(writer, PRIV_HEADER_PERMISSIONS, Some(&format!("{:o}". header.permissions())), verbose)?;
-    write_line(writer, PRIV_HEADER_CREATED, Some(&header.created_ns().as_base64()), verbose)?;
-    write_line(writer, PRIV_HEADER_CHANGED, Some(&header.changed_ns().as_base64()), verbose)?;
-    write_line(writer, PRIV_HEADER_SIZE, Some(&header.size().as_base64()), verbose)?;
+    write_line(writer, PRIV_HEADER_PERMISSIONS, Some(&format!("{:o}", header.permissions())), verbose)?;
+    write_line(writer, PRIV_HEADER_CREATED, Some(&u128_to_base64str(header.created_ns())), verbose)?;
+    write_line(writer, PRIV_HEADER_CHANGED, Some(&u128_to_base64str(header.changed_ns())), verbose)?;
+    write_line(writer, PRIV_HEADER_SIZE, Some(&u64_to_base64str(header.size())), verbose)?;
     write_line(writer, PRIV_HEADER_DATA, None, verbose)?;
     Ok(())
 }
@@ -19,7 +21,6 @@ mod tests {
     use ::std::str::from_utf8;
 
     use super::*;
-    use super::write_public_header;
 
     #[test]
     fn write_vanilla() {
@@ -33,7 +34,7 @@ mod tests {
         let mut buf: Vec<u8> = Vec::new();
         write_private_header(&mut buf, &header, true).unwrap();
         let expected =
-            "github.com/mverleg/file_endec\0\nv 1.1.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\ncheck xx_sha256 Ag\nmeta1+data:\n";
+            "name my_filename.ext\nperm 754\ncrt CBqZvhwAAAAAAAAAAAAAAA\ncng aPPI9OUAAAAAAAAAAAAAAA\nsz AKAPAAAAAAA\nenc:\n";
         assert_eq!(expected, from_utf8(&buf).unwrap());
     }
 }

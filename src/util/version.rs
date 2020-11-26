@@ -10,7 +10,10 @@ pub fn get_current_version() -> Version {
     CURRENT_VERSION.clone()
 }
 
-pub fn version_has_options(version: &Version) -> bool {
+/// Whether two features were used in the given version:
+/// * private header with metadata
+/// * customization options
+pub fn version_has_options_meta(version: &Version) -> bool {
     version >= &*OPTIONS_INTORDUCED_IN_VERSION
 }
 

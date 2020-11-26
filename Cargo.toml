@@ -16,7 +16,11 @@ path = "src/lib.rs"
 
 [features]
 default = []
+# Feature 'expose' exports more functions from the library, which is intended for
+# integration testing and not part of semver api (i.e. not backwards compatible).
 expose = []
+# Feature 'test-e2e' enables some expensive end-to-end tests as part of unit tests.
+test-e2e = []
 
 [[bin]]
 name = "fileenc"

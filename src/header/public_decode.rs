@@ -15,7 +15,7 @@ use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
 use crate::util::option::{EncOption, EncOptionSet};
-use crate::util::version::version_has_options;
+use crate::util::version::version_has_options_meta;
 
 fn read_line(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<()> {
     line.clear();
@@ -118,7 +118,7 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
     let mut line = String::new();
     parse_marker(reader, &mut line, verbose)?;
     let version = parse_version(reader, &mut line, verbose)?;
-    let has_options = version_has_options(&version);
+    let has_options = version_has_options_meta(&version);
     let options = if has_options {
         parse_options(reader, &mut line, verbose)?
     } else {

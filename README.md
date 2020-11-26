@@ -68,7 +68,7 @@ Use `fileenc --help` and `filedec --help` to see CLI arguments. For `fileenc`:
     ARGS:
         <FILES>...    One or more paths to input files (absolute or relative)
 
-The `--fast` mode uses only one hash algorithm one encryption algorithm (argon2i and aes256), and no key stretching; this makes it about 10 times faster.
+The `--fast` mode uses only one hash algorithm one encryption algorithm (argon2i and aes256), and reduces key stretching; this makes it about 10 times faster.
 
 Keep in mind
 -------------------------------

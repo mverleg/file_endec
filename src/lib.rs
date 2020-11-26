@@ -3,7 +3,6 @@ pub use crate::config::EncryptConfig;
 pub use crate::config::EndecConfig;
 #[cfg(feature = "expose")]
 pub use crate::files::mockfile::generate_test_file_content_for_test;
-#[cfg(feature = "expose")]
 pub use crate::header::strategy::get_current_version_strategy;
 pub use crate::header::strategy::Verbosity;
 #[cfg(feature = "expose")]

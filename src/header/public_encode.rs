@@ -14,7 +14,7 @@ use crate::header::public_header_type::{HEADER_META_DATA_MARKER, HEADER_OPTION_M
 use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
-use crate::util::version::version_has_options;
+use crate::util::version::version_has_options_meta;
 
 fn wrap_err(res: Result<usize, impl Error>, verbose: bool) -> FedResult<()> {
     if let Err(err) = res {
@@ -72,7 +72,7 @@ fn write_checksum(writer: &mut impl Write, checksum: &Checksum, verbose: bool) -
 pub fn write_public_header(writer: &mut impl Write, header: &PublicHeader, verbose: bool) -> FedResult<()> {
     write_marker(writer, verbose)?;
     write_version(writer, header.version(), verbose)?;
-    if version_has_options(header.version()) {
+    if version_has_options_meta(header.version()) {
         write_options(writer, header.options(), verbose)?;
     }
     write_salt(writer, header.salt(), verbose)?;

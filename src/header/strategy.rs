@@ -134,9 +134,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_current_version_strategy() {
-        //TODO @mark: more options?
-        get_current_version_strategy(&EncOptionSet::empty(), true);
-        get_current_version_strategy(&EncOptionSet::empty(), false);
+    fn determine_strategy_1_0() {
+        assert_eq!(&*STRATEGY_1_0, get_version_strategy(&Version::parse("1.0.0").unwrap(), &EncOptionSet::empty(), true).unwrap());
+        assert_eq!(&*STRATEGY_1_0, get_version_strategy(&Version::parse("1.0.0").unwrap(), &EncOptionSet::empty(), false).unwrap());
+    }
+
+    #[test]
+    fn determine_strategy_1_1() {
+        assert_eq!(&*STRATEGY_1_0, get_version_strategy(&Version::parse("1.1.0").unwrap(), &EncOptionSet::empty(), true).unwrap());
+        assert_eq!(&*STRATEGY_1_0, get_version_strategy(&Version::parse("1.1.0").unwrap(), &EncOptionSet::empty(), false).unwrap());
+        assert_eq!(&*STRATEGY_1_1_FAST, get_version_strategy(&Version::parse("1.1.0").unwrap(), &EncOptionSet::all_for_test(), true).unwrap());
+        assert_eq!(&*STRATEGY_1_1_FAST, get_version_strategy(&Version::parse("1.1.0").unwrap(), &EncOptionSet::all_for_test(), false).unwrap());
     }
 }

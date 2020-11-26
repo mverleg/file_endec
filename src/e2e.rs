@@ -10,6 +10,7 @@ use crate::files::mockfile::write_test_file;
 use crate::util::test_cmd::{filename_append_enc, test_decrypt, test_encrypt};
 
 #[test]
+#[cfg_attr(not(feature = "test-e2e"), ignore)]
 fn large_file() {
     let key = "abc123";
     let (tmp, file, data) = write_test_file(128 * 1024 * 1024);
@@ -41,6 +42,7 @@ fn large_file() {
 }
 
 #[test]
+#[cfg_attr(not(feature = "test-e2e"), ignore)]
 fn many_files() {
     let key = "!&R$ Eq1473L19XTGK'K7#be7Rl b62U8R2";
     let files: Vec<(TempDir, PathBuf, Vec<u8>)> =
@@ -63,6 +65,7 @@ fn many_files() {
 }
 
 #[test]
+#[cfg_attr(not(feature = "test-e2e"), ignore)]
 fn dry_run_passfile() {
     let key = "Lp0aY_=f9&zLEN-!D&jfdZPQH709-%N+";
     let (dir, file, _) = write_test_file(100 * 1024);
@@ -91,6 +94,7 @@ fn dry_run_passfile() {
 }
 
 #[test]
+#[cfg_attr(not(feature = "test-e2e"), ignore)]
 fn output_dir_multi_salt() {
     let key = "!zEtt8M$vC6hJ9T@";
     let out_dir = TempDir::new().unwrap();

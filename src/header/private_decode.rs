@@ -1,41 +1,40 @@
 use ::std::collections::HashMap;
 use ::std::io::BufRead;
-use ::std::str::FromStr;
+use ::std::primitive::from_str_radix;
 
-use ::semver::Version;
-
-use crate::files::Checksum;
 use crate::header::decode_util::HeaderErr;
 use crate::header::decode_util::read_header_keys;
 use crate::header::decode_util::skip_header;
-use crate::header::private_header_type::{PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_CREATED, PRIV_HEADER_MODIFIED, PRIV_HEADER_ACCESSED};
+use crate::header::private_header_type::{PRIV_HEADER_ACCESSED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_MODIFIED, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE};
 use crate::header::private_header_type::PrivateHeader;
-use crate::header::PUB_HEADER_CHECKSUM_MARKER;
-use crate::header::PUB_HEADER_MARKER;
 use crate::header::PUB_HEADER_META_DATA_MARKER;
-use crate::header::PUB_HEADER_OPTION_MARKER;
 use crate::header::PUB_HEADER_PURE_DATA_MARKER;
-use crate::header::PUB_HEADER_SALT_MARKER;
-use crate::header::PUB_HEADER_VERSION_MARKER;
-use crate::header::PublicHeader;
-use crate::key::salt::Salt;
-use crate::util::errors::add_err;
-use crate::util::FedResult;
-use crate::util::option::EncOption;
-use crate::util::option::EncOptionSet;
 use crate::util::base::small_str_to_u128;
+use crate::util::base::small_str_to_u64;
+use crate::util::FedResult;
 
 fn parse_filename(header_data: &HashMap<String, String>) -> FedResult<String> {
     header_data.get(PRIV_HEADER_FILENAME).cloned()
-        .ok_or("could not find the original filename in the file header".to_owned())
+        .ok_or("could not find the original filename in the private file header".to_owned())
+}
+
+fn parse_permissions(header_data: &HashMap<String, String>) -> FedResult<u32> {
+    //TODO @mark: test parsing
+    header_data.get(PRIV_HEADER_PERMISSIONS).map(|sz| u32::from_str_radix(sz, 8).unwrap())
+        .ok_or("could not find the original file size in the private file header".to_owned())
 }
 
 fn parse_sizes(header_data: &HashMap<String, String>) -> FedResult<(Option<u128>, Option<u128>, Option<u128>)> {
     Ok((
-        header_data.get(PRIV_HEADER_CREATED).map(|ts| small_str_to_u128(ts)).unwrap(),
-        header_data.get(PRIV_HEADER_MODIFIED).map(|ts| small_str_to_u128(ts)).unwrap(),
-        header_data.get(PRIV_HEADER_ACCESSED).map(|ts| small_str_to_u128(ts)).unwrap(),
+        header_data.get(PRIV_HEADER_CREATED).map(|ts| small_str_to_u128(ts).unwrap()),
+        header_data.get(PRIV_HEADER_MODIFIED).map(|ts| small_str_to_u128(ts).unwrap()),
+        header_data.get(PRIV_HEADER_ACCESSED).map(|ts| small_str_to_u128(ts).unwrap()),
     ))
+}
+
+fn parse_size(header_data: &HashMap<String, String>) -> FedResult<u64> {
+    header_data.get(PRIV_HEADER_SIZE).map(|sz| small_str_to_u64(sz).unwrap())
+        .ok_or("could not find the original file size in the private file header".to_owned())
 }
 
 //TODO @mark: include filename in error at caller?
@@ -52,13 +51,15 @@ pub fn parse_private_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedRes
     };
 
     let filename = parse_filename(&header_data)?;
-    let (created_ns, changed_ns, accessed_ns) = parse_sizes(&header_data)?;
+    let permissions = parse_permissions(&header_data)?;
+    let (created, changed, accessed) = parse_sizes(&header_data)?;
+    let size = parse_size(&header_data)?;
     Ok(PrivateHeader::new(
         filename,
         permissions,
-        created_ns,
-        changed_ns,
-        accessed_ns,
+        created,
+        changed,
+        accessed,
         size,
     ))
 }
@@ -72,16 +73,6 @@ pub fn skip_public_header<R: BufRead>(reader: &mut R) -> FedResult<()> {
 mod tests {
     //TODO @mark: update all these tests
 
-    use ::std::io::BufReader;
-    use ::std::io::Read;
-
-    use ::semver::Version;
-
-    use crate::files::Checksum;
-    use crate::header::public_decode::skip_public_header;
-    use crate::header::PublicHeader;
-    use crate::key::salt::Salt;
-    use crate::util::option::EncOptionSet;
 
     // #[test]
     // fn stop_read_after_header() {

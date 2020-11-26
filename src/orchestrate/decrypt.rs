@@ -22,7 +22,6 @@ use crate::progress::Progress;
 use crate::progress::silent::SilentProgress;
 use crate::symmetric::decrypt::decrypt_file;
 use crate::header::private_decode::parse_private_header;
-use std::io::BufReader;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,

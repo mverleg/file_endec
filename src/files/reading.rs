@@ -19,12 +19,13 @@ pub fn open_reader(file: &FileInfo, verbosity: Verbosity) -> FedResult<BufReader
 }
 
 pub fn read_file(
+    data: &mut Vec<u8>,
     reader: &mut BufReader<File>,
     path_str: &str,
     size_kb: u64,
     verbosity: Verbosity,
     start_progress: &mut impl FnMut(),
-) -> FedResult<Vec<u8>> {
+) {
     start_progress();
     if verbosity.debug() {
         println!("reading {}", path_str);
@@ -36,7 +37,6 @@ pub fn read_file(
             path_str
         );
     }
-    let mut data = vec![];
     wrap_io(
         || "could not read input file",
         reader.read_to_end(&mut data),

@@ -88,7 +88,10 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             key_cache.insert(salt.clone(), sk.clone());
             sk
         };
-        let data = read_file(
+        let mut data = Vec::with_capacity(file_strat.file.size_k());
+        //TODO @mark: read private header
+        read_file(
+            &mut data,
             &mut reader,
             &file_strat.file.path_str(),
             file_strat.file.size_kb(),

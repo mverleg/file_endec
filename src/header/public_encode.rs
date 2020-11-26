@@ -16,31 +16,6 @@ use crate::util::errors::add_err;
 use crate::util::FedResult;
 use crate::util::version::version_has_options_meta;
 
-const DELIMITER_CHARS: [u8; 1] = [32,];
-
-fn wrap_err(res: Result<usize, impl Error>, verbose: bool) -> FedResult<()> {
-    if let Err(err) = res {
-        Err(add_err("failed to write encryption header", verbose, err))
-    } else {
-        Ok(())
-    }
-}
-
-fn write_line(
-    writer: &mut impl Write,
-    prefix: &str,
-    value: Option<String>,
-    verbose: bool,
-) -> FedResult<()> {
-    wrap_err(writer.write(prefix.as_bytes()), verbose)?;
-    if let Some(text) = value {
-        wrap_err(writer.write(&DELIMITER_CHARS), verbose)?;
-        wrap_err(writer.write(text.as_bytes()), verbose)?;
-    }
-    wrap_err(writer.write(b"\n"), verbose)?;
-    Ok(())
-}
-
 fn write_marker(writer: &mut impl Write, verbose: bool) -> FedResult<()> {
     write_line(writer, PUB_HEADER_MARKER, None, verbose)
 }
@@ -113,7 +88,7 @@ mod tests {
         let mut buf: Vec<u8> = Vec::new();
         write_public_header(&mut buf, &header, true).unwrap();
         let expected =
-            "github.com/mverleg/file_endec\0\nv 1.1.0\nopts \nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\ncheck xx_sha256 Ag\nmeta1+data:\n";
+            "github.com/mverleg/file_endec\0\nv 1.1.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\ncheck xx_sha256 Ag\nmeta1+data:\n";
         assert_eq!(expected, from_utf8(&buf).unwrap());
     }
 

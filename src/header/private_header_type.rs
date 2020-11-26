@@ -14,14 +14,14 @@ pub struct PrivateHeader {
 }
 
 impl PrivateHeader {
-    pub fn new(filename: String, permissions: u32, created_ns: u128, changed_ns: u128, size: u64,) -> FedResult<Self> {
-        Ok(PrivateHeader {
+    pub fn new(filename: String, permissions: u32, created_ns: u128, changed_ns: u128, size: u64,) -> Self {
+        PrivateHeader {
             filename,
             permissions,
             created_ns,
             changed_ns,
             size,
-        })
+        }
     }
 
     pub fn filename(&self) -> &str {
@@ -50,4 +50,4 @@ pub const PRIV_HEADER_PERMISSIONS: &str = "perm";
 pub const PRIV_HEADER_CREATED: &str = "crt";
 pub const PRIV_HEADER_CHANGED: &str = "cng";
 pub const PRIV_HEADER_SIZE: &str = "sz";
-pub const PRIV_HEADER_DATA: &str = "data:";
+pub const PRIV_HEADER_DATA: &str = "enc:";

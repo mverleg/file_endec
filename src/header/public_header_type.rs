@@ -14,13 +14,13 @@ pub struct PublicHeader {
 }
 
 impl PublicHeader {
-    pub fn new(version: Version, salt: Salt, checksum: Checksum, options: EncOptionSet,) -> FedResult<Self> {
-        Ok(PublicHeader {
+    pub fn new(version: Version, salt: Salt, checksum: Checksum, options: EncOptionSet) -> Self {
+        PublicHeader {
             version,
             salt,
             checksum,
             options,
-        })
+        }
     }
 
     pub fn version(&self) -> &Version {

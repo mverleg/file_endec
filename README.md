@@ -25,13 +25,13 @@ Functionality
 In Docker
 -------------------------------
 
-Run the encryptor with Docker::
+Run the encryptor with Docker:
 
     docker run --rm -it -v "$(pwd):/data" mverleg/file-endec /fileenc file.txt
 
 You can mount any directory in which you want to encrypt files; the above example uses the current directory `$(pwd)`. Use `/filedec` instead of `/fileenc` for decryption.
 
-To build the image yourself (instead of downloading from Dockerhub), clone the Github project and run::
+To build the image yourself (instead of downloading from Dockerhub), clone the Github project and run:
 
     docker build -t mverleg/file-endec .
 

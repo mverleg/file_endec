@@ -4,12 +4,18 @@ use crate::util::errors::FedResult;
 
 #[cfg(test)]
 use std::convert::TryInto;
+use number2name::BASE64URL;
 
-pub fn u64_to_base64str(value: u64) -> String {
-    BASE64URL_NOPAD.encode(&value.to_le_bytes())
+pub fn u64_to_small_str(value: u64) -> String {
+    BASE64URL.encode(value)
 }
 
-pub fn u128_to_base64str(value: u128) -> String {
+pub fn small_str_to_u64(value: u64) -> String {
+    BASE64URL.encode(value)
+}
+
+#[cfg(test)]
+pub fn u64_to_base64str(value: u64) -> String {
     BASE64URL_NOPAD.encode(&value.to_le_bytes())
 }
 

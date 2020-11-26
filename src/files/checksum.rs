@@ -7,8 +7,8 @@ use ::std::num::NonZeroU32;
 use ::ring::pbkdf2::{derive, PBKDF2_HMAC_SHA512};
 use ::twox_hash::XxHash64;
 
-use crate::util::base64::base64str_to_u8s;
-use crate::util::base64::u8s_to_base64str;
+use crate::util::base::base64str_to_u8s;
+use crate::util::base::u8s_to_base64str;
 use crate::util::FedResult;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

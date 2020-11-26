@@ -1,7 +1,7 @@
 pub use errors::FedResult;
 
 #[allow(clippy::module_inception)]
-pub mod base64;
+pub mod base;
 pub mod errors;
 pub mod pth;
 pub mod test_cmd;

@@ -117,7 +117,8 @@ impl fmt::Display for DecryptArguments {
 }
 
 pub fn main() {
-    if let Err(err) = go_decrypt() {
+    let args = DecryptArguments::from_args();
+    if let Err(err) = go_decrypt(&args) {
         stderr().write_all(err.as_bytes()).unwrap();
         stderr().write_all(b"\n").unwrap();
         exit(1);
@@ -145,8 +146,7 @@ impl DecryptArguments {
 
 //TODO: if wildcards or directories are ever supported, then skip files that have the encrypted extension (i.e. .enc)
 
-fn go_decrypt() -> FedResult<()> {
-    let args = DecryptArguments::from_args();
+fn go_decrypt(args: &DecryptArguments) -> FedResult<()> {
     if args.debug {
         println!("arguments provided:\n{}", args);
     }

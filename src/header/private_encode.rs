@@ -2,16 +2,21 @@ use ::std::io::Write;
 
 use crate::header::encode_util::write_line;
 use crate::header::private_header_type::{PRIV_HEADER_CHANGED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE, PrivateHeader};
-use crate::util::base64::u64_to_base64str;
-use crate::util::base64::u128_to_base64str;
+use crate::util::base::u64_to_base64str;
+use crate::util::base::u128_to_base64str;
 use crate::util::FedResult;
+use crate::{EncOptionSet, EncOption};
 
-pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, verbose: bool) -> FedResult<()> {
-    write_line(writer, PRIV_HEADER_FILENAME, Some(header.filename()), verbose)?;
-    write_line(writer, PRIV_HEADER_PERMISSIONS, Some(&format!("{:o}", header.permissions())), verbose)?;
-    write_line(writer, PRIV_HEADER_CREATED, Some(&u128_to_base64str(header.created_ns())), verbose)?;
-    write_line(writer, PRIV_HEADER_CHANGED, Some(&u128_to_base64str(header.changed_ns())), verbose)?;
-    write_line(writer, PRIV_HEADER_SIZE, Some(&u64_to_base64str(header.size())), verbose)?;
+pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, options: &EncOptionSet, verbose: bool) -> FedResult<()> {
+    if options.has(EncOption::HideMeta) {
+        write_line(writer, PRIV_HEADER_FILENAME, Some(header.filename()), verbose)?;
+        write_line(writer, PRIV_HEADER_PERMISSIONS, Some(&format!("{:o}", header.permissions())), verbose)?;
+        write_line(writer, PRIV_HEADER_CREATED, Some(&u128_to_base64str(header.created_ns())), verbose)?;
+        write_line(writer, PRIV_HEADER_CHANGED, Some(&u128_to_base64str(header.changed_ns())), verbose)?;
+    }
+    if options.has(EncOption::PadSize) {
+        write_line(writer, PRIV_HEADER_SIZE, Some(&u64_to_base64str(header.size())), verbose)?;
+    }
     write_line(writer, PRIV_HEADER_DATA, None, verbose)?;
     Ok(())
 }

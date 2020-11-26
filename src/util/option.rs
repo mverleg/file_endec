@@ -38,8 +38,8 @@ impl EncOptionSet {
         self.options.len()
     }
 
-    pub fn has(&self, option: &EncOption) -> bool {
-        self.options.contains(option)
+    pub fn has(&self, option: EncOption) -> bool {
+        self.options.contains(&option)
     }
 
     pub fn iter(&self) -> Iter<'_, EncOption> {

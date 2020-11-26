@@ -27,7 +27,7 @@ RUN cargo build --all-targets --all-features --release --tests
 # Code changes invalidate cache beyond here main code separately
 
 COPY ./src/ src/
-RUN bash -c 'touch -c src/* test_files/*'
+RUN bash -c 'touch -c src/*'
 
 # Build
 

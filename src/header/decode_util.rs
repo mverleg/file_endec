@@ -17,7 +17,7 @@ fn read_line(reader: &mut dyn BufRead, line: &mut String) -> Result<(), HeaderEr
         Ok(sz) => if sz == 0 {
             return Err(HeaderErr::NoEndMarker)
         },
-        Err(err) => return Err(HeaderErr::ReadError),
+        Err(_) => return Err(HeaderErr::ReadError),
     }
     line.pop();
     Ok(())

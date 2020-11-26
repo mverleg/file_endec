@@ -185,7 +185,7 @@ impl fmt::Display for EncryptArguments {
 
 pub fn main() {
     let args = EncryptArguments::from_args();
-    if let Err(err) = go_encrypt(&args) {
+    if let Err(err) = go_encrypt(args) {
         eprintln!("{}", err);
         exit(1);
     }
@@ -230,7 +230,7 @@ impl EncryptArguments {
 
 //TODO: if wildcards or directories are ever supported, then skip files that have the encrypted extension (i.e. .enc)
 
-fn go_encrypt(args: &EncryptArguments) -> FedResult<()> {
+fn go_encrypt(args: EncryptArguments) -> FedResult<()> {
     if args.debug {
         println!("arguments provided:\n{}", args);
     }

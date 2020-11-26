@@ -131,9 +131,9 @@ mod tests {
                 EncOption::HideMeta,
                 EncOption::PadSize,
             ]);
-            assert!(!options.has(&EncOption::Fast));
-            assert!(options.has(&EncOption::HideMeta));
-            assert!(options.has(&EncOption::PadSize));
+            assert!(!options.has(EncOption::Fast));
+            assert!(options.has(EncOption::HideMeta));
+            assert!(options.has(EncOption::PadSize));
         }
     }
 

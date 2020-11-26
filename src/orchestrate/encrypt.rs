@@ -23,8 +23,8 @@ use crate::util::version::get_current_version;
 
 /// Encrypt one or more files and return the new paths.
 pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
-    assert!(!config.options().has(&EncOption::HideMeta), "metadata hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
-    assert!(!config.options().has(&EncOption::PadSize), "size hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
+    assert!(!config.options().has(EncOption::HideMeta), "metadata hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
+    assert!(!config.options().has(EncOption::PadSize), "size hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
     let version = get_current_version();
     let strategy = get_current_version_strategy(config.options(), config.debug());
     let files_info = inspect_files(

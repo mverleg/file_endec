@@ -118,7 +118,7 @@ pub fn get_version_strategy(version: &Version, options: &EncOptionSet, verbose: 
             format!("non-existent version {} (minimum is 1.0.0)", version)
         });
     }
-    if options.has(&EncOption::Fast) {
+    if options.has(EncOption::Fast) {
         Ok(&*STRATEGY_1_1_FAST)
     } else {
         Ok(&*STRATEGY_1_0)

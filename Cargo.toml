@@ -69,7 +69,7 @@ file_shred = "^1.1.0"
 # utilities
 lazy_static = "^1.4.0"
 rand = "^0.7.3"
-number2name = "^1.1.0"
+number2name = "^1.1.1"
 
 [dev-dependencies]
 criterion = "^0.3.3"

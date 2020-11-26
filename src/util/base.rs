@@ -1,17 +1,25 @@
+#[cfg(test)]
+use std::convert::TryInto;
+
 use ::data_encoding::BASE64URL_NOPAD;
+use ::number2name::BASE64URL;
 
 use crate::util::errors::FedResult;
 
-#[cfg(test)]
-use std::convert::TryInto;
-use number2name::BASE64URL;
-
 pub fn u64_to_small_str(value: u64) -> String {
-    BASE64URL.encode(value)
+    BASE64URL.encode_u64(value)
 }
 
-pub fn small_str_to_u64(value: u64) -> String {
-    BASE64URL.encode(value)
+pub fn u128_to_small_str(value: u128) -> String {
+    BASE64URL.encode_u128(value)
+}
+
+pub fn small_str_to_u64(text: &str) -> Option<u64> {
+    BASE64URL.decode_u64(text).ok()
+}
+
+pub fn small_str_to_u128(text: &str) -> Option<u128> {
+    BASE64URL.decode_u128(text).ok()
 }
 
 #[cfg(test)]

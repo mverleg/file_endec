@@ -18,7 +18,6 @@ use crate::progress::Progress;
 use crate::progress::silent::SilentProgress;
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
-use crate::header::private_header_type::PrivateHeader;
 
 /// Encrypt one or more files and return the new paths.
 pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {

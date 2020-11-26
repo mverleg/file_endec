@@ -12,7 +12,7 @@ use crate::files::file_meta::inspect_files;
 use crate::files::read_headers::read_file_strategies;
 use crate::files::reading::{open_reader, read_file};
 use crate::files::write_output::write_output_file;
-use crate::header::public_decode::skip_header;
+use crate::header::public_decode::skip_public_header;
 use crate::key::key::StretchKey;
 use crate::key::Salt;
 use crate::key::stretch::stretch_key;
@@ -73,7 +73,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
     let mut out_pths = vec![];
     for file_strat in &files_strats {
         let mut reader = open_reader(&file_strat.file, config.verbosity())?;
-        skip_header(&mut reader, config.verbosity().debug())?;
+        skip_public_header(&mut reader)?;
         let salt = file_strat.header.salt().clone();
         let stretched_key = if let Some(sk) = key_cache.get(&salt) {
             sk.clone()

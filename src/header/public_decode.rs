@@ -5,22 +5,22 @@ use ::std::str::FromStr;
 use ::semver::Version;
 
 use crate::files::Checksum;
-use crate::header::decode_util::{HeaderErr, read_header_keys};
+use crate::header::decode_util::{HeaderErr, read_header_keys, skip_header};
 use crate::header::PUB_HEADER_CHECKSUM_MARKER;
 use crate::header::PUB_HEADER_MARKER;
+use crate::header::PUB_HEADER_META_DATA_MARKER;
+use crate::header::PUB_HEADER_OPTION_MARKER;
 use crate::header::PUB_HEADER_PURE_DATA_MARKER;
 use crate::header::PUB_HEADER_SALT_MARKER;
 use crate::header::PUB_HEADER_VERSION_MARKER;
-use crate::header::public_header_type::{PUB_HEADER_META_DATA_MARKER, PUB_HEADER_OPTION_MARKER};
 use crate::header::PublicHeader;
 use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
 use crate::util::option::{EncOption, EncOptionSet};
-use crate::util::version::version_has_options_meta;
 
-fn parse_version(header_data: &HashMap<String, String>) -> FedResult<Version> {
-    let version_str = header_data.get(HEADER_VERSION_MARKER)
+fn parse_version(header_data: &HashMap<String, String>, verbose: bool) -> FedResult<Version> {
+    let version_str = header_data.get(PUB_HEADER_VERSION_MARKER)
         .ok_or("could not find the version in the file header".to_owned())?;
     match Version::parse(version_str) {
         Ok(version) => Ok(version),
@@ -79,7 +79,7 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
         Ok(map) => map,
         Err(err) => return Err(if verbose {
             match err {
-                HeaderErr::NoStartMarker => format!("did not recognize encryption header (expected '{}'); was this file really encrypted with fileenc?", HEADER_MARKER),
+                HeaderErr::NoStartMarker => format!("did not recognize encryption header (expected '{}'); was this file really encrypted with fileenc?", PUB_HEADER_MARKER),
                 HeaderErr::NoEndMarker => format!("could not find the end of the file header ('{}' or '{}'); has the file header been corrupted?", PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER),
                 HeaderErr::HeaderSyntax(line) => format!("part of the file header could not be parsed because it did not have the expected format (found '{}')", &line),
                 HeaderErr::ReadError => format!("the file header could not be read; perhaps the file was not accessible, or the file header has been corrupted"),
@@ -94,19 +94,16 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
         }),
     };
 
-    let version = parse_version(&header_data)?;
+    let version = parse_version(&header_data, verbose)?;
     let options = parse_options(&header_data, verbose)?;
     let salt = parse_salt(&header_data, verbose)?;
     let checksum = parse_checksum(&header_data)?;
     PublicHeader::new(version, salt, checksum, options)
 }
 
-pub fn skip_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<()> {
-    let mut line = String::new();
-    while !line.starts_with(PUB_HEADER_META_DATA_MARKER) && !line.starts_with(PUB_HEADER_PURE_DATA_MARKER) {
-        read_line(reader, &mut line, verbose)?;
-    }
-    Ok(())
+pub fn skip_public_header<R: BufRead>(reader: &mut R) -> FedResult<()> {
+    skip_header(reader, &[PUB_HEADER_META_DATA_MARKER, PUB_HEADER_PURE_DATA_MARKER])
+        .map_err(|_| "failed to skip past the header while reading file; possibly the header has been corrupted".to_string())
 }
 
 #[cfg(test)]
@@ -117,7 +114,7 @@ mod tests {
     use ::semver::Version;
 
     use crate::files::Checksum;
-    use crate::header::public_decode::skip_header;
+    use crate::header::public_decode::skip_public_header;
     use crate::header::PublicHeader;
     use crate::key::salt::Salt;
     use crate::util::option::EncOptionSet;
@@ -147,7 +144,7 @@ mod tests {
             "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\
             \ncheck xx_sha256 Ag\ndata:\nthis is the data and should not be read!\nthe end of the data";
         let mut reader = BufReader::new(input.as_bytes());
-        skip_header(&mut reader, true).unwrap();
+        skip_public_header(&mut reader).unwrap();
         let mut remainder = vec![];
         reader.read_to_end(&mut remainder).unwrap();
         let expected = "this is the data and should not be read!\nthe end of the data"

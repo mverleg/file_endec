@@ -5,12 +5,7 @@ pub use self::strategy::CompressionAlg;
 pub use self::strategy::KeyHashAlg;
 pub use self::strategy::Strategy;
 pub use self::strategy::SymmetricEncryptionAlg;
-pub use self::public_header_type::PublicHeader;
-pub use self::public_header_type::PUB_HEADER_CHECKSUM_MARKER;
-pub use self::public_header_type::PUB_HEADER_PURE_DATA_MARKER;
-pub use self::public_header_type::PUB_HEADER_MARKER;
-pub use self::public_header_type::PUB_HEADER_SALT_MARKER;
-pub use self::public_header_type::PUB_HEADER_VERSION_MARKER;
+pub use self::public_header_type::*;
 
 pub mod public_decode;
 pub mod public_encode;

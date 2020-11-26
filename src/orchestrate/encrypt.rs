@@ -18,6 +18,7 @@ use crate::progress::Progress;
 use crate::progress::silent::SilentProgress;
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
+use crate::header::private_header_type::PrivateHeader;
 
 /// Encrypt one or more files and return the new paths.
 pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
@@ -72,9 +73,11 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             &mut |alg| progress.start_sym_alg_for_file(&alg, &file),
         );
         let pub_header = PublicHeader::new(version.clone(), salt.clone(), checksum, config.options().clone())?;
-        let priv_header = PrivateHeader::new()?;
+        let priv_header = unimplemented!();  //TODO @mark: TEMPORARY! REMOVE THIS!
+        //let priv_header = PrivateHeader::new()?;
         if !config.dry_run() {
-            write_output_file(config, &file, &secret, Some(&pub_header, &priv_header), &mut || {
+            //write_output_file(config, &file, &secret, Some(&pub_header, &priv_header), &mut || {
+            write_output_file(config, &file, &secret, Some((&pub_header, &priv_header)), &mut || {
                 progress.start_write_for_file(&file)
             })?;
             //TODO @mark: test that file is removed?

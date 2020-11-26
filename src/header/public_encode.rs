@@ -48,6 +48,9 @@ fn write_version(writer: &mut impl Write, version: &Version, verbose: bool) -> F
 }
 
 fn write_options(writer: &mut impl Write, options: &EncOptionSet, verbose: bool) -> FedResult<()> {
+    if options.len() == 0 {
+        return Ok(());
+    }
     let options_txt = options.iter()
         .map(|opt| opt.to_string())
         .collect::<Vec<_>>()

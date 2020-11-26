@@ -15,9 +15,11 @@ use crate::util::FedResult;
 use crate::util::option::{EncOption, EncOptionSet};
 use crate::util::version::version_has_options_meta;
 
+#[derive(Debug)]
 pub enum HeaderErr {
     NoStartMarker,
     NoEndMarker,
+    HeaderSyntax(String),
     // Either an system IO problem, or not valid utf8.
     ReadError,
 }
@@ -35,7 +37,7 @@ fn read_line(reader: &mut dyn BufRead, line: &mut String) -> Result<(), HeaderEr
     Ok(())
 }
 
-pub fn read_header_keys(reader: &mut dyn BufRead, start: Option<&str>, ends: &[&str], verbose: bool) -> Result<HashMap<String, String>, HeaderErr> {
+pub fn read_header_keys(reader: &mut dyn BufRead, start: Option<&str>, ends: &[&str]) -> Result<HashMap<String, String>, HeaderErr> {
     assert!(!end.is_empty());
     let mut line = String::new();
 
@@ -49,13 +51,56 @@ pub fn read_header_keys(reader: &mut dyn BufRead, start: Option<&str>, ends: &[&
     let mut map = HashMap::with_capacity(8);
     loop {
         read_line(reader, &mut line)?;
-        // Currently only the end-markers end with a colon, but that may be temporary.
         for end in ends {
-            if line == end {
+            if &line == end {
                 return Ok(map)
             }
         }
-        debug_assert!(!line.ends_with(":"));
+        // Currently, only the end-markers end with a colon, but that may be temporary.
+        debug_assert!(!line.ends_with(':'));
 
+        let mut parts = line.splitn(2, ' ');
+        let key = parts.next().unwrap().to_owned();
+        let value = match parts.next() {
+            Some(val) => val.to_owned(),
+            None => return Err(HeaderErr::HeaderSyntax(line)),
+        };
+        map.insert(key, value);
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use ::std::io::BufReader;
+
+    use super::*;
+
+    #[test]
+    fn read_keys_empty() {
+        let input = "hello\0\nworld:";
+        let mut reader = BufReader::new(input.as_bytes());
+        let map = read_header_keys(&mut reader, Some("hello\0"), &vec!["world:"]).unwrap();
+        assert!(map.is_empty());
+    }
+
+    #[test]
+    fn read_keys_no_start_single_end() {
+        let input = "key value\nend:";
+        let mut reader = BufReader::new(input.as_bytes());
+        let map = read_header_keys(&mut reader, None, &vec!["end:"]).unwrap();
+        assert!(!map.is_empty());
+        assert_eq!(map.get("key"), Some("value"));
+        assert_eq!(map.get("other"), None);
+    }
+
+    #[test]
+    fn read_keys_start_double_end() {
+        let input = "hello\0\nworld:";
+        let mut reader = BufReader::new(input.as_bytes());
+        let map = read_header_keys(&mut reader, Some("hello\0"), &vec!["world:"]).unwrap();
+        assert!(map.is_empty());
+        unimplemented!()
+    }
+
+    //TODO @mark: error situations
 }

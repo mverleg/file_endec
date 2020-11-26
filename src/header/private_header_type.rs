@@ -33,11 +33,11 @@ impl PrivateHeader {
     }
 
     pub fn created_ns(&self) -> u128 {
-        self.created
+        self.created_ns
     }
 
     pub fn changed_ns(&self) -> u128 {
-        self.changed
+        self.changed_ns
     }
 
     pub fn size(&self) -> u64 {
@@ -45,9 +45,9 @@ impl PrivateHeader {
     }
 }
 
-pub const PRIV_HEADER_FILENAME: &str = "name ";
-pub const PRIV_HEADER_PERMISSIONS: &str = "perm ";
-pub const PRIV_HEADER_CREATED: &str = "crt ";
-pub const PRIV_HEADER_CHANGED: &str = "cng ";
-pub const PRIV_HEADER_SIZE: &str = "sz ";
+pub const PRIV_HEADER_FILENAME: &str = "name";
+pub const PRIV_HEADER_PERMISSIONS: &str = "perm";
+pub const PRIV_HEADER_CREATED: &str = "crt";
+pub const PRIV_HEADER_CHANGED: &str = "cng";
+pub const PRIV_HEADER_SIZE: &str = "sz";
 pub const PRIV_HEADER_DATA: &str = "data:";

@@ -17,102 +17,64 @@ use crate::util::FedResult;
 use crate::util::option::{EncOption, EncOptionSet};
 use crate::util::version::version_has_options_meta;
 
-fn read_line(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<()> {
-    line.clear();
-    let res = reader.read_line(line);
-    if let Err(err) = res {
-        return Err(add_err("could not read file", verbose, err));
-    }
-    line.pop();
-    Ok(())
-}
-
-fn check_prefix<'a>(line: &'a str, prefix: &str, verbose: bool) -> FedResult<&'a str> {
-    if line.starts_with(prefix) {
-        Ok(&line[prefix.len()..])
-    } else {
-        Err(if verbose {
-            "encryption header was incorrect".to_owned()
-        } else {
-            format!(
-                "encryption header was incorrect (expected '{}', but it was not found)",
-                prefix
-            )
-        })
-    }
-}
-
-fn parse_marker(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<()> {
-    read_line(reader, line, verbose)?;
-    if PUB_HEADER_MARKER != line {
-        return Err(if verbose {
-            format!("did not recognize encryption header (expected '{}', got '{}'); was this file really encrypted with fileenc?", PUB_HEADER_MARKER, line)
-        } else {
-            "did not recognize encryption header; was this file really encrypted with fileenc?"
-                .to_owned()
-        });
-    }
-    Ok(())
-}
-
-fn parse_version(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Version> {
-    read_line(reader, line, verbose)?;
-    let version_str = check_prefix(line, PUB_HEADER_VERSION_MARKER, verbose)?;
-    match Version::parse(version_str) {
-        Ok(version) => Ok(version),
-        Err(err) => Err(add_err(
-            format!(
-                "could not determine the version \
-            of fileenc that encrypted this file; got {} which is invalid",
-                version_str
-            ),
-            verbose,
-            err,
-        )),
-    }
-}
-
-fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<EncOptionSet> {
-    read_line(reader, line, verbose)?;
-    let options_str = check_prefix(line, PUB_HEADER_OPTION_MARKER, verbose)?;
-    let mut option_vec = vec![];
-    for option_str in options_str.split_whitespace() {
-        match EncOption::from_str(option_str) {
-            Ok(option) => option_vec.push(option),
-            Err(err) => return Err(add_err(
-                format!("could not determine the options of fileenc that encrypted this file (got {} which is unknown); maybe it was encrypted with a newer version?", option_str),
-                verbose,
-                err,
-            )),
-        }
-    }
-    let option_count = option_vec.len();
-    let options: EncOptionSet = option_vec.into();
-    if options.len() != option_count {
-        return Err(add_err(
-            format!("there were duplicate encryption options in the file header; it is possible the header has been meddled with"),
-            verbose,
-            format!("found {}", options_str),
-        ));
-    }
-    Ok(options)
-}
-
-fn parse_salt(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Salt> {
-    read_line(reader, line, verbose)?;
-    let salt_str = check_prefix(line, PUB_HEADER_SALT_MARKER, verbose)?;
-    Salt::parse_base64(salt_str, verbose)
-}
-
-fn parse_checksum(
-    reader: &mut dyn BufRead,
-    line: &mut String,
-    verbose: bool,
-) -> FedResult<Checksum> {
-    read_line(reader, line, verbose)?;
-    let checksum_str = check_prefix(line, PUB_HEADER_CHECKSUM_MARKER, verbose)?;
-    Checksum::parse(checksum_str)
-}
+// fn parse_version(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Version> {
+//     read_line(reader, line, verbose)?;
+//     let version_str = check_prefix(line, PUB_HEADER_VERSION_MARKER, verbose)?;
+//     match Version::parse(version_str) {
+//         Ok(version) => Ok(version),
+//         Err(err) => Err(add_err(
+//             format!(
+//                 "could not determine the version \
+//             of fileenc that encrypted this file; got {} which is invalid",
+//                 version_str
+//             ),
+//             verbose,
+//             err,
+//         )),
+//     }
+// }
+//
+// fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<EncOptionSet> {
+//     read_line(reader, line, verbose)?;
+//     let options_str = check_prefix(line, PUB_HEADER_OPTION_MARKER, verbose)?;
+//     let mut option_vec = vec![];
+//     for option_str in options_str.split_whitespace() {
+//         match EncOption::from_str(option_str) {
+//             Ok(option) => option_vec.push(option),
+//             Err(err) => return Err(add_err(
+//                 format!("could not determine the options of fileenc that encrypted this file (got {} which is unknown); maybe it was encrypted with a newer version?", option_str),
+//                 verbose,
+//                 err,
+//             )),
+//         }
+//     }
+//     let option_count = option_vec.len();
+//     let options: EncOptionSet = option_vec.into();
+//     if options.len() != option_count {
+//         return Err(add_err(
+//             format!("there were duplicate encryption options in the file header; it is possible the header has been meddled with"),
+//             verbose,
+//             format!("found {}", options_str),
+//         ));
+//     }
+//     Ok(options)
+// }
+//
+// fn parse_salt(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Salt> {
+//     read_line(reader, line, verbose)?;
+//     let salt_str = check_prefix(line, PUB_HEADER_SALT_MARKER, verbose)?;
+//     Salt::parse_base64(salt_str, verbose)
+// }
+//
+// fn parse_checksum(
+//     reader: &mut dyn BufRead,
+//     line: &mut String,
+//     verbose: bool,
+// ) -> FedResult<Checksum> {
+//     read_line(reader, line, verbose)?;
+//     let checksum_str = check_prefix(line, PUB_HEADER_CHECKSUM_MARKER, verbose)?;
+//     Checksum::parse(checksum_str)
+// }
 
 pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<PublicHeader> {
     let mut line = String::new();

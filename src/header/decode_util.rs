@@ -79,7 +79,7 @@ mod tests {
 
         #[test]
         fn empty() {
-            let input = "hello\0\nworld:";
+            let input = "hello\0\nworld:\nignore this";
             let mut reader = BufReader::new(input.as_bytes());
             let map = read_header_keys(&mut reader, Some("hello\0"), &vec!["world:"]).unwrap();
             assert!(map.is_empty());
@@ -87,7 +87,7 @@ mod tests {
 
         #[test]
         fn no_start_single_end() {
-            let input = "key value\nend:";
+            let input = "key value\nend:\nignore this";
             let mut reader = BufReader::new(input.as_bytes());
             let map = read_header_keys(&mut reader, None, &vec!["end:"]).unwrap();
             assert!(!map.is_empty());
@@ -97,7 +97,7 @@ mod tests {
 
         #[test]
         fn start_double_end() {
-            let input = "start\0\nkey value\nletters alpha beta gamma\nend2:";
+            let input = "start\0\nkey value\nletters alpha beta gamma\nend2:\nignore this";
             let mut reader = BufReader::new(input.as_bytes());
             let map = read_header_keys(&mut reader, None, &vec!["end1:", "end2:"]).unwrap();
             assert!(!map.is_empty());

@@ -7,3 +7,4 @@ pub mod pth;
 pub mod test_cmd;
 pub mod version;
 pub mod option;
+pub mod rounding;

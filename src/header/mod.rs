@@ -7,11 +7,12 @@ pub use self::strategy::KeyHashAlg;
 pub use self::strategy::Strategy;
 pub use self::strategy::SymmetricEncryptionAlg;
 
-pub mod public_decode;
-pub mod public_encode;
 pub mod strategy;
 pub mod public_header_type;
+pub mod public_encode;
+pub mod public_decode;
 pub mod private_header_type;
 pub mod private_encode;
+pub mod private_decode;
 pub mod encode_util;
 pub mod decode_util;

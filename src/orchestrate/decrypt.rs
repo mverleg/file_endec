@@ -21,6 +21,8 @@ use crate::progress::log::LogProgress;
 use crate::progress::Progress;
 use crate::progress::silent::SilentProgress;
 use crate::symmetric::decrypt::decrypt_file;
+use crate::header::private_decode::parse_private_header;
+use std::io::BufReader;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,
@@ -89,7 +91,6 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             sk
         };
         let mut data = Vec::with_capacity(file_strat.file.size_b as usize);
-        dbg!(1, &data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
         //TODO @mark: read private header
         read_file(
             &mut data,
@@ -99,6 +100,11 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
+        parse_private_header(
+            &mut data,
+            config.verbosity().debug(),
+        )?;
+        //TODO @mark: how to track the end of header position?
         dbg!(2, &data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
         let revealed = decrypt_file(
             data,

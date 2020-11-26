@@ -54,7 +54,7 @@ impl PrivateHeader {
 pub const PRIV_HEADER_FILENAME: &str = "name";
 pub const PRIV_HEADER_PERMISSIONS: &str = "perm";
 pub const PRIV_HEADER_CREATED: &str = "crt";
-pub const PRIV_HEADER_CHANGED: &str = "cng";
+pub const PRIV_HEADER_MODIFIED: &str = "cng";
 pub const PRIV_HEADER_ACCESSED: &str = "acs";
 pub const PRIV_HEADER_SIZE: &str = "sz";
 pub const PRIV_HEADER_DATA: &str = "enc:";

@@ -16,67 +16,93 @@ use crate::util::errors::add_err;
 use crate::util::FedResult;
 use crate::util::option::{EncOption, EncOptionSet};
 use crate::util::version::version_has_options_meta;
+use crate::header::decode_util::{read_header_keys, HeaderErr};
+use std::collections::HashMap;
 
-// fn parse_version(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Version> {
-//     read_line(reader, line, verbose)?;
-//     let version_str = check_prefix(line, PUB_HEADER_VERSION_MARKER, verbose)?;
-//     match Version::parse(version_str) {
-//         Ok(version) => Ok(version),
-//         Err(err) => Err(add_err(
-//             format!(
-//                 "could not determine the version \
-//             of fileenc that encrypted this file; got {} which is invalid",
-//                 version_str
-//             ),
-//             verbose,
-//             err,
-//         )),
-//     }
-// }
-//
-// fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<EncOptionSet> {
-//     read_line(reader, line, verbose)?;
-//     let options_str = check_prefix(line, PUB_HEADER_OPTION_MARKER, verbose)?;
-//     let mut option_vec = vec![];
-//     for option_str in options_str.split_whitespace() {
-//         match EncOption::from_str(option_str) {
-//             Ok(option) => option_vec.push(option),
-//             Err(err) => return Err(add_err(
-//                 format!("could not determine the options of fileenc that encrypted this file (got {} which is unknown); maybe it was encrypted with a newer version?", option_str),
-//                 verbose,
-//                 err,
-//             )),
-//         }
-//     }
-//     let option_count = option_vec.len();
-//     let options: EncOptionSet = option_vec.into();
-//     if options.len() != option_count {
-//         return Err(add_err(
-//             format!("there were duplicate encryption options in the file header; it is possible the header has been meddled with"),
-//             verbose,
-//             format!("found {}", options_str),
-//         ));
-//     }
-//     Ok(options)
-// }
-//
-// fn parse_salt(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Salt> {
-//     read_line(reader, line, verbose)?;
-//     let salt_str = check_prefix(line, PUB_HEADER_SALT_MARKER, verbose)?;
-//     Salt::parse_base64(salt_str, verbose)
-// }
-//
-// fn parse_checksum(
-//     reader: &mut dyn BufRead,
-//     line: &mut String,
-//     verbose: bool,
-// ) -> FedResult<Checksum> {
-//     read_line(reader, line, verbose)?;
-//     let checksum_str = check_prefix(line, PUB_HEADER_CHECKSUM_MARKER, verbose)?;
-//     Checksum::parse(checksum_str)
-// }
+fn parse_version(header_data: &HashMap<String, String>) -> FedResult<Version> {
+    read_line(reader, line, verbose)?;
+    let version_str = check_prefix(line, PUB_HEADER_VERSION_MARKER, verbose)?;
+    match Version::parse(version_str) {
+        Ok(version) => Ok(version),
+        Err(err) => Err(add_err(
+            format!(
+                "could not determine the version \
+            of fileenc that encrypted this file; got {} which is invalid",
+                version_str
+            ),
+            verbose,
+            err,
+        )),
+    }
+}
 
+fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<EncOptionSet> {
+    read_line(reader, line, verbose)?;
+    let options_str = check_prefix(line, PUB_HEADER_OPTION_MARKER, verbose)?;
+    let mut option_vec = vec![];
+    for option_str in options_str.split_whitespace() {
+        match EncOption::from_str(option_str) {
+            Ok(option) => option_vec.push(option),
+            Err(err) => return Err(add_err(
+                format!("could not determine the options of fileenc that encrypted this file (got {} which is unknown); maybe it was encrypted with a newer version?", option_str),
+                verbose,
+                err,
+            )),
+        }
+    }
+    let option_count = option_vec.len();
+    let options: EncOptionSet = option_vec.into();
+    if options.len() != option_count {
+        return Err(add_err(
+            format!("there were duplicate encryption options in the file header; it is possible the header has been meddled with"),
+            verbose,
+            format!("found {}", options_str),
+        ));
+    }
+    Ok(options)
+}
+
+fn parse_salt(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Salt> {
+    read_line(reader, line, verbose)?;
+    let salt_str = check_prefix(line, PUB_HEADER_SALT_MARKER, verbose)?;
+    Salt::parse_base64(salt_str, verbose)
+}
+
+fn parse_checksum(
+    reader: &mut dyn BufRead,
+    line: &mut String,
+    verbose: bool,
+) -> FedResult<Checksum> {
+    read_line(reader, line, verbose)?;
+    let checksum_str = check_prefix(line, PUB_HEADER_CHECKSUM_MARKER, verbose)?;
+    Checksum::parse(checksum_str)
+}
+
+//TODO @mark: include filename at caller?
 pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<PublicHeader> {
+
+    let header_data = match read_header_keys(reader, Some(PUB_HEADER_MARKER), &[PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER]) {
+        Ok(map) => map,
+        Err(err) => return Err(if verbose {
+            match err {
+                HeaderErr::NoStartMarker => format!("did not recognize encryption header (expected '{}'); was this file really encrypted with fileenc?", HEADER_MARKER),
+                HeaderErr::NoEndMarker => format!("could not find the end of the file header ('{}' or '{}'); has the file header been corrupted?", PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER),
+                HeaderErr::HeaderSyntax(line) => format!("part of the file header could not be parsed because it did not have the expected format (found '{}')", &line),
+                HeaderErr::ReadError => format!("the file header could not be read; perhaps the file was not accessible, or the file header has been corrupted"),
+            }
+        } else {
+            match err {
+                HeaderErr::NoStartMarker => format!("did not recognize encryption header; was this file really encrypted with fileenc?"),
+                HeaderErr::NoEndMarker => format!("could not find the end of the file header; has the file header been corrupted?"),
+                HeaderErr::HeaderSyntax(_) => format!("part of the file header could not be parsed because it did not have the expected format"),
+                HeaderErr::ReadError => format!("the file header could not be read; perhaps the file was not accessible, or the file header has been corrupted"),
+            }
+        }),
+    };
+
+    header_data.get(HEADER_VERSION_MARKER)
+        .ok_or("could not find the version in the file header".to_owned())?;
+
     let mut line = String::new();
     parse_marker(reader, &mut line, verbose)?;
     let version = parse_version(reader, &mut line, verbose)?;
@@ -165,7 +191,7 @@ mod tests {
         )
         .unwrap();
         let mut buf = input.as_bytes();
-        let header = parse_public_header(&mut buf, true).unwrap();
+        let header = parse_public_header(&mut buf, false).unwrap();
         assert_eq!(expected, header);
     }
 

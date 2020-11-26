@@ -8,6 +8,7 @@ use crate::header::write_public_header;
 use crate::header::PublicHeader;
 use crate::util::errors::wrap_io;
 use crate::util::FedResult;
+use crate::header::private_header_type::PrivateHeader;
 
 pub fn write_output_file(
     config: &impl EndecConfig,
@@ -37,7 +38,7 @@ pub fn write_output_file(
         File::create(&file.out_pth),
     )?;
     if let Some(header) = header {
-        write_public_header(&mut out_file, &header, config.debug())?;
+        write_public_header(&mut out_file, &header.0, config.debug())?;
     }
     wrap_io(
         || {

@@ -31,14 +31,14 @@ fn read_line(reader: &mut dyn BufRead, line: &mut String) -> Result<(), HeaderEr
         Ok(sz) => if sz == 0 {
             return Err(HeaderErr::NoEndMarker)
         },
-        Err(_) => return Err(HeaderErr::ReadError),
+        Err(err) => return Err(HeaderErr::ReadError),
     }
     line.pop();
     Ok(())
 }
 
 pub fn read_header_keys(reader: &mut dyn BufRead, start: Option<&str>, ends: &[&str]) -> Result<HashMap<String, String>, HeaderErr> {
-    assert!(!end.is_empty());
+    assert!(!ends.is_empty());
     let mut line = String::new();
 
     read_line(reader, &mut line)?;
@@ -89,16 +89,19 @@ mod tests {
         let mut reader = BufReader::new(input.as_bytes());
         let map = read_header_keys(&mut reader, None, &vec!["end:"]).unwrap();
         assert!(!map.is_empty());
-        assert_eq!(map.get("key"), Some("value"));
+        assert_eq!(map.get("key").map(|v| v.as_str()), Some("value"));
         assert_eq!(map.get("other"), None);
     }
 
     #[test]
     fn read_keys_start_double_end() {
-        let input = "hello\0\nworld:";
+        let input = "start\0\nkey value\nletters alpha beta gamma\nend2:";
         let mut reader = BufReader::new(input.as_bytes());
-        let map = read_header_keys(&mut reader, Some("hello\0"), &vec!["world:"]).unwrap();
-        assert!(map.is_empty());
+        let map = read_header_keys(&mut reader, None, &vec!["end1:", "end2:"]).unwrap();
+        assert!(!map.is_empty());
+        assert_eq!(map.get("key").map(|v| v.as_str()), Some("value"));
+        assert_eq!(map.get("letters").map(|v| v.as_str()), Some("alpha beta gamma"));
+        assert_eq!(map.get("other"), None);
         unimplemented!()
     }
 

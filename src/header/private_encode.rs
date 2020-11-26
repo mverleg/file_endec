@@ -2,8 +2,10 @@ use ::std::io::Write;
 
 use crate::header::encode_util::write_line;
 use crate::header::private_header_type::{PRIV_HEADER_CHANGED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE, PrivateHeader};
-use crate::util::base::u64_to_base64str;
-use crate::util::base::u128_to_base64str;
+use crate::util::base::small_str_to_u64;
+use crate::util::base::small_str_to_u128;
+use crate::util::base::u64_to_small_str;
+use crate::util::base::u128_to_small_str;
 use crate::util::FedResult;
 use crate::{EncOptionSet, EncOption};
 
@@ -15,7 +17,7 @@ pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, opt
         write_line(writer, PRIV_HEADER_CHANGED, Some(&u128_to_base64str(header.changed_ns())), verbose)?;
     }
     if options.has(EncOption::PadSize) {
-        write_line(writer, PRIV_HEADER_SIZE, Some(&u64_to_base64str(header.size())), verbose)?;
+        write_line(writer, PRIV_HEADER_SIZE, Some(&u64_to_small_str(header.size())), verbose)?;
     }
     write_line(writer, PRIV_HEADER_DATA, None, verbose)?;
     Ok(())

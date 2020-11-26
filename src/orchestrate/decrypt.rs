@@ -21,7 +21,8 @@ use crate::progress::log::LogProgress;
 use crate::progress::Progress;
 use crate::progress::silent::SilentProgress;
 use crate::symmetric::decrypt::decrypt_file;
-use crate::header::private_decode::parse_private_header;
+use crate::header::private_decode::{parse_private_header, find_private_data_start};
+use crate::header::decode_util::skip_header;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,
@@ -90,7 +91,6 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             sk
         };
         let mut data = Vec::with_capacity(file_strat.file.size_b as usize);
-        //TODO @mark: read private header
         read_file(
             &mut data,
             &mut reader,
@@ -99,19 +99,18 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
-        parse_private_header(
+        let priv_header = parse_private_header(
             &mut data.as_slice(),
         )?;
-        //TODO @mark: how to track the end of header position?
-        dbg!(2, &data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
+        let end_header_index = find_private_data_start(&data);
         let revealed = decrypt_file(
             data,
+            end_header_index,
             &stretched_key,
             &salt,
             &file_strat.strategy.symmetric_algorithms,
             &mut |alg| progress.start_sym_alg_for_file(alg, &file_strat.file),
         )?;
-        dbg!(3, &revealed.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
         let big = decompress_file(
             revealed,
             &file_strat.strategy.compression_algorithm,

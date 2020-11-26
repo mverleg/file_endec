@@ -62,19 +62,26 @@ pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<PrivateHead
     ))
 }
 
-pub fn skip_public_header<R: BufRead>(reader: &mut R) -> FedResult<()> {
-    skip_header(reader, &[PUB_HEADER_META_DATA_MARKER, PUB_HEADER_PURE_DATA_MARKER])
-        .map_err(|_| "failed to skip past the header while reading file; possibly the header has been corrupted".to_string())
+pub fn find_private_data_start(data: &[u8]) -> usize {
+    //TODO @mark: unit test this
+    let start = data.find_byteset(PRIV_HEADER_DATA);
+    start + PRIV_HEADER_DATA.len()
 }
 
 #[cfg(test)]
 mod tests {
-    //TODO @mark: update all these tests
+    use ::std::collections::HashMap;
 
+    use crate::header::private_decode::{parse_permissions, parse_private_header};
+    use crate::header::private_header_type::{PRIV_HEADER_PERMISSIONS, PrivateHeader};
 
-    use crate::header::private_header_type::PrivateHeader;
-    use crate::header::private_decode::parse_private_header;
-    use crate::EncOptionSet;
+    #[test]
+    fn permissions() {
+        let mut map = HashMap::new();
+        map.insert(PRIV_HEADER_PERMISSIONS.to_owned(), "754".to_owned());
+        let perms = parse_permissions(&map);
+        assert_eq!(perms, Ok(Some(0o754)));
+    }
 
     #[test]
     fn read_vanilla() {

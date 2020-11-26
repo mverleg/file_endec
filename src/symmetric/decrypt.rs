@@ -8,18 +8,21 @@ use crate::util::FedResult;
 
 pub fn decrypt_file(
     mut data: Vec<u8>,
+    end_header_index: usize,
     key: &StretchKey,
     salt: &Salt,
     encrypt_algs: &[SymmetricEncryptionAlg],
     start_progress: &mut impl FnMut(&SymmetricEncryptionAlg),
 ) -> FedResult<Vec<u8>> {
     assert!(!encrypt_algs.is_empty());
+    let mut start = end_header_index;
     for decrypt_alg in encrypt_algs.iter().rev() {
         start_progress(decrypt_alg);
         data = match decrypt_alg {
-            SymmetricEncryptionAlg::Aes256 => decrypt_aes256(&data, key, salt)?,
-            SymmetricEncryptionAlg::Twofish => decrypt_twofish(&data, key, salt)?,
-        }
+            SymmetricEncryptionAlg::Aes256 => decrypt_aes256(&data[start..], key, salt)?,
+            SymmetricEncryptionAlg::Twofish => decrypt_twofish(&data[start..], key, salt)?,
+        };
+        start = 0;
     }
     Ok(data)
 }

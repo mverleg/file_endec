@@ -76,3 +76,11 @@ criterion = "^0.3.3"
 regex = "^1.4.2"
 tempfile = "^3.1.0"
 datatest = "^0.6.3"
+
+[profile.release]
+lto = true
+opt-level = 3
+
+[profile.dev.package."*"]
+opt-level = 3
+debug = false

@@ -804,9 +804,9 @@ dependencies = [
 
 [[package]]
 name = "number2name"
-version = "1.1.1"
+version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "154c2e8c7688ffba7c11e0cb076d8fd6184539f1d26548115947587c4f6b1c2c"
+checksum = "7cae46955e0f1ad0140de5d47b3cf331e391c069d06a6a6c268c4610b3a81a26"
 dependencies = [
  "lazy_static",
  "structopt",

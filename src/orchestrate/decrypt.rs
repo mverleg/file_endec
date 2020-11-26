@@ -100,8 +100,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
         parse_private_header(
-            &mut data,
-            config.verbosity().debug(),
+            &mut data.as_slice(),
         )?;
         //TODO @mark: how to track the end of header position?
         dbg!(2, &data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!

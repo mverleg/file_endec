@@ -1,6 +1,5 @@
 use ::std::collections::HashMap;
 use ::std::io::BufRead;
-use ::std::primitive::from_str_radix;
 
 use crate::header::decode_util::HeaderErr;
 use crate::header::decode_util::read_header_keys;
@@ -18,10 +17,9 @@ fn parse_filename(header_data: &HashMap<String, String>) -> FedResult<String> {
         .ok_or("could not find the original filename in the private file header".to_owned())
 }
 
-fn parse_permissions(header_data: &HashMap<String, String>) -> FedResult<u32> {
+fn parse_permissions(header_data: &HashMap<String, String>) -> FedResult<Option<u32>> {
     //TODO @mark: test parsing
-    header_data.get(PRIV_HEADER_PERMISSIONS).map(|sz| u32::from_str_radix(sz, 8).unwrap())
-        .ok_or("could not find the original file size in the private file header".to_owned())
+    Ok(header_data.get(PRIV_HEADER_PERMISSIONS).map(|sz| u32::from_str_radix(sz, 8).unwrap()))
 }
 
 fn parse_sizes(header_data: &HashMap<String, String>) -> FedResult<(Option<u128>, Option<u128>, Option<u128>)> {
@@ -38,7 +36,7 @@ fn parse_size(header_data: &HashMap<String, String>) -> FedResult<u64> {
 }
 
 //TODO @mark: include filename in error at caller?
-pub fn parse_private_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<PrivateHeader> {
+pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<PrivateHeader> {
 
     let header_data = match read_header_keys(reader, None, &[PRIV_HEADER_DATA]) {
         Ok(map) => map,
@@ -74,66 +72,52 @@ mod tests {
     //TODO @mark: update all these tests
 
 
-    // #[test]
-    // fn stop_read_after_header() {
-    //     let _version = Version::parse("1.0.0").unwrap();
-    //     let input =
-    //         "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\
-    //         \ncheck xx_sha256 Ag\ndata:\nthis is the data and should not be read!\nthe end of the data";
-    //     let mut reader = BufReader::new(input.as_bytes());
-    //     parse_public_header(&mut reader, true).unwrap();
-    //     let mut remainder = vec![];
-    //     reader.read_to_end(&mut remainder).unwrap();
-    //     let expected = "this is the data and should not be read!\nthe end of the data"
-    //         .as_bytes()
-    //         .to_owned();
-    //     assert_eq!(expected, remainder);
-    // }
-    //
-    // #[test]
-    // fn skip_header_position() {
-    //     let _version = Version::parse("1.0.0").unwrap();
-    //     let input =
-    //         "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\
-    //         \ncheck xx_sha256 Ag\ndata:\nthis is the data and should not be read!\nthe end of the data";
-    //     let mut reader = BufReader::new(input.as_bytes());
-    //     skip_public_header(&mut reader).unwrap();
-    //     let mut remainder = vec![];
-    //     reader.read_to_end(&mut remainder).unwrap();
-    //     let expected = "this is the data and should not be read!\nthe end of the data"
-    //         .as_bytes()
-    //         .to_owned();
-    //     assert_eq!(expected, remainder);
-    // }
-    //
-    // #[test]
-    // fn read_v1_0_0_one() {
-    //     let version = Version::parse("1.0.0").unwrap();
-    //     let input =
-    //         "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\ncheck xx_sha256 Ag\ndata:\n";
-    //     let expected = PublicHeader::new(
-    //         version,
-    //         Salt::fixed_for_test(1),
-    //         Checksum::fixed_for_test(vec![2]),
-    //         EncOptionSet::empty(),  // always empty for v1.0
-    //     );
-    //     let mut buf = input.as_bytes();
-    //     let header = parse_public_header(&mut buf, false).unwrap();
-    //     assert_eq!(expected, header);
-    // }
-    //
-    // #[test]
-    // fn read_v1_0_0_two() {
-    //     let version = Version::parse("1.0.0").unwrap();
-    //     let input = "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt FV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2AQ\ncheck xx_sha256 AAUABQAFAAUABQAF\ndata:\n";
-    //     let expected = PublicHeader::new(
-    //         version,
-    //         Salt::fixed_for_test(123_456_789_123_456_789),
-    //         Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
-    //         EncOptionSet::empty(),  // always empty for v1.0
-    //     );
-    //     let mut buf = input.as_bytes();
-    //     let header = parse_public_header(&mut buf, true).unwrap();
-    //     assert_eq!(expected, header);
-    // }
+    use crate::header::private_header_type::PrivateHeader;
+    use crate::header::private_decode::parse_private_header;
+    use crate::EncOptionSet;
+
+    #[test]
+    fn read_vanilla() {
+        let mut txt = "enc:\n".as_bytes();
+        let actual = parse_private_header(&mut txt).unwrap();
+        let expected = PrivateHeader::new(
+            "my_filename.ext".to_owned(),
+            Some(0o754),
+            Some(123_456_789_000),
+            Some(987_654_321_000),
+            Some(999_999_999_999),
+            1024_000,
+        );
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn read_hide_meta_size() {
+        let mut txt = "name my_filename.ext\nperm 754\ncrt Ax9lQnI\ncng NWzxOMo\nacs NiToP-_\nsz C4_A\nenc:\n".as_bytes();
+        let actual = parse_private_header(&mut txt).unwrap();
+        let expected = PrivateHeader::new(
+            "my_filename.ext".to_owned(),
+            Some(0o754),
+            Some(123_456_789_000),
+            Some(987_654_321_000),
+            Some(999_999_999_999),
+            1024_000,
+        );
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn read_hide_unsupported() {
+        let mut txt = "name my_filename.ext\ncrt Ax9lQnI\ncng NWzxOMo\nsz C4_A\nenc:\n".as_bytes();
+        let actual = parse_private_header(&mut txt).unwrap();
+        let expected = PrivateHeader::new(
+            "my_filename.ext".to_owned(),
+            None,
+            Some(123_456_789_000),
+            Some(987_654_321_000),
+            None,
+            1024_000,
+        );
+        assert_eq!(actual, expected);
+    }
 }

@@ -58,6 +58,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
     for file in &files_info {
         let mut reader = open_reader(&file, config.verbosity())?;
         let mut data = Vec::with_capacity(file.size_b as usize + 2048);
+        dbg!(1, &data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
         let priv_header = PrivateHeader::new(
             file.file_name(),
             file.permissions,
@@ -69,9 +70,10 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
         write_private_header(
             &mut data,
             &priv_header,
-            &options,
+            config.options(),
             config.verbosity().debug()
-        );
+        )?;
+        dbg!(2, &data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
         read_file(
             &mut data,
             &mut reader,
@@ -80,6 +82,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file),
         )?;
+        dbg!(3, &data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
         let checksum = calculate_checksum(&data, &mut || progress.start_checksum_for_file(&file));
         let small = compress_file(data, &strategy.compression_algorithm, &mut |alg| {
             progress.start_compress_alg_for_file(&alg, &file)

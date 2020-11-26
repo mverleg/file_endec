@@ -7,7 +7,33 @@ use ::std::path::PathBuf;
 use ::tempfile::{NamedTempFile, TempDir};
 
 use crate::files::mockfile::write_test_file;
-use crate::util::test_cmd::{filename_append_enc, test_decrypt, test_encrypt};
+use crate::util::test_cmd::filename_append_enc;
+use crate::util::test_cmd::test_decrypt;
+use crate::util::test_cmd::test_encrypt;
+
+#[test]
+fn fast() {
+    let key = "#3QJ3RwOInsMK9TQDwZkpUK-EmH7T07@";
+    let (tmp, raw_pth, data) = write_test_file(1024);
+    let enc_pth = filename_append_enc(raw_pth.as_path());
+    test_encrypt(
+        &[raw_pth.as_path()],
+        &["-k", &format!("pass:{}", key), "-d", "-s"],
+        None,
+    );
+    assert!(enc_pth.as_path().exists());
+    assert!(!raw_pth.as_path().exists());
+    test_decrypt(
+        &[raw_pth.as_path()],
+        &["-k", &format!("pass:{}", key), "-d", "-v"],
+        None,
+        true,
+    );
+    assert!(!enc_pth.as_path().exists());
+    assert!(raw_pth.as_path().exists());
+    assert_eq!(fs::read(raw_pth.as_path()).unwrap(), data);
+    tmp.close().unwrap();
+}
 
 #[test]
 #[cfg_attr(not(feature = "test-e2e"), ignore)]

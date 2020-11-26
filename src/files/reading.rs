@@ -25,7 +25,7 @@ pub fn read_file(
     size_kb: u64,
     verbosity: Verbosity,
     start_progress: &mut impl FnMut(),
-) {
+) -> FedResult<()> {
     start_progress();
     if verbosity.debug() {
         println!("reading {}", path_str);
@@ -39,10 +39,10 @@ pub fn read_file(
     }
     wrap_io(
         || "could not read input file",
-        reader.read_to_end(&mut data),
+        reader.read_to_end(data),
     )?;
     if !verbosity.quiet() && data.starts_with(PUB_HEADER_MARKER.as_bytes()) {
         eprintln!("warning: file '{}' seems to already be encrypted", path_str);
     }
-    Ok(data)
+    Ok(())
 }

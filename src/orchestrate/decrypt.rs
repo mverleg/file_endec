@@ -88,7 +88,8 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             key_cache.insert(salt.clone(), sk.clone());
             sk
         };
-        let mut data = Vec::with_capacity(file_strat.file.size_k());
+        let mut data = Vec::with_capacity(file_strat.file.size_b as usize);
+        dbg!(1, &data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
         //TODO @mark: read private header
         read_file(
             &mut data,
@@ -98,6 +99,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
+        dbg!(2, &data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
         let revealed = decrypt_file(
             data,
             &stretched_key,
@@ -105,6 +107,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             &file_strat.strategy.symmetric_algorithms,
             &mut |alg| progress.start_sym_alg_for_file(alg, &file_strat.file),
         )?;
+        dbg!(3, &revealed.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
         let big = decompress_file(
             revealed,
             &file_strat.strategy.compression_algorithm,

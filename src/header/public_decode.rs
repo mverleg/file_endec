@@ -1,44 +1,42 @@
+use ::std::collections::HashMap;
 use ::std::io::BufRead;
 use ::std::str::FromStr;
 
 use ::semver::Version;
 
 use crate::files::Checksum;
-use crate::header::PublicHeader;
+use crate::header::decode_util::{HeaderErr, read_header_keys};
 use crate::header::PUB_HEADER_CHECKSUM_MARKER;
-use crate::header::PUB_HEADER_PURE_DATA_MARKER;
 use crate::header::PUB_HEADER_MARKER;
+use crate::header::PUB_HEADER_PURE_DATA_MARKER;
 use crate::header::PUB_HEADER_SALT_MARKER;
 use crate::header::PUB_HEADER_VERSION_MARKER;
-use crate::header::public_header_type::{PUB_HEADER_OPTION_MARKER, PUB_HEADER_META_DATA_MARKER};
+use crate::header::public_header_type::{PUB_HEADER_META_DATA_MARKER, PUB_HEADER_OPTION_MARKER};
+use crate::header::PublicHeader;
 use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
 use crate::util::option::{EncOption, EncOptionSet};
 use crate::util::version::version_has_options_meta;
-use crate::header::decode_util::{read_header_keys, HeaderErr};
-use std::collections::HashMap;
 
 fn parse_version(header_data: &HashMap<String, String>) -> FedResult<Version> {
-    read_line(reader, line, verbose)?;
-    let version_str = check_prefix(line, PUB_HEADER_VERSION_MARKER, verbose)?;
+    let version_str = header_data.get(HEADER_VERSION_MARKER)
+        .ok_or("could not find the version in the file header".to_owned())?;
     match Version::parse(version_str) {
         Ok(version) => Ok(version),
         Err(err) => Err(add_err(
-            format!(
-                "could not determine the version \
-            of fileenc that encrypted this file; got {} which is invalid",
-                version_str
-            ),
+            format!("could not determine the version of fileenc that encrypted this file; got {} which is invalid", version_str),
             verbose,
             err,
         )),
     }
 }
 
-fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<EncOptionSet> {
-    read_line(reader, line, verbose)?;
-    let options_str = check_prefix(line, PUB_HEADER_OPTION_MARKER, verbose)?;
+fn parse_options(header_data: &HashMap<String, String>, verbose: bool) -> FedResult<EncOptionSet> {
+    let options_str = match header_data.get(PUB_HEADER_OPTION_MARKER) {
+        Some(val) => val,
+        None => return Ok(EncOptionSet::empty()),
+    };
     let mut option_vec = vec![];
     for option_str in options_str.split_whitespace() {
         match EncOption::from_str(option_str) {
@@ -62,23 +60,19 @@ fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> 
     Ok(options)
 }
 
-fn parse_salt(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Salt> {
-    read_line(reader, line, verbose)?;
-    let salt_str = check_prefix(line, PUB_HEADER_SALT_MARKER, verbose)?;
+fn parse_salt(header_data: &HashMap<String, String>, verbose: bool) -> FedResult<Salt> {
+    let salt_str = header_data.get(PUB_HEADER_SALT_MARKER)
+        .ok_or("could not find the salt in the file header".to_owned())?;
     Salt::parse_base64(salt_str, verbose)
 }
 
-fn parse_checksum(
-    reader: &mut dyn BufRead,
-    line: &mut String,
-    verbose: bool,
-) -> FedResult<Checksum> {
-    read_line(reader, line, verbose)?;
-    let checksum_str = check_prefix(line, PUB_HEADER_CHECKSUM_MARKER, verbose)?;
+fn parse_checksum(header_data: &HashMap<String, String>) -> FedResult<Checksum> {
+    let checksum_str = header_data.get(PUB_HEADER_CHECKSUM_MARKER)
+        .ok_or("could not find the checksum in the file header".to_owned())?;
     Checksum::parse(checksum_str)
 }
 
-//TODO @mark: include filename at caller?
+//TODO @mark: include filename in error at caller?
 pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<PublicHeader> {
 
     let header_data = match read_header_keys(reader, Some(PUB_HEADER_MARKER), &[PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER]) {
@@ -100,26 +94,10 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
         }),
     };
 
-    header_data.get(HEADER_VERSION_MARKER)
-        .ok_or("could not find the version in the file header".to_owned())?;
-
-    let mut line = String::new();
-    parse_marker(reader, &mut line, verbose)?;
-    let version = parse_version(reader, &mut line, verbose)?;
-    let has_options = version_has_options_meta(&version);
-    let options = if has_options {
-        parse_options(reader, &mut line, verbose)?
-    } else {
-        EncOptionSet::empty()
-    };
-    let salt = parse_salt(reader, &mut line, verbose)?;
-    let checksum = parse_checksum(reader, &mut line, verbose)?;
-    read_line(reader, &mut line, verbose)?;
-    if has_options {
-        check_prefix(&line, PUB_HEADER_META_DATA_MARKER, verbose).unwrap();
-    } else {
-        check_prefix(&line, PUB_HEADER_PURE_DATA_MARKER, verbose).unwrap();
-    }
+    let version = parse_version(&header_data)?;
+    let options = parse_options(&header_data, verbose)?;
+    let salt = parse_salt(&header_data, verbose)?;
+    let checksum = parse_checksum(&header_data)?;
     PublicHeader::new(version, salt, checksum, options)
 }
 

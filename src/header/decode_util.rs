@@ -32,11 +32,16 @@ pub fn read_header_keys(reader: &mut dyn BufRead, start: Option<&str>, ends: &[&
         if line != start {
             return Err(HeaderErr::NoStartMarker)
         }
+        read_line(reader, &mut line)?;
     }
 
     let mut map = HashMap::with_capacity(8);
     loop {
-        read_line(reader, &mut line)?;
+        if line.trim().is_empty() {
+            read_line(reader, &mut line)?;
+            continue;
+        }
+
         for end in ends {
             if &line == end {
                 return Ok(map)
@@ -52,6 +57,8 @@ pub fn read_header_keys(reader: &mut dyn BufRead, start: Option<&str>, ends: &[&
             None => return Err(HeaderErr::HeaderSyntax(line)),
         };
         map.insert(key, value);
+
+        read_line(reader, &mut line)?;
     }
 }
 
@@ -86,6 +93,14 @@ mod tests {
         }
 
         #[test]
+        fn no_start_empty() {
+            let input = "end:\nignore this";
+            let mut reader = BufReader::new(input.as_bytes());
+            let map = read_header_keys(&mut reader, None, &vec!["end:"]).unwrap();
+            assert!(map.is_empty());
+        }
+
+        #[test]
         fn no_start_single_end() {
             let input = "key value\nend:\nignore this";
             let mut reader = BufReader::new(input.as_bytes());
@@ -99,7 +114,18 @@ mod tests {
         fn start_double_end() {
             let input = "start\0\nkey value\nletters alpha beta gamma\nend2:\nignore this";
             let mut reader = BufReader::new(input.as_bytes());
-            let map = read_header_keys(&mut reader, None, &vec!["end1:", "end2:"]).unwrap();
+            let map = read_header_keys(&mut reader, Some("start\0"), &vec!["end1:", "end2:"]).unwrap();
+            assert!(!map.is_empty());
+            assert_eq!(map.get("key").map(|v| v.as_str()), Some("value"));
+            assert_eq!(map.get("letters").map(|v| v.as_str()), Some("alpha beta gamma"));
+            assert_eq!(map.get("other"), None);
+        }
+
+        #[test]
+        fn skip_empty_lines() {
+            let input = "start\0\n  \nkey value\n\nletters alpha beta gamma\n\nend2:\nignore this";
+            let mut reader = BufReader::new(input.as_bytes());
+            let map = read_header_keys(&mut reader, Some("start\0"), &vec!["end1:", "end2:"]).unwrap();
             assert!(!map.is_empty());
             assert_eq!(map.get("key").map(|v| v.as_str()), Some("value"));
             assert_eq!(map.get("letters").map(|v| v.as_str()), Some("alpha beta gamma"));

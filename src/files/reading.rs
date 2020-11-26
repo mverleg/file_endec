@@ -3,7 +3,7 @@ use ::std::io::{BufReader, Read};
 
 use crate::files::file_meta::FileInfo;
 use crate::header::strategy::Verbosity;
-use crate::header::HEADER_MARKER;
+use crate::header::PUB_HEADER_MARKER;
 use crate::util::errors::wrap_io;
 use crate::util::FedResult;
 
@@ -41,7 +41,7 @@ pub fn read_file(
         || "could not read input file",
         reader.read_to_end(&mut data),
     )?;
-    if !verbosity.quiet() && data.starts_with(HEADER_MARKER.as_bytes()) {
+    if !verbosity.quiet() && data.starts_with(PUB_HEADER_MARKER.as_bytes()) {
         eprintln!("warning: file '{}' seems to already be encrypted", path_str);
     }
     Ok(data)

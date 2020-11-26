@@ -161,7 +161,6 @@ mod back_and_forth {
     use ::file_endec::Verbosity;
 
     fn create_test_file() -> PathBuf {
-        //TODO @mark: reusable somewhere?
         let mut pth = tempdir().unwrap().into_path();
         pth.push("source.data");
         let mut writer = BufWriter::new(File::create(&pth).unwrap());

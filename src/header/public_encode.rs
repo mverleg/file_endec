@@ -6,11 +6,11 @@ use ::semver::Version;
 use crate::EncOptionSet;
 use crate::files::Checksum;
 use crate::header::PublicHeader;
-use crate::header::HEADER_CHECKSUM_MARKER;
-use crate::header::HEADER_MARKER;
-use crate::header::HEADER_SALT_MARKER;
-use crate::header::HEADER_VERSION_MARKER;
-use crate::header::public_header_type::{HEADER_META_DATA_MARKER, HEADER_OPTION_MARKER};
+use crate::header::PUB_HEADER_CHECKSUM_MARKER;
+use crate::header::PUB_HEADER_MARKER;
+use crate::header::PUB_HEADER_SALT_MARKER;
+use crate::header::PUB_HEADER_VERSION_MARKER;
+use crate::header::public_header_type::{PUB_HEADER_META_DATA_MARKER, PUB_HEADER_OPTION_MARKER};
 use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
@@ -39,12 +39,12 @@ fn write_line(
 }
 
 fn write_marker(writer: &mut impl Write, verbose: bool) -> FedResult<()> {
-    write_line(writer, HEADER_MARKER, None, verbose)
+    write_line(writer, PUB_HEADER_MARKER, None, verbose)
 }
 
 fn write_version(writer: &mut impl Write, version: &Version, verbose: bool) -> FedResult<()> {
     let version_str = format!("{}.{}.{}", version.major, version.minor, version.patch);
-    write_line(writer, HEADER_VERSION_MARKER, Some(version_str), verbose)
+    write_line(writer, PUB_HEADER_VERSION_MARKER, Some(version_str), verbose)
 }
 
 fn write_options(writer: &mut impl Write, options: &EncOptionSet, verbose: bool) -> FedResult<()> {
@@ -52,18 +52,18 @@ fn write_options(writer: &mut impl Write, options: &EncOptionSet, verbose: bool)
         .map(|opt| opt.to_string())
         .collect::<Vec<_>>()
         .join(" ");
-    write_line(writer, HEADER_OPTION_MARKER, Some(options_txt), verbose)
+    write_line(writer, PUB_HEADER_OPTION_MARKER, Some(options_txt), verbose)
 }
 
 fn write_salt(writer: &mut impl Write, salt: &Salt, verbose: bool) -> FedResult<()> {
     let salt_str = salt.as_base64();
-    write_line(writer, HEADER_SALT_MARKER, Some(salt_str), verbose)
+    write_line(writer, PUB_HEADER_SALT_MARKER, Some(salt_str), verbose)
 }
 
 fn write_checksum(writer: &mut impl Write, checksum: &Checksum, verbose: bool) -> FedResult<()> {
     write_line(
         writer,
-        HEADER_CHECKSUM_MARKER,
+        PUB_HEADER_CHECKSUM_MARKER,
         Some(format!("{}", checksum)),
         verbose,
     )
@@ -77,7 +77,7 @@ pub fn write_public_header(writer: &mut impl Write, header: &PublicHeader, verbo
     }
     write_salt(writer, header.salt(), verbose)?;
     write_checksum(writer, header.checksum(), verbose)?;
-    write_line(writer, HEADER_META_DATA_MARKER, None, verbose)?;
+    write_line(writer, PUB_HEADER_META_DATA_MARKER, None, verbose)?;
     Ok(())
 }
 

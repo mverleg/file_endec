@@ -5,12 +5,12 @@ use ::semver::Version;
 
 use crate::files::Checksum;
 use crate::header::PublicHeader;
-use crate::header::HEADER_CHECKSUM_MARKER;
-use crate::header::HEADER_PURE_DATA_MARKER;
-use crate::header::HEADER_MARKER;
-use crate::header::HEADER_SALT_MARKER;
-use crate::header::HEADER_VERSION_MARKER;
-use crate::header::public_header_type::{HEADER_OPTION_MARKER, HEADER_META_DATA_MARKER};
+use crate::header::PUB_HEADER_CHECKSUM_MARKER;
+use crate::header::PUB_HEADER_PURE_DATA_MARKER;
+use crate::header::PUB_HEADER_MARKER;
+use crate::header::PUB_HEADER_SALT_MARKER;
+use crate::header::PUB_HEADER_VERSION_MARKER;
+use crate::header::public_header_type::{PUB_HEADER_OPTION_MARKER, PUB_HEADER_META_DATA_MARKER};
 use crate::key::salt::Salt;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
@@ -44,9 +44,9 @@ fn check_prefix<'a>(line: &'a str, prefix: &str, verbose: bool) -> FedResult<&'a
 
 fn parse_marker(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<()> {
     read_line(reader, line, verbose)?;
-    if HEADER_MARKER != line {
+    if PUB_HEADER_MARKER != line {
         return Err(if verbose {
-            format!("did not recognize encryption header (expected '{}', got '{}'); was this file really encrypted with fileenc?", HEADER_MARKER, line)
+            format!("did not recognize encryption header (expected '{}', got '{}'); was this file really encrypted with fileenc?", PUB_HEADER_MARKER, line)
         } else {
             "did not recognize encryption header; was this file really encrypted with fileenc?"
                 .to_owned()
@@ -57,7 +57,7 @@ fn parse_marker(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> F
 
 fn parse_version(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Version> {
     read_line(reader, line, verbose)?;
-    let version_str = check_prefix(line, HEADER_VERSION_MARKER, verbose)?;
+    let version_str = check_prefix(line, PUB_HEADER_VERSION_MARKER, verbose)?;
     match Version::parse(version_str) {
         Ok(version) => Ok(version),
         Err(err) => Err(add_err(
@@ -74,7 +74,7 @@ fn parse_version(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> 
 
 fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<EncOptionSet> {
     read_line(reader, line, verbose)?;
-    let options_str = check_prefix(line, HEADER_OPTION_MARKER, verbose)?;
+    let options_str = check_prefix(line, PUB_HEADER_OPTION_MARKER, verbose)?;
     let mut option_vec = vec![];
     for option_str in options_str.split_whitespace() {
         match EncOption::from_str(option_str) {
@@ -100,7 +100,7 @@ fn parse_options(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> 
 
 fn parse_salt(reader: &mut dyn BufRead, line: &mut String, verbose: bool) -> FedResult<Salt> {
     read_line(reader, line, verbose)?;
-    let salt_str = check_prefix(line, HEADER_SALT_MARKER, verbose)?;
+    let salt_str = check_prefix(line, PUB_HEADER_SALT_MARKER, verbose)?;
     Salt::parse_base64(salt_str, verbose)
 }
 
@@ -110,7 +110,7 @@ fn parse_checksum(
     verbose: bool,
 ) -> FedResult<Checksum> {
     read_line(reader, line, verbose)?;
-    let checksum_str = check_prefix(line, HEADER_CHECKSUM_MARKER, verbose)?;
+    let checksum_str = check_prefix(line, PUB_HEADER_CHECKSUM_MARKER, verbose)?;
     Checksum::parse(checksum_str)
 }
 
@@ -128,16 +128,16 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
     let checksum = parse_checksum(reader, &mut line, verbose)?;
     read_line(reader, &mut line, verbose)?;
     if has_options {
-        check_prefix(&line, HEADER_META_DATA_MARKER, verbose).unwrap();
+        check_prefix(&line, PUB_HEADER_META_DATA_MARKER, verbose).unwrap();
     } else {
-        check_prefix(&line, HEADER_PURE_DATA_MARKER, verbose).unwrap();
+        check_prefix(&line, PUB_HEADER_PURE_DATA_MARKER, verbose).unwrap();
     }
     PublicHeader::new(version, salt, checksum, options)
 }
 
 pub fn skip_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<()> {
     let mut line = String::new();
-    while !line.starts_with(HEADER_META_DATA_MARKER) && !line.starts_with(HEADER_PURE_DATA_MARKER) {
+    while !line.starts_with(PUB_HEADER_META_DATA_MARKER) && !line.starts_with(PUB_HEADER_PURE_DATA_MARKER) {
         read_line(reader, &mut line, verbose)?;
     }
     Ok(())

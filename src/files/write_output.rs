@@ -13,7 +13,7 @@ pub fn write_output_file(
     config: &impl EndecConfig,
     file: &FileInfo,
     data: &[u8],
-    header: Option<&PublicHeader>,
+    header: Option<(&PublicHeader, &PrivateHeader)>,
     start_progress: &mut impl FnMut(),
 ) -> FedResult<()> {
     start_progress();

@@ -1,17 +1,27 @@
 use ::std::fs;
+use ::std::hash;
+use ::std::io;
+#[cfg(any(target_os = "linux", target_os = "l4re"))]
+use ::std::os::unix::fs::PermissionsExt;
 use ::std::path::Path;
 use ::std::path::PathBuf;
+use ::std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::config::typ::Extension;
 use crate::header::strategy::Verbosity;
-use crate::util::pth::determine_output_path;
 use crate::util::FedResult;
-use ::std::hash;
+use crate::util::pth::determine_output_path;
+use std::fs::Metadata;
 
 #[derive(Debug)]
 pub struct FileInfo<'a> {
     pub in_path: &'a Path,
-    pub size_kb: u64,
+    pub size_b: u64,
+    /// octal notation, like 0o754 "rwxrw.r.."
+    pub permissions: Option<u32>,
+    pub created_ns: Option<u128>,
+    pub changed_ns: Option<u128>,
+    pub accessed_ns: Option<u128>,
     pub out_pth: PathBuf,
 }
 
@@ -22,6 +32,10 @@ impl<'a> FileInfo<'a> {
             .unwrap()
             .to_string_lossy()
             .to_string()
+    }
+
+    pub fn size_kb(&self) -> u64 {
+        self.size_b / 1024
     }
 }
 
@@ -45,6 +59,27 @@ impl<'a> FileInfo<'a> {
     pub fn path_str(&self) -> String {
         self.in_path.to_string_lossy().to_string()
     }
+}
+
+fn to_ns(sys_time: io::Result<SystemTime>) -> Option<u128> {
+    match sys_time {
+        Ok(st) => match st.duration_since(UNIX_EPOCH) {
+            Ok(duration) => Some(duration.as_nanos()),
+            Err(_) => None,
+        },
+        Err(_) => None,
+    }
+}
+
+#[cfg(any(target_os = "linux", target_os = "l4re"))]
+fn get_perms(meta: &Metadata) -> Option<u32> {
+    Some(meta.permissions().mode())
+}
+
+//TODO: maybe support more operating systems
+#[cfg(not(any(target_os = "linux", target_os = "l4re")))]
+fn get_perms() -> Option<u32> {
+    None
 }
 
 pub fn inspect_files<'a>(
@@ -93,7 +128,11 @@ pub fn inspect_files<'a>(
 
         infos.push(FileInfo {
             in_path: file.as_path(),
-            size_kb: meta.len() / 1024,
+            size_b: meta.len(),
+            permissions: get_perms(&meta),
+            created_ns: to_ns(meta.created()),
+            changed_ns: to_ns(meta.modified()),
+            accessed_ns: to_ns(meta.accessed()),
             out_pth: output_file,
         });
     }
@@ -124,14 +163,14 @@ mod tests {
     use ::tempfile::NamedTempFile;
     use ::tempfile::TempDir;
 
+    use crate::config::EncryptConfig;
     use crate::config::typ::EndecConfig;
     use crate::config::typ::Extension;
-    use crate::config::EncryptConfig;
     use crate::header::strategy::Verbosity;
     use crate::key::Key;
+    use crate::util::option::EncOptionSet;
 
     use super::*;
-    use crate::util::option::EncOptionSet;
 
     #[test]
     fn output_path() {

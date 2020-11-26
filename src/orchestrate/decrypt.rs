@@ -91,7 +91,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         let data = read_file(
             &mut reader,
             &file_strat.file.path_str(),
-            file_strat.file.size_kb,
+            file_strat.file.size_kb(),
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;

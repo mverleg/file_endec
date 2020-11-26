@@ -4,22 +4,24 @@ pub struct PrivateHeader {
     // The original filename without directory path, with extension.
     filename: String,
     // Linux-like permissions in octal, e.g. "754" for "rwxrw.r..".
-    permissions: u32,
+    permissions: Option<u32>,
     // Created and modified timestamps in nanoseconds.
-    created_ns: u128,
-    changed_ns: u128,
+    created_ns: Option<u128>,
+    changed_ns: Option<u128>,
+    accessed_ns: Option<u128>,
     // Original filesize in bytes
     size: u64,
 }
 
 impl PrivateHeader {
-    pub fn new(filename: String, permissions: u32, created_ns: u128, changed_ns: u128, size: u64,) -> Self {
+    pub fn new(filename: String, permissions: Option<u32>, created_ns: Option<u128>, changed_ns: Option<u128>, accessed_ns: Option<u128>, size: u64,) -> Self {
         assert!(!filename.contains('\n'));
         PrivateHeader {
             filename,
             permissions,
             created_ns,
             changed_ns,
+            accessed_ns,
             size,
         }
     }
@@ -28,16 +30,20 @@ impl PrivateHeader {
         &self.filename
     }
 
-    pub fn permissions(&self) -> u32 {
+    pub fn permissions(&self) -> Option<u32> {
         self.permissions
     }
 
-    pub fn created_ns(&self) -> u128 {
+    pub fn created_ns(&self) -> Option<u128> {
         self.created_ns
     }
 
-    pub fn changed_ns(&self) -> u128 {
+    pub fn changed_ns(&self) -> Option<u128> {
         self.changed_ns
+    }
+
+    pub fn accessed_ns(&self) -> Option<u128> {
+        self.accessed_ns
     }
 
     pub fn size(&self) -> u64 {
@@ -49,5 +55,6 @@ pub const PRIV_HEADER_FILENAME: &str = "name";
 pub const PRIV_HEADER_PERMISSIONS: &str = "perm";
 pub const PRIV_HEADER_CREATED: &str = "crt";
 pub const PRIV_HEADER_CHANGED: &str = "cng";
+pub const PRIV_HEADER_ACCESSED: &str = "acs";
 pub const PRIV_HEADER_SIZE: &str = "sz";
 pub const PRIV_HEADER_DATA: &str = "enc:";

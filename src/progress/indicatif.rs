@@ -95,7 +95,7 @@ impl IndicatifProgress {
                 TaskType::Read(file_strat.file().in_path.to_owned()),
                 TaskInfo {
                     text: format!("read {}", &file_strat.file().file_name()),
-                    size: file_strat.file().size_kb,
+                    size: file_strat.file().size_kb(),
                 },
             );
             todo.insert(
@@ -110,7 +110,7 @@ impl IndicatifProgress {
                             .unwrap()
                             .to_string_lossy()
                     ),
-                    size: file_strat.file().size_kb * 2,
+                    size: file_strat.file().size_kb() * 2,
                 },
             );
             if delete_input {
@@ -118,7 +118,7 @@ impl IndicatifProgress {
                     TaskType::ShredInput(file_strat.file().in_path.to_owned()),
                     TaskInfo {
                         text: format!("shred input {}", &file_strat.file().file_name()),
-                        size: file_strat.file().size_kb * 3,
+                        size: file_strat.file().size_kb() * 3,
                     },
                 );
             }
@@ -127,7 +127,7 @@ impl IndicatifProgress {
                     TaskType::Compress(alg.clone(), file_strat.file().in_path.to_owned()),
                     TaskInfo {
                         text: format!("{} {}", &alg, &file_strat.file().file_name()),
-                        size: file_strat.file().size_kb * 3,
+                        size: file_strat.file().size_kb() * 3,
                     },
                 );
             }
@@ -136,7 +136,7 @@ impl IndicatifProgress {
                     TaskType::Symmetric(alg.clone(), file_strat.file().in_path.to_owned()),
                     TaskInfo {
                         text: format!("{} {}", &alg, &file_strat.file().file_name()),
-                        size: file_strat.file().size_kb * 3,
+                        size: file_strat.file().size_kb() * 3,
                     },
                 );
             }
@@ -144,7 +144,7 @@ impl IndicatifProgress {
                 TaskType::Checksum(file_strat.file().in_path.to_owned()),
                 TaskInfo {
                     text: format!("checksum {}", &file_strat.file().file_name()),
-                    size: file_strat.file().size_kb,
+                    size: file_strat.file().size_kb(),
                 },
             );
         }

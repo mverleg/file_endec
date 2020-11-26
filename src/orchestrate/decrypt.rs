@@ -1,8 +1,8 @@
 use ::std::collections::HashMap;
 use ::std::path::PathBuf;
 
+use crate::{FedResult, Verbosity};
 use crate::config::DecryptConfig;
-pub use crate::config::enc::EncryptConfig;
 use crate::config::typ::{EndecConfig, Extension};
 use crate::files::Checksum;
 use crate::files::checksum::calculate_checksum;
@@ -13,8 +13,6 @@ use crate::files::read_headers::read_file_strategies;
 use crate::files::reading::{open_reader, read_file};
 use crate::files::write_output::write_output_file;
 use crate::header::public_decode::skip_header;
-pub use crate::header::strategy::Verbosity;
-pub use crate::key::{Key, KeySource};
 use crate::key::key::StretchKey;
 use crate::key::Salt;
 use crate::key::stretch::stretch_key;
@@ -23,7 +21,6 @@ use crate::progress::log::LogProgress;
 use crate::progress::Progress;
 use crate::progress::silent::SilentProgress;
 use crate::symmetric::decrypt::decrypt_file;
-pub use crate::util::FedResult;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,
@@ -163,15 +160,14 @@ mod tests {
     use ::std::fs;
     use ::std::fs::File;
     use ::std::io::Read;
+    use ::std::path::Path;
 
     use ::lazy_static::lazy_static;
     use ::regex::Regex;
-    use ::semver::Version;
-    use tempfile::tempdir;
+    use ::tempfile::tempdir;
 
     use crate::config::DecryptConfig;
     use crate::decrypt;
-    use crate::files::scan::get_enc_files_direct;
     use crate::files::scan::TEST_FILE_DIR;
     use crate::header::strategy::Verbosity;
     use crate::key::key::Key;
@@ -183,46 +179,38 @@ mod tests {
 
     /// Open the files in 'test_files/' that were encrypted with previous versions,
     /// and make sure they can still be decrypted (and match the original).
+
+    #[datatest::files("test_files", {
+        input in r"/original_v(?:\d+\.\d+\.\d+)(?:_\w+)?.png.enc$",
+    })]
     #[test]
-    fn load_all_versions() {
-        let enc_files: Vec<Version> = get_enc_files_direct(&*TEST_FILE_DIR)
-            .unwrap()
-            .iter()
-            .map(|f| f.file_stem().unwrap().to_str().unwrap())
-            .filter(|s| s.starts_with("original_"))
-            .map(|n| COMPAT_FILE_RE.captures_iter(n).next().unwrap())
-            .map(|v| Version::parse(&v[1]).unwrap())
-            .collect();
-        assert!(!enc_files.is_empty());
+    fn load_version(input: &Path) {
+        //TODO @mark: test that at least one match
         let mut original_pth = TEST_FILE_DIR.clone();
         original_pth.push("original.png".to_owned());
-        for enc_file in enc_files {
-            let mut enc_pth = TEST_FILE_DIR.clone();
-            enc_pth.push(format!("original_v{}.png.enc", enc_file));
-            let mut dec_pth = TEST_FILE_DIR.clone();
-            dec_pth.push(format!("original_v{}.png", enc_file));
-            let conf = DecryptConfig::new(
-                vec![enc_pth],
-                COMPAT_KEY.clone(),
-                Verbosity::Debug,
-                true,
-                false,
-                None,
-            );
-            decrypt(&conf).unwrap();
-            let mut original_data = vec![];
-            File::open(&original_pth)
-                .unwrap()
-                .read_to_end(&mut original_data)
-                .unwrap();
-            let mut dec_data = vec![];
-            File::open(&dec_pth)
-                .unwrap()
-                .read_to_end(&mut dec_data)
-                .unwrap();
-            assert_eq!(&original_data, &dec_data);
-            fs::remove_file(&dec_pth).unwrap();
-        }
+        let conf = DecryptConfig::new(
+            vec![input.to_owned()],
+            COMPAT_KEY.clone(),
+            Verbosity::Debug,
+            true,
+            false,
+            None,
+        );
+        let dec_pths = decrypt(&conf).unwrap();
+        assert_eq!(dec_pths.len(), 1);
+        let dec_pth = dec_pths.first().unwrap();
+        let mut original_data = vec![];
+        File::open(&original_pth)
+            .unwrap()
+            .read_to_end(&mut original_data)
+            .unwrap();
+        let mut dec_data = vec![];
+        File::open(&dec_pth)
+            .unwrap()
+            .read_to_end(&mut dec_data)
+            .unwrap();
+        assert_eq!(&original_data, &dec_data);
+        fs::remove_file(&dec_pth).unwrap();
     }
 
     #[test]

@@ -48,12 +48,7 @@ lazy_static! {
     pub static ref TEST_FILE_DIR: PathBuf = {
         // Try to find relative to target dir.
         let mut test_files_dir: PathBuf = {
-            let mut p = std::env::current_exe().unwrap();
-            p.pop();
-            p.pop();
-            p.pop();
-            p.pop();
-            //TODO: note that file structure depends on target, it's different for musl, so this is not great...
+            let mut p = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             p.push("test_files");
             p
         };

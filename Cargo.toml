@@ -51,7 +51,7 @@ aes = "^0.6.0"
 block-modes = "^0.7.0"
 
 # hashing
-ring = "^0.16.9"
+ring = "^0.16.17"
 argon2rs = "^0.2.5"
 bcrypt = "^0.9.0"
 twox-hash = "^1.6.0"
@@ -74,3 +74,4 @@ rand = "^0.7.3"
 criterion = "^0.3.3"
 regex = "^1.4.2"
 tempfile = "^3.1.0"
+datatest = "^0.6.3"

@@ -1,18 +1,17 @@
-use ::std::error::Error;
 use ::std::io::Write;
 
 use ::semver::Version;
 
 use crate::EncOptionSet;
 use crate::files::Checksum;
-use crate::header::PublicHeader;
+use crate::header::encode_util::write_line;
 use crate::header::PUB_HEADER_CHECKSUM_MARKER;
 use crate::header::PUB_HEADER_MARKER;
 use crate::header::PUB_HEADER_SALT_MARKER;
 use crate::header::PUB_HEADER_VERSION_MARKER;
 use crate::header::public_header_type::{PUB_HEADER_META_DATA_MARKER, PUB_HEADER_OPTION_MARKER};
+use crate::header::PublicHeader;
 use crate::key::salt::Salt;
-use crate::util::errors::add_err;
 use crate::util::FedResult;
 use crate::util::version::version_has_options_meta;
 
@@ -38,14 +37,14 @@ fn write_options(writer: &mut impl Write, options: &EncOptionSet, verbose: bool)
 
 fn write_salt(writer: &mut impl Write, salt: &Salt, verbose: bool) -> FedResult<()> {
     let salt_str = salt.as_base64();
-    write_line(writer, PUB_HEADER_SALT_MARKER, Some(salt_str), verbose)
+    write_line(writer, PUB_HEADER_SALT_MARKER, Some(&salt_str), verbose)
 }
 
 fn write_checksum(writer: &mut impl Write, checksum: &Checksum, verbose: bool) -> FedResult<()> {
     write_line(
         writer,
         PUB_HEADER_CHECKSUM_MARKER,
-        Some(format!("{}", checksum)),
+        Some(&format!("{}", checksum)),
         verbose,
     )
 }
@@ -83,8 +82,7 @@ mod tests {
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
             EncOptionSet::empty(),
-        )
-        .unwrap();
+        );
         let mut buf: Vec<u8> = Vec::new();
         write_public_header(&mut buf, &header, true).unwrap();
         let expected =
@@ -100,8 +98,7 @@ mod tests {
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
             EncOptionSet::all_for_test(),
-        )
-        .unwrap();
+        );
         let mut buf: Vec<u8> = Vec::new();
         write_public_header(&mut buf, &header, true).unwrap();
         let expected = "github.com/mverleg/file_endec\0\nv 1.1.0\nopts fast hide-meta pad-size\nsalt FV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2AQ\ncheck xx_sha256 AAUABQAFAAUABQAF\nmeta1+data:\n";

@@ -2,7 +2,6 @@ use ::semver::Version;
 
 use crate::files::Checksum;
 use crate::key::Salt;
-use crate::util::FedResult;
 use crate::util::option::EncOptionSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

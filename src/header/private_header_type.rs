@@ -1,4 +1,3 @@
-use crate::util::FedResult;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PrivateHeader {

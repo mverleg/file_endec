@@ -98,7 +98,7 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
     let options = parse_options(&header_data, verbose)?;
     let salt = parse_salt(&header_data, verbose)?;
     let checksum = parse_checksum(&header_data)?;
-    PublicHeader::new(version, salt, checksum, options)
+    Ok(PublicHeader::new(version, salt, checksum, options))
 }
 
 pub fn skip_public_header<R: BufRead>(reader: &mut R) -> FedResult<()> {
@@ -163,8 +163,7 @@ mod tests {
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
             EncOptionSet::empty(),  // always empty for v1.0
-        )
-        .unwrap();
+        );
         let mut buf = input.as_bytes();
         let header = parse_public_header(&mut buf, false).unwrap();
         assert_eq!(expected, header);
@@ -179,8 +178,7 @@ mod tests {
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
             EncOptionSet::empty(),  // always empty for v1.0
-        )
-        .unwrap();
+        );
         let mut buf = input.as_bytes();
         let header = parse_public_header(&mut buf, true).unwrap();
         assert_eq!(expected, header);

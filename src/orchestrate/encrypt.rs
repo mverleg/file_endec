@@ -19,6 +19,8 @@ use crate::progress::silent::SilentProgress;
 use crate::symmetric::encrypt::encrypt_file;
 use crate::util::version::get_current_version;
 
+//TODO @mark: I need to add some random number of bytes to private header, because the attacker knows the size of the cyphertext, so they can deduce private header information
+
 /// Encrypt one or more files and return the new paths.
 pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
     assert!(!config.options().has(&EncOption::HideMeta), "metadata hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
@@ -71,7 +73,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             &strategy.symmetric_algorithms,
             &mut |alg| progress.start_sym_alg_for_file(&alg, &file),
         );
-        let pub_header = PublicHeader::new(version.clone(), salt.clone(), checksum, config.options().clone())?;
+        let pub_header = PublicHeader::new(version.clone(), salt.clone(), checksum, config.options().clone());
         let priv_header = unimplemented!();  //TODO @mark: TEMPORARY! REMOVE THIS!
         //let priv_header = PrivateHeader::new()?;
         if !config.dry_run() {

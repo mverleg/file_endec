@@ -1,7 +1,7 @@
 use ::std::collections::HashMap;
 use ::std::io::BufRead;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum HeaderErr {
     NoStartMarker,
     NoEndMarker,
@@ -78,7 +78,7 @@ pub fn read_header_keys(reader: &mut dyn BufRead, start: Option<&str>, ends: &[&
     }
 }
 
-//TODO @mark: test (copy from public_decode?)
+//TODO @mark: test if cannot be removed (copy from public_decode?)
 pub fn skip_header<R: BufRead>(reader: &mut R, ends: &[&str]) -> Result<(), HeaderErr> {
     let mut line = String::new();
     loop {
@@ -153,6 +153,31 @@ mod tests {
             assert_eq!(map.get("other"), None);
         }
 
-        //TODO @mark: error situations
+        #[test]
+        fn error_no_start_marker() {
+            let input = "not_start\nkey value\nend:\nignore this";
+            let mut reader = BufReader::new(input.as_bytes());
+            let err = read_header_keys(&mut reader, Some("start"), &vec!["end:"]);
+            assert!(err.is_err());
+            assert_eq!(err.unwrap_err(), HeaderErr::NoStartMarker);
+        }
+
+        #[test]
+        fn error_no_end_marker() {
+            let input = "start\nkey value\nignore this";
+            let mut reader = BufReader::new(input.as_bytes());
+            let err = read_header_keys(&mut reader, Some("start"), &vec!["end:"]);
+            assert!(err.is_err());
+            assert_eq!(err.unwrap_err(), HeaderErr::NoEndMarker);
+        }
+
+        #[test]
+        fn error_header_syntax() {
+            let input = "start\nkey_without_value\nend:\nignore this";
+            let mut reader = BufReader::new(input.as_bytes());
+            let err = read_header_keys(&mut reader, Some("start"), &vec!["end:"]);
+            assert!(err.is_err());
+            assert_eq!(err.unwrap_err(), HeaderErr::HeaderSyntax("key_without_value".to_owned()));
+        }
     }
 }

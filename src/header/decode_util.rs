@@ -22,9 +22,10 @@ fn read_line(reader: &mut dyn BufRead, line: &mut String, index: &mut usize) -> 
             return Err(HeaderErr::ReadError)
         },
     }
+    eprintln!("index {} + {} -> {}", *index, line.len(), *index + line.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
     *index = *index + line.len();
     line.pop();
-    eprintln!("line: {}", &line);  //TODO @mark: TEMPORARY! REMOVE THIS!
+    eprintln!("line: [{}]", &line);  //TODO @mark: TEMPORARY! REMOVE THIS!
     Ok(())
 }
 
@@ -42,6 +43,7 @@ pub fn read_header_keys(reader: &mut dyn BufRead, start: Option<&str>, ends: &[&
 
     read_line(reader, &mut line, &mut index)?;
     if let Some(start) = start {
+        debug_assert!(!start.is_empty());
         if line != start {
             return Err(HeaderErr::NoStartMarker)
         }
@@ -56,6 +58,7 @@ pub fn read_header_keys(reader: &mut dyn BufRead, start: Option<&str>, ends: &[&
         }
 
         for end in ends {
+            debug_assert!(!end.is_empty());
             if &line == end {
                 return Ok((index, map))
             }
@@ -102,7 +105,7 @@ mod tests {
             let input = "hello\0\nworld:\nignore this";
             let mut reader = BufReader::new(input.as_bytes());
             let (index, map) = read_header_keys(&mut reader, Some("hello\0"), &vec!["world:"]).unwrap();
-            assert_eq!(index, 17);
+            assert_eq!(index, 14);
             assert!(map.is_empty());
         }
 
@@ -111,7 +114,7 @@ mod tests {
             let input = "end:\nignore this";
             let mut reader = BufReader::new(input.as_bytes());
             let (index, map) = read_header_keys(&mut reader, None, &vec!["end:"]).unwrap();
-            assert_eq!(index, 4);
+            assert_eq!(index, 5);
             assert!(map.is_empty());
         }
 
@@ -131,7 +134,7 @@ mod tests {
             let input = "start\0\nkey value\nletters alpha beta gamma\nend2:\nignore this";
             let mut reader = BufReader::new(input.as_bytes());
             let (index, map) = read_header_keys(&mut reader, Some("start\0"), &vec!["end1:", "end2:"]).unwrap();
-            assert_eq!(index, 51);
+            assert_eq!(index, 48);
             assert!(!map.is_empty());
             assert_eq!(map.get("key").map(|v| v.as_str()), Some("value"));
             assert_eq!(map.get("letters").map(|v| v.as_str()), Some("alpha beta gamma"));
@@ -143,7 +146,7 @@ mod tests {
             let input = "start\0\n  \nkey value\n\nletters alpha beta gamma\n\nend2:\nignore this";
             let mut reader = BufReader::new(input.as_bytes());
             let (index, map) = read_header_keys(&mut reader, Some("start\0"), &vec!["end1:", "end2:"]).unwrap();
-            assert_eq!(index, 59);
+            assert_eq!(index, 53);
             assert!(!map.is_empty());
             assert_eq!(map.get("key").map(|v| v.as_str()), Some("value"));
             assert_eq!(map.get("letters").map(|v| v.as_str()), Some("alpha beta gamma"));

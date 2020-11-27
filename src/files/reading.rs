@@ -37,11 +37,10 @@ pub fn read_file(
             path_str
         );
     }
-    wrap_io(
-        || "could not read input file",
-        reader.read_to_end(data),
-    )?;
+    wrap_io(|| "could not read input file", reader.read_to_end(data))?;
+
     if !verbosity.quiet() && data.starts_with(PUB_HEADER_MARKER.as_bytes()) {
+        //TODO @mark: this is called during decrypt, how does this not happen too often?
         eprintln!("warning: file '{}' seems to already be encrypted", path_str);
     }
     Ok(())

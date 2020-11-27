@@ -100,15 +100,8 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
-        let (end_header_index, priv_header) = if version_has_options_meta(&file_strat.header.version()) {
-            let index_header = parse_private_header(&mut data.as_slice())?;
-            (index_header.0, Some(index_header.1))
-        } else {
-            (0, None)
-        };
         let revealed = decrypt_file(
             data,
-            end_header_index,
             &stretched_key,
             &salt,
             &file_strat.strategy.symmetric_algorithms,
@@ -119,6 +112,12 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             &file_strat.strategy.compression_algorithm,
             &mut |alg| progress.start_compress_alg_for_file(alg, &file_strat.file),
         )?;
+        let (end_header_index, priv_header) = if version_has_options_meta(&file_strat.header.version()) {
+            let index_header = parse_private_header(&mut big.as_slice())?;
+            (index_header.0, Some(index_header.1))
+        } else {
+            (0, None)
+        };
         let actual_checksum = calculate_checksum(&big, &mut || {
             progress.start_checksum_for_file(&file_strat.file)
         });

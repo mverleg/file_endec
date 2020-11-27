@@ -25,6 +25,7 @@ use crate::header::private_encode::write_private_header;
 
 /// Encrypt one or more files and return the new paths.
 pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
+    //TODO @mark: break this up into more functions?
     assert!(!config.options().has(EncOption::HideMeta), "metadata hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
     assert!(!config.options().has(EncOption::PadSize), "size hiding not yet implemented");  //TODO @mark: TEMPORARY! REMOVE THIS!
     let version = get_current_version();

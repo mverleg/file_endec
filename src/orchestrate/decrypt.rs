@@ -22,6 +22,7 @@ use crate::progress::Progress;
 use crate::progress::silent::SilentProgress;
 use crate::symmetric::decrypt::decrypt_file;
 use crate::header::private_decode::parse_private_header;
+use crate::util::version::version_has_options_meta;
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,
@@ -52,6 +53,7 @@ pub fn validate_checksum_matches(
 
 /// Decrypt one or more files and return the new paths.
 pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
+    //TODO @mark: break this up into more functions?
     let files_info = inspect_files(
         config.files(),
         config.verbosity(),
@@ -98,9 +100,12 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
-        let (end_header_index, priv_header) = parse_private_header(
-            &mut data.as_slice(),
-        )?;
+        let (end_header_index, priv_header) = if version_has_options_meta(&file_strat.header.version()) {
+            let index_header = parse_private_header(&mut data.as_slice())?;
+            (index_header.0, Some(index_header.1))
+        } else {
+            (0, None)
+        };
         let revealed = decrypt_file(
             data,
             end_header_index,

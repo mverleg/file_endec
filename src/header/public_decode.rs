@@ -75,7 +75,7 @@ fn parse_checksum(header_data: &HashMap<String, String>) -> FedResult<Checksum> 
 //TODO @mark: include filename in error at caller?
 pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<PublicHeader> {
 
-    let header_data = match read_header_keys(reader, Some(PUB_HEADER_MARKER), &[PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER]) {
+    let (_, header_data) = match read_header_keys(reader, Some(PUB_HEADER_MARKER), &[PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER]) {
         Ok(map) => map,
         Err(err) => return Err(if verbose {
             match err {

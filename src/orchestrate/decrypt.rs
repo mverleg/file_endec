@@ -21,7 +21,7 @@ use crate::progress::log::LogProgress;
 use crate::progress::Progress;
 use crate::progress::silent::SilentProgress;
 use crate::symmetric::decrypt::decrypt_file;
-use crate::header::private_decode::{parse_private_header, find_private_data_start};
+use crate::header::private_decode::parse_private_header;
 use crate::header::decode_util::skip_header;
 
 pub fn validate_checksum_matches(
@@ -99,10 +99,9 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
-        let priv_header = parse_private_header(
+        let (end_header_index, priv_header) = parse_private_header(
             &mut data.as_slice(),
         )?;
-        let end_header_index = find_private_data_start(&data);
         let revealed = decrypt_file(
             data,
             end_header_index,

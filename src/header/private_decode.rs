@@ -36,9 +36,10 @@ fn parse_size(header_data: &HashMap<String, String>) -> FedResult<u64> {
 }
 
 //TODO @mark: include filename in error at caller?
-pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<PrivateHeader> {
+/// Parses the data in the private header and returns it, along with the index of the first byte after the header.
+pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<(usize, PrivateHeader)> {
 
-    let header_data = match read_header_keys(reader, None, &[PRIV_HEADER_DATA]) {
+    let (index, header_data) = match read_header_keys(reader, None, &[PRIV_HEADER_DATA]) {
         Ok(map) => map,
         Err(err) => return Err(match err {
             HeaderErr::NoStartMarker => unreachable!(),
@@ -52,20 +53,14 @@ pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<PrivateHead
     let permissions = parse_permissions(&header_data)?;
     let (created, changed, accessed) = parse_sizes(&header_data)?;
     let size = parse_size(&header_data)?;
-    Ok(PrivateHeader::new(
+    Ok((index, PrivateHeader::new(
         filename,
         permissions,
         created,
         changed,
         accessed,
         size,
-    ))
-}
-
-pub fn find_private_data_start(data: &[u8]) -> usize {
-    //TODO @mark: unit test this
-    let start = data.find_byteset(PRIV_HEADER_DATA);
-    start + PRIV_HEADER_DATA.len()
+    )))
 }
 
 #[cfg(test)]
@@ -86,7 +81,7 @@ mod tests {
     #[test]
     fn read_vanilla() {
         let mut txt = "enc:\n".as_bytes();
-        let actual = parse_private_header(&mut txt).unwrap();
+        let (index, actual) = parse_private_header(&mut txt).unwrap();
         let expected = PrivateHeader::new(
             "my_filename.ext".to_owned(),
             Some(0o754),
@@ -95,13 +90,14 @@ mod tests {
             Some(999_999_999_999),
             1024_000,
         );
+        assert_eq!(index, 4);
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn read_hide_meta_size() {
         let mut txt = "name my_filename.ext\nperm 754\ncrt Ax9lQnI\ncng NWzxOMo\nacs NiToP-_\nsz C4_A\nenc:\n".as_bytes();
-        let actual = parse_private_header(&mut txt).unwrap();
+        let (index, actual) = parse_private_header(&mut txt).unwrap();
         let expected = PrivateHeader::new(
             "my_filename.ext".to_owned(),
             Some(0o754),
@@ -110,13 +106,14 @@ mod tests {
             Some(999_999_999_999),
             1024_000,
         );
+        assert_eq!(index, 84);
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn read_hide_unsupported() {
         let mut txt = "name my_filename.ext\ncrt Ax9lQnI\ncng NWzxOMo\nsz C4_A\nenc:\n".as_bytes();
-        let actual = parse_private_header(&mut txt).unwrap();
+        let (index, actual) = parse_private_header(&mut txt).unwrap();
         let expected = PrivateHeader::new(
             "my_filename.ext".to_owned(),
             None,
@@ -125,6 +122,7 @@ mod tests {
             None,
             1024_000,
         );
+        assert_eq!(index, 61);
         assert_eq!(actual, expected);
     }
 }

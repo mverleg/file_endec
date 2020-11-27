@@ -1,0 +1,44 @@
+use ::std::sync::atomic::AtomicBool;
+use ::std::sync::atomic::Ordering;
+use ::std::thread;
+use ::std::thread::sleep;
+use ::std::time::Duration;
+use ::std::time::SystemTime;
+
+use ::rand::RngCore;
+use ::rand::rngs::OsRng;
+use std::sync::Arc;
+
+/// Generate a secure random series of bytes, showing a
+/// warning on stderr if it takes long.
+pub fn generate_secure_random_timed(buffer: &mut [u8]) {
+
+    let is_ready = Arc::new(AtomicBool::new(false));
+    let has_warned = Arc::new(AtomicBool::new(false));
+    let timer = SystemTime::now();
+
+    // Spawn a thread just to log messages if things take long.
+    let is_ready_monitor = is_ready.clone();
+    let has_warned_monitor = has_warned.clone();
+    thread::spawn(move || {
+        // Wait one second before warning.
+        sleep(Duration::new(1, 0));
+        if is_ready_monitor.load(Ordering::Release) {
+            return;
+        }
+        has_warned_monitor.store(true, Ordering::Acquire);
+        eprintln!("secure random number generation is taking long; perhaps there is not enough entropy available");
+        //TODO @mark: are all the acquires/releases correct?
+        //TODO @mark: do I have to join the thread? can it just be left to die?
+        //TODO @mark: does this thread keep the process alive? it's only 1 second, but still, this thread should die as soon as the main one finishes
+    });
+
+    // This does the actual number generation.
+    OsRng.fill_bytes(buffer);
+    is_ready.store(true, Ordering::Acquire);
+
+    // If the warning was shown, then also show that the situation is resolved now.
+    if has_warned.load(Ordering::Release) {
+        eprintln!("secure random number generation ready after {} ms", timer.elapsed().unwrap().as_millis());
+    }
+}

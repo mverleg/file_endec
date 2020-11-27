@@ -77,7 +77,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
     let mut out_pths = vec![];
     for file_strat in &files_strats {
         let mut reader = open_reader(&file_strat.file, config.verbosity())?;
-        reader.seek(SeekFrom::Start(file_strat.header_len as u64));
+        reader.seek(SeekFrom::Start(file_strat.header_len as u64)).unwrap();
         let salt = file_strat.header.salt().clone();
         let stretched_key = if let Some(sk) = key_cache.get(&salt) {
             sk.clone()

@@ -8,3 +8,4 @@ pub mod key;
 pub mod salt;
 pub mod source;
 pub mod stretch;
+pub mod random;

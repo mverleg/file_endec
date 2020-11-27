@@ -17,15 +17,13 @@ fn read_line(reader: &mut dyn BufRead, line: &mut String, index: &mut usize) -> 
         Ok(sz) => if sz == 0 {
             return Err(HeaderErr::NoEndMarker)
         },
-        Err(err) => {
-            dbg!(err);  //TODO @mark: TEMPORARY! REMOVE THIS!
+        Err(_) =>
             return Err(HeaderErr::ReadError)
-        },
+        ,
     }
-    eprintln!("index {} + {} -> {}", *index, line.len(), *index + line.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
     *index = *index + line.len();
     line.pop();
-    eprintln!("line: [{}]", &line);  //TODO @mark: TEMPORARY! REMOVE THIS!
+    dbg!(&line);  //TODO @mark: TEMPORARY! REMOVE THIS!
     Ok(())
 }
 

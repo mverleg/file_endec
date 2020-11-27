@@ -4,9 +4,7 @@ use ::std::fmt::Formatter;
 use ::std::hash::Hash;
 use ::std::hash::Hasher;
 
-use ::rand::rngs::OsRng;
-use ::rand::RngCore;
-
+use crate::key::random::generate_secure_random_timed;
 use crate::util::base::base64str_to_u8s;
 use crate::util::base::u8s_to_base64str;
 use crate::util::errors::add_err;
@@ -54,9 +52,10 @@ impl Debug for Salt {
 
 impl Salt {
     pub fn generate_random() -> FedResult<Self> {
-        let mut long = [0u8; SALT_LEN];
-        OsRng.fill_bytes(&mut long);
-        Ok(Salt { salt: long })
+        //TODO @mark: use a faster version for tests? except the salt tests
+        let mut salt = [0u8; SALT_LEN];
+        generate_secure_random_timed(&mut salt);
+        Ok(Salt { salt })
     }
 
     #[cfg(any(test, feature = "expose"))]
@@ -119,6 +118,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(not(feature = "test-e2e"), ignore)]
     fn generate_salt_entropy() {
         // Fails if all bytes are the same (or if generation fails).
         // This test could theoretically fail in extremely rare cases.
@@ -133,6 +133,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(not(feature = "test-e2e"), ignore)]
     fn generate_salt_different() {
         // Fails if two subsequent salts are identical (or if generation fails).
         // This test could theoretically fail in extremely rare cases.

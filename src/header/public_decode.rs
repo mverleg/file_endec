@@ -152,7 +152,7 @@ mod tests {
         );
         let mut buf = input.as_bytes();
         let (length, header) = parse_public_header(&mut buf, false).unwrap();
-        assert_eq!(length, 0);
+        assert_eq!(length, 156);
         assert_eq!(expected, header);
     }
 
@@ -168,7 +168,7 @@ mod tests {
         );
         let mut buf = input.as_bytes();
         let (length, header) = parse_public_header(&mut buf, true).unwrap();
-        assert_eq!(length, 0);
+        assert_eq!(length, 170);
         assert_eq!(expected, header);
     }
 }

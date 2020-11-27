@@ -86,14 +86,14 @@ mod tests {
 
     #[test]
     fn read_vanilla() {
-        let mut txt = "enc:\n".as_bytes();
+        let mut txt = "name my_filename.ext\nsz C4_A\nenc:\n".as_bytes();
         let (index, actual) = parse_private_header(&mut txt).unwrap();
         let expected = PrivateHeader::new(
             "my_filename.ext".to_owned(),
-            Some(0o754),
-            Some(123_456_789_000),
-            Some(987_654_321_000),
-            Some(999_999_999_999),
+            None,
+            None,
+            None,
+            None,
             1024_000,
         );
         assert_eq!(index, 4);

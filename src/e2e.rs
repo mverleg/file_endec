@@ -26,7 +26,7 @@ fn fast() {
     assert!(!raw_pth.as_path().exists());
     test_decrypt(
         &[raw_pth.as_path()],
-        &["-k", &format!("pass:{}", key), "-d", "-v"],
+        &["-k", &format!("pass:{}", key), "-d", "-q"],
         None,
         true,
     );

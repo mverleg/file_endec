@@ -6,7 +6,7 @@ use ::indicatif::ProgressBar;
 use ::indicatif::ProgressStyle;
 
 use crate::files::file_meta::FileInfo;
-use crate::files::read_headers::FileHeader;
+use crate::files::read_headers::FileHeaderStrategy;
 use crate::files::read_headers::FileStrategy;
 use crate::header::{CompressionAlg, KeyHashAlg, Strategy, SymmetricEncryptionAlg};
 use crate::progress::Progress;
@@ -51,6 +51,7 @@ impl ProgressData {
 }
 
 impl<'a> FileStrategy for (&'a FileInfo<'a>, &'a Strategy) {
+
     fn file(&self) -> &FileInfo {
         self.0
     }
@@ -173,7 +174,7 @@ impl IndicatifProgress {
     }
 
     pub fn new_dec_strategy(
-        file_strategies: &[FileHeader],
+        file_strategies: &[FileHeaderStrategy],
         delete_input: bool,
         verbosity: Verbosity,
     ) -> Self {

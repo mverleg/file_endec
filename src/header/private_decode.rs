@@ -87,7 +87,7 @@ mod tests {
     #[test]
     fn read_vanilla() {
         let mut txt = "name my_filename.ext\nsz C4_A\nenc:\n".as_bytes();
-        let (index, actual) = parse_private_header(&mut txt).unwrap();
+        let (length, actual) = parse_private_header(&mut txt).unwrap();
         let expected = PrivateHeader::new(
             "my_filename.ext".to_owned(),
             None,
@@ -96,14 +96,14 @@ mod tests {
             None,
             1024_000,
         );
-        assert_eq!(index, 4);
+        assert_eq!(length, 34);
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn read_hide_meta_size() {
         let mut txt = "name my_filename.ext\nperm 754\ncrt Ax9lQnI\ncng NWzxOMo\nacs NiToP-_\nsz C4_A\nenc:\n".as_bytes();
-        let (index, actual) = parse_private_header(&mut txt).unwrap();
+        let (length, actual) = parse_private_header(&mut txt).unwrap();
         let expected = PrivateHeader::new(
             "my_filename.ext".to_owned(),
             Some(0o754),
@@ -112,14 +112,14 @@ mod tests {
             Some(999_999_999_999),
             1024_000,
         );
-        assert_eq!(index, 84);
+        assert_eq!(length, 79);
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn read_hide_unsupported() {
         let mut txt = "name my_filename.ext\ncrt Ax9lQnI\ncng NWzxOMo\nsz C4_A\nenc:\n".as_bytes();
-        let (index, actual) = parse_private_header(&mut txt).unwrap();
+        let (length, actual) = parse_private_header(&mut txt).unwrap();
         let expected = PrivateHeader::new(
             "my_filename.ext".to_owned(),
             None,
@@ -128,7 +128,7 @@ mod tests {
             None,
             1024_000,
         );
-        assert_eq!(index, 61);
+        assert_eq!(length, 58);
         assert_eq!(actual, expected);
     }
 }

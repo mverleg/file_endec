@@ -5,7 +5,7 @@ use ::std::str::FromStr;
 use ::semver::Version;
 
 use crate::files::Checksum;
-use crate::header::decode_util::{HeaderErr, read_header_keys, skip_header};
+use crate::header::decode_util::{HeaderErr, read_header_keys};
 use crate::header::PUB_HEADER_CHECKSUM_MARKER;
 use crate::header::PUB_HEADER_MARKER;
 use crate::header::PUB_HEADER_META_DATA_MARKER;
@@ -73,9 +73,9 @@ fn parse_checksum(header_data: &mut HashMap<String, String>) -> FedResult<Checks
 }
 
 //TODO @mark: include filename in error at caller?
-pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<PublicHeader> {
+pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<(usize, PublicHeader)> {
 
-    let (_, mut header_data) = match read_header_keys(reader, Some(PUB_HEADER_MARKER), &[PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER]) {
+    let (index, mut header_data) = match read_header_keys(reader, Some(PUB_HEADER_MARKER), &[PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER]) {
         Ok(map) => map,
         Err(err) => return Err(if verbose {
             match err {
@@ -106,13 +106,7 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
         eprintln!("encountered unknown header keys '{}'; this may happen if the file is encrypted using a newer version of file_endec, or if the file is corrupt; ignoring this problem", key_names);
     }
 
-    Ok(PublicHeader::new(version, salt, checksum, options))
-}
-
-//TODO @mark: maybe not necessary anymore, since read_header_keys returns length?
-pub fn skip_public_header<R: BufRead>(reader: &mut R) -> FedResult<()> {
-    skip_header(reader, &[PUB_HEADER_META_DATA_MARKER, PUB_HEADER_PURE_DATA_MARKER])
-        .map_err(|_| "failed to skip past the header while reading file; possibly the header has been corrupted".to_string())
+    Ok((index, PublicHeader::new(version, salt, checksum, options)))
 }
 
 #[cfg(test)]
@@ -123,7 +117,6 @@ mod tests {
     use ::semver::Version;
 
     use crate::files::Checksum;
-    use crate::header::public_decode::skip_public_header;
     use crate::header::PublicHeader;
     use crate::key::salt::Salt;
     use crate::util::option::EncOptionSet;
@@ -147,22 +140,6 @@ mod tests {
     }
 
     #[test]
-    fn skip_header_position() {
-        let _version = Version::parse("1.0.0").unwrap();
-        let input =
-            "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\
-            \ncheck xx_sha256 Ag\ndata:\nthis is the data and should not be read!\nthe end of the data";
-        let mut reader = BufReader::new(input.as_bytes());
-        skip_public_header(&mut reader).unwrap();
-        let mut remainder = vec![];
-        reader.read_to_end(&mut remainder).unwrap();
-        let expected = "this is the data and should not be read!\nthe end of the data"
-            .as_bytes()
-            .to_owned();
-        assert_eq!(expected, remainder);
-    }
-
-    #[test]
     fn read_v1_0_0_one() {
         let version = Version::parse("1.0.0").unwrap();
         let input =
@@ -174,7 +151,8 @@ mod tests {
             EncOptionSet::empty(),  // always empty for v1.0
         );
         let mut buf = input.as_bytes();
-        let header = parse_public_header(&mut buf, false).unwrap();
+        let (length, header) = parse_public_header(&mut buf, false).unwrap();
+        assert_eq!(length, 0);
         assert_eq!(expected, header);
     }
 
@@ -189,7 +167,8 @@ mod tests {
             EncOptionSet::empty(),  // always empty for v1.0
         );
         let mut buf = input.as_bytes();
-        let header = parse_public_header(&mut buf, true).unwrap();
+        let (length, header) = parse_public_header(&mut buf, true).unwrap();
+        assert_eq!(length, 0);
         assert_eq!(expected, header);
     }
 }

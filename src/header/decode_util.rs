@@ -78,19 +78,6 @@ pub fn read_header_keys(reader: &mut dyn BufRead, start: Option<&str>, ends: &[&
     }
 }
 
-//TODO @mark: test if cannot be removed (copy from public_decode?)
-pub fn skip_header<R: BufRead>(reader: &mut R, ends: &[&str]) -> Result<(), HeaderErr> {
-    let mut line = String::new();
-    loop {
-        read_line(reader, &mut line, &mut 0)?;
-        for end in ends {
-            if &line == end {
-                return Ok(())
-            }
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use ::std::io::BufReader;

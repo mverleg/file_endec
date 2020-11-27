@@ -4,18 +4,20 @@ use crate::header::{get_version_strategy, parse_public_header, PublicHeader, Str
 use crate::{FedResult, Verbosity};
 
 #[derive(Debug)]
-pub struct FileHeader<'a> {
+pub struct FileHeaderStrategy<'a> {
     pub file: &'a FileInfo<'a>,
     pub header: PublicHeader,
+    pub header_len: usize,
     pub strategy: &'a Strategy,
 }
 
-impl<'a> FileHeader<'a> {
-    pub fn new(file: &'a FileInfo<'a>, header: PublicHeader, verbosity: Verbosity) -> FedResult<Self> {
+impl<'a> FileHeaderStrategy<'a> {
+    pub fn new(file: &'a FileInfo<'a>, header: PublicHeader, header_len: usize, verbosity: Verbosity) -> FedResult<Self> {
         let strategy = get_version_strategy(header.version(), header.options(), verbosity.debug())?;
-        Ok(FileHeader {
+        Ok(FileHeaderStrategy {
             file,
             header,
+            header_len,
             strategy,
         })
     }
@@ -24,7 +26,7 @@ impl<'a> FileHeader<'a> {
 pub fn read_file_strategies<'a>(
     files: &'a [FileInfo],
     verbosity: Verbosity,
-) -> FedResult<Vec<FileHeader<'a>>> {
+) -> FedResult<Vec<FileHeaderStrategy<'a>>> {
     files
         .iter()
         .map(|fi| (fi, open_reader(&fi, verbosity)))
@@ -34,7 +36,8 @@ pub fn read_file_strategies<'a>(
                 reader.and_then(|mut r| parse_public_header(&mut r, verbosity.debug())),
             )
         })
-        .map(|(fi, header)| header.and_then(|h| FileHeader::new(fi, h, verbosity)))
+        .map(|(fi, hdr_info)| hdr_info
+            .and_then(|(hdr_len, hdr)| FileHeaderStrategy::new(fi, hdr, hdr_len, verbosity)))
         .collect()
 }
 
@@ -43,7 +46,7 @@ pub trait FileStrategy {
     fn strategy(&self) -> &Strategy;
 }
 
-impl<'a> FileStrategy for FileHeader<'a> {
+impl<'a> FileStrategy for FileHeaderStrategy<'a> {
     fn file(&self) -> &FileInfo {
         self.file
     }

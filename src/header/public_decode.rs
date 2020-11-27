@@ -19,10 +19,10 @@ use crate::util::errors::add_err;
 use crate::util::FedResult;
 use crate::util::option::{EncOption, EncOptionSet};
 
-fn parse_version(header_data: &HashMap<String, String>, verbose: bool) -> FedResult<Version> {
-    let version_str = header_data.get(PUB_HEADER_VERSION_MARKER)
+fn parse_version(header_data: &mut HashMap<String, String>, verbose: bool) -> FedResult<Version> {
+    let version_str = header_data.remove(PUB_HEADER_VERSION_MARKER)
         .ok_or("could not find the version in the file header".to_owned())?;
-    match Version::parse(version_str) {
+    match Version::parse(&version_str) {
         Ok(version) => Ok(version),
         Err(err) => Err(add_err(
             format!("could not determine the version of fileenc that encrypted this file; got {} which is invalid", version_str),
@@ -32,8 +32,8 @@ fn parse_version(header_data: &HashMap<String, String>, verbose: bool) -> FedRes
     }
 }
 
-fn parse_options(header_data: &HashMap<String, String>, verbose: bool) -> FedResult<EncOptionSet> {
-    let options_str = match header_data.get(PUB_HEADER_OPTION_MARKER) {
+fn parse_options(header_data: &mut HashMap<String, String>, verbose: bool) -> FedResult<EncOptionSet> {
+    let options_str = match header_data.remove(PUB_HEADER_OPTION_MARKER) {
         Some(val) => val,
         None => return Ok(EncOptionSet::empty()),
     };
@@ -60,22 +60,22 @@ fn parse_options(header_data: &HashMap<String, String>, verbose: bool) -> FedRes
     Ok(options)
 }
 
-fn parse_salt(header_data: &HashMap<String, String>, verbose: bool) -> FedResult<Salt> {
-    let salt_str = header_data.get(PUB_HEADER_SALT_MARKER)
+fn parse_salt(header_data: &mut HashMap<String, String>, verbose: bool) -> FedResult<Salt> {
+    let salt_str = header_data.remove(PUB_HEADER_SALT_MARKER)
         .ok_or("could not find the salt in the file header".to_owned())?;
-    Salt::parse_base64(salt_str, verbose)
+    Salt::parse_base64(&salt_str, verbose)
 }
 
-fn parse_checksum(header_data: &HashMap<String, String>) -> FedResult<Checksum> {
-    let checksum_str = header_data.get(PUB_HEADER_CHECKSUM_MARKER)
+fn parse_checksum(header_data: &mut HashMap<String, String>) -> FedResult<Checksum> {
+    let checksum_str = header_data.remove(PUB_HEADER_CHECKSUM_MARKER)
         .ok_or("could not find the checksum in the file header".to_owned())?;
-    Checksum::parse(checksum_str)
+    Checksum::parse(&checksum_str)
 }
 
 //TODO @mark: include filename in error at caller?
 pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<PublicHeader> {
 
-    let (_, header_data) = match read_header_keys(reader, Some(PUB_HEADER_MARKER), &[PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER]) {
+    let (_, mut header_data) = match read_header_keys(reader, Some(PUB_HEADER_MARKER), &[PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER]) {
         Ok(map) => map,
         Err(err) => return Err(if verbose {
             match err {
@@ -94,13 +94,22 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
         }),
     };
 
-    let version = parse_version(&header_data, verbose)?;
-    let options = parse_options(&header_data, verbose)?;
-    let salt = parse_salt(&header_data, verbose)?;
-    let checksum = parse_checksum(&header_data)?;
+    let version = parse_version(&mut header_data, verbose)?;
+    let options = parse_options(&mut header_data, verbose)?;
+    let salt = parse_salt(&mut header_data, verbose)?;
+    let checksum = parse_checksum(&mut header_data)?;
+
+    if !header_data.is_empty() {
+        let key_names = header_data.iter()
+            .map(|(key, _)| key.as_str())
+            .collect::<Vec<_>>().join("', '");
+        eprintln!("encountered unknown header keys '{}'; this may happen if the file is encrypted using a newer version of file_endec, or if the file is corrupt; ignoring this problem", key_names);
+    }
+
     Ok(PublicHeader::new(version, salt, checksum, options))
 }
 
+//TODO @mark: maybe not necessary anymore, since read_header_keys returns length?
 pub fn skip_public_header<R: BufRead>(reader: &mut R) -> FedResult<()> {
     skip_header(reader, &[PUB_HEADER_META_DATA_MARKER, PUB_HEADER_PURE_DATA_MARKER])
         .map_err(|_| "failed to skip past the header while reading file; possibly the header has been corrupted".to_string())

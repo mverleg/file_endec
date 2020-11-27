@@ -1,6 +1,5 @@
 use ::std::collections::HashMap;
 use ::std::io::BufRead;
-use std::ops::Add;
 
 #[derive(Debug)]
 pub enum HeaderErr {

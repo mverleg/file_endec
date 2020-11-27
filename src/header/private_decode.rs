@@ -3,35 +3,32 @@ use ::std::io::BufRead;
 
 use crate::header::decode_util::HeaderErr;
 use crate::header::decode_util::read_header_keys;
-use crate::header::decode_util::skip_header;
 use crate::header::private_header_type::{PRIV_HEADER_ACCESSED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_MODIFIED, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE};
 use crate::header::private_header_type::PrivateHeader;
-use crate::header::PUB_HEADER_META_DATA_MARKER;
-use crate::header::PUB_HEADER_PURE_DATA_MARKER;
 use crate::util::base::small_str_to_u128;
 use crate::util::base::small_str_to_u64;
 use crate::util::FedResult;
 
-fn parse_filename(header_data: &HashMap<String, String>) -> FedResult<String> {
-    header_data.get(PRIV_HEADER_FILENAME).cloned()
+fn parse_filename(header_data: &mut HashMap<String, String>) -> FedResult<String> {
+    header_data.remove(PRIV_HEADER_FILENAME)
         .ok_or("could not find the original filename in the private file header".to_owned())
 }
 
-fn parse_permissions(header_data: &HashMap<String, String>) -> FedResult<Option<u32>> {
+fn parse_permissions(header_data: &mut HashMap<String, String>) -> FedResult<Option<u32>> {
     //TODO @mark: test parsing
-    Ok(header_data.get(PRIV_HEADER_PERMISSIONS).map(|sz| u32::from_str_radix(sz, 8).unwrap()))
+    Ok(header_data.remove(PRIV_HEADER_PERMISSIONS).map(|sz| u32::from_str_radix(&sz, 8).unwrap()))
 }
 
-fn parse_sizes(header_data: &HashMap<String, String>) -> FedResult<(Option<u128>, Option<u128>, Option<u128>)> {
+fn parse_sizes(header_data: &mut HashMap<String, String>) -> FedResult<(Option<u128>, Option<u128>, Option<u128>)> {
     Ok((
-        header_data.get(PRIV_HEADER_CREATED).map(|ts| small_str_to_u128(ts).unwrap()),
-        header_data.get(PRIV_HEADER_MODIFIED).map(|ts| small_str_to_u128(ts).unwrap()),
-        header_data.get(PRIV_HEADER_ACCESSED).map(|ts| small_str_to_u128(ts).unwrap()),
+        header_data.remove(PRIV_HEADER_CREATED).map(|ts| small_str_to_u128(&ts).unwrap()),
+        header_data.remove(PRIV_HEADER_MODIFIED).map(|ts| small_str_to_u128(&ts).unwrap()),
+        header_data.remove(PRIV_HEADER_ACCESSED).map(|ts| small_str_to_u128(&ts).unwrap()),
     ))
 }
 
-fn parse_size(header_data: &HashMap<String, String>) -> FedResult<u64> {
-    header_data.get(PRIV_HEADER_SIZE).map(|sz| small_str_to_u64(sz).unwrap())
+fn parse_size(header_data: &mut HashMap<String, String>) -> FedResult<u64> {
+    header_data.remove(PRIV_HEADER_SIZE).map(|sz| small_str_to_u64(&sz).unwrap())
         .ok_or("could not find the original file size in the private file header".to_owned())
 }
 
@@ -39,7 +36,7 @@ fn parse_size(header_data: &HashMap<String, String>) -> FedResult<u64> {
 /// Parses the data in the private header and returns it, along with the index of the first byte after the header.
 pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<(usize, PrivateHeader)> {
 
-    let (index, header_data) = match read_header_keys(reader, None, &[PRIV_HEADER_DATA]) {
+    let (index, mut header_data) = match read_header_keys(reader, None, &[PRIV_HEADER_DATA]) {
         Ok(map) => map,
         Err(err) => return Err(match err {
             HeaderErr::NoStartMarker => unreachable!(),
@@ -49,10 +46,18 @@ pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<(usize, Pri
         }),
     };
 
-    let filename = parse_filename(&header_data)?;
-    let permissions = parse_permissions(&header_data)?;
-    let (created, changed, accessed) = parse_sizes(&header_data)?;
-    let size = parse_size(&header_data)?;
+    let filename = parse_filename(&mut header_data)?;
+    let permissions = parse_permissions(&mut header_data)?;
+    let (created, changed, accessed) = parse_sizes(&mut header_data)?;
+    let size = parse_size(&mut header_data)?;
+
+    if !header_data.is_empty() {
+        let key_names = header_data.iter()
+            .map(|(key, _)| key.as_str())
+            .collect::<Vec<_>>().join("', '");
+        eprintln!("encountered unknown private header keys '{}'; this may happen if the file is encrypted using a newer version of file_endec, or if the file is corrupt; ignoring this problem", key_names);
+    }
+
     Ok((index, PrivateHeader::new(
         filename,
         permissions,
@@ -74,8 +79,9 @@ mod tests {
     fn permissions() {
         let mut map = HashMap::new();
         map.insert(PRIV_HEADER_PERMISSIONS.to_owned(), "754".to_owned());
-        let perms = parse_permissions(&map);
+        let perms = parse_permissions(&mut map);
         assert_eq!(perms, Ok(Some(0o754)));
+        assert!(map.is_empty());
     }
 
     #[test]

@@ -23,9 +23,8 @@ pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, opt
             write_line(writer, PRIV_HEADER_ACCESSED, Some(&u128_to_small_str(time_ns)), verbose)?;
         }
     }
-    if options.has(EncOption::PadSize) {
-        write_line(writer, PRIV_HEADER_SIZE, Some(&u64_to_small_str(header.size())), verbose)?;
-    }
+    //if options.has(EncOption::PadSize) {  //TODO @mark: keep it required? even if not used?
+    write_line(writer, PRIV_HEADER_SIZE, Some(&u64_to_small_str(header.size())), verbose)?;
     write_line(writer, PRIV_HEADER_DATA, None, verbose)?;
     Ok(())
 }

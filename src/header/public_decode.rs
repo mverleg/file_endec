@@ -75,6 +75,7 @@ fn parse_checksum(header_data: &mut HashMap<String, String>) -> FedResult<Checks
 //TODO @mark: include filename in error at caller?
 pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<(usize, PublicHeader)> {
 
+    eprintln!("START parse_public_header");   //TODO @mark: TEMPORARY! REMOVE THIS!
     let (index, mut header_data) = match read_header_keys(reader, Some(PUB_HEADER_MARKER), &[PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER]) {
         Ok(map) => map,
         Err(err) => return Err(if verbose {
@@ -93,6 +94,7 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
             }
         }),
     };
+    eprintln!("END parse_public_header");   //TODO @mark: TEMPORARY! REMOVE THIS!
 
     let version = parse_version(&mut header_data, verbose)?;
     let options = parse_options(&mut header_data, verbose)?;

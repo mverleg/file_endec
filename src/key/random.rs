@@ -12,7 +12,6 @@ use ::rand::rngs::OsRng;
 /// Generate a secure random series of bytes, showing a
 /// warning on stderr if it takes long.
 pub fn generate_secure_random_timed(buffer: &mut [u8]) {
-    eprintln!("DO WE EVEN GET HERE?");  //TODO @mark: TEMPORARY! REMOVE THIS!
 
     let is_ready = Arc::new(AtomicBool::new(false));
     let has_warned = Arc::new(AtomicBool::new(false));

@@ -119,6 +119,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         } else {
             (0, None)
         };
+        // The private header is included in the checksum.
         let actual_checksum = calculate_checksum(&big, &mut || {
             progress.start_checksum_for_file(&file_strat.file)
         });
@@ -130,7 +131,8 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         ) {
             checksum_failure_count += 1;
         }
-        write_output_file(config, &file_strat.file, &big, None, &mut || {
+        let plain = &big[end_header_index..];
+        write_output_file(config, &file_strat.file, &plain, None, &mut || {
             progress.start_write_for_file(&file_strat.file)
         })?;
         if config.delete_input() {
@@ -146,7 +148,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
                 "successfully decrypted '{}' to '{}' ({} kb)",
                 &file_strat.file.path_str(),
                 &file_strat.file.out_pth.to_string_lossy(),
-                big.len() / 1024,
+                plain.len() / 1024,
             );
         }
         out_pths.push(file_strat.file.out_pth.clone());

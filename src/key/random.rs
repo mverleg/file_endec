@@ -22,18 +22,15 @@ pub fn generate_secure_random_timed(buffer: &mut [u8]) {
     let has_warned_monitor = has_warned.clone();
     spawn(move || {
         // Wait one second before warning.
-        sleep(Duration::new(1, 0));
+        sleep(Duration::new(100, 0));
         if is_ready_monitor.load(Ordering::Acquire) {
             return;
         }
         has_warned_monitor.store(true, Ordering::Release);
         eprintln!("secure random number generation is taking long; perhaps there is not enough entropy available");
-        //TODO @mark: do I have to join the thread? can it just be left to die?
-        //TODO @mark: does this thread keep the process alive? it's only 1 second, but still, this thread should die as soon as the main one finishes
     });
 
     // This does the actual number generation.
-    sleep(Duration::new(2, 0));  //TODO @mark: TEMPORARY! REMOVE THIS!
     OsRng.fill_bytes(buffer);
     is_ready.store(true, Ordering::Release);
 

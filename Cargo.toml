@@ -78,6 +78,7 @@ tempfile = "^3.1.0"
 datatest = "^0.6.3"
 
 [profile.test]
+# note: might not be working...
 lto = false
 opt-level = 3
 

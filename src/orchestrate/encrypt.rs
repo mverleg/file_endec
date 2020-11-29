@@ -73,6 +73,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             config.options(),
             config.verbosity().debug()
         )?;
+        let end_header_index = data.len();
         read_file(
             &mut data,
             &mut reader,
@@ -81,7 +82,8 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file),
         )?;
-        let checksum = calculate_checksum(&data, &mut || progress.start_checksum_for_file(&file));
+        // Do not include the private header in the checksum (by skipping it).
+        let checksum = calculate_checksum(&data[end_header_index..], &mut || progress.start_checksum_for_file(&file));
         let small = compress_file(data, &strategy.compression_algorithm, &mut |alg| {
             progress.start_compress_alg_for_file(&alg, &file)
         })?;

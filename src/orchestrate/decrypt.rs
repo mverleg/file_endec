@@ -119,8 +119,8 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         } else {
             (0, None)
         };
-        // The private header is included in the checksum.
-        let actual_checksum = calculate_checksum(&big, &mut || {
+        let plain = &big[end_header_index..];
+        let actual_checksum = calculate_checksum(&plain, &mut || {
             progress.start_checksum_for_file(&file_strat.file)
         });
         if !validate_checksum_matches(
@@ -131,7 +131,6 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         ) {
             checksum_failure_count += 1;
         }
-        let plain = &big[end_header_index..];
         write_output_file(config, &file_strat.file, &plain, None, &mut || {
             progress.start_write_for_file(&file_strat.file)
         })?;

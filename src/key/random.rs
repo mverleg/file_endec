@@ -22,7 +22,7 @@ pub fn generate_secure_random_timed(buffer: &mut [u8]) {
     let has_warned_monitor = has_warned.clone();
     spawn(move || {
         // Wait one second before warning.
-        sleep(Duration::new(100, 0));
+        sleep(Duration::new(1, 0));
         if is_ready_monitor.load(Ordering::Acquire) {
             return;
         }

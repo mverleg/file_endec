@@ -1,3 +1,4 @@
+use crate::key::Salt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PrivateHeader {
@@ -9,12 +10,17 @@ pub struct PrivateHeader {
     created_ns: Option<u128>,
     changed_ns: Option<u128>,
     accessed_ns: Option<u128>,
-    // Original filesize in bytes
+    // Original filesize in bytes.
     size: u64,
+    // Secret seed for values like checksum. This prevents an attacker from verifying whether
+    // an encrypted file contains a specific file that the attacker has access to.
+    pepper: Salt,
+    // Padding bytes length to obfuscate header size.
+    padding_len: u16,
 }
 
 impl PrivateHeader {
-    pub fn new(filename: String, permissions: Option<u32>, created_ns: Option<u128>, changed_ns: Option<u128>, accessed_ns: Option<u128>, size: u64,) -> Self {
+    pub fn new(filename: String, permissions: Option<u32>, created_ns: Option<u128>, changed_ns: Option<u128>, accessed_ns: Option<u128>, size: u64, pepper: Salt, padding_len: u16) -> Self {
         assert!(!filename.contains('\n'));
         PrivateHeader {
             filename,
@@ -23,6 +29,8 @@ impl PrivateHeader {
             changed_ns,
             accessed_ns,
             size,
+            pepper,
+            padding_len,
         }
     }
 
@@ -49,6 +57,13 @@ impl PrivateHeader {
     pub fn size(&self) -> u64 {
         self.size
     }
+
+    pub fn pepper(&self) -> &Salt {
+        &self.pepper
+    }
+    pub fn padding_len(&self) -> u16 {
+        self.padding_len
+    }
 }
 
 pub const PRIV_HEADER_FILENAME: &str = "name";
@@ -57,4 +72,6 @@ pub const PRIV_HEADER_CREATED: &str = "crt";
 pub const PRIV_HEADER_MODIFIED: &str = "cng";
 pub const PRIV_HEADER_ACCESSED: &str = "acs";
 pub const PRIV_HEADER_SIZE: &str = "sz";
+pub const PRIV_HEADER_PEPPER: &str = "pepr";
+pub const PRIV_HEADER_PADDING: &str = "pad";
 pub const PRIV_HEADER_DATA: &str = "enc:";

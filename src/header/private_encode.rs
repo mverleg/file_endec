@@ -3,8 +3,9 @@ use ::std::io::Write;
 use crate::{EncOption, EncOptionSet};
 use crate::header::encode_util::write_line;
 use crate::header::private_header_type::{PRIV_HEADER_ACCESSED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_MODIFIED, PRIV_HEADER_PADDING, PRIV_HEADER_PEPPER, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE, PrivateHeader};
-use crate::util::base::{base64str_to_u8s, u128_to_small_str, u8s_to_base64str};
+use crate::util::base::u128_to_small_str;
 use crate::util::base::u64_to_small_str;
+use crate::util::base::u8s_to_base64str;
 use crate::util::FedResult;
 
 pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, options: &EncOptionSet, verbose: bool) -> FedResult<()> {

@@ -9,6 +9,8 @@ use ::std::time::SystemTime;
 use ::rand::RngCore;
 use ::rand::rngs::OsRng;
 
+use crate::key::Salt;
+
 /// Generate a secure random series of bytes, showing a
 /// warning on stderr if it takes long.
 pub fn generate_secure_random_timed(buffer: &mut [u8]) {
@@ -40,6 +42,6 @@ pub fn generate_secure_random_timed(buffer: &mut [u8]) {
     }
 }
 
-pub fn generate_pseudo_random() {
-    pass
+pub fn generate_pseudo_random(seed: &Salt) {
+    unimplemented!()
 }

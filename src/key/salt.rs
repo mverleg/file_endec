@@ -61,7 +61,7 @@ impl Salt {
     #[cfg(any(test, feature = "expose"))]
     pub fn fixed_for_test(salt: u64) -> Self {
         // Iterator didn't work: salt.to_le_bytes().into_iter().cycle().take(SALT_LEN).collect::<Vec<u8>>()
-        let mut repeated: [u8; 64] = [0u8; SALT_LEN];
+        let mut repeated: [u8; SALT_LEN] = [0u8; SALT_LEN];
         let input: [u8; 8] = salt.to_le_bytes();
         for i in 0..repeated.len() {
             repeated[i] = input[i % input.len()];

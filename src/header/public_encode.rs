@@ -9,7 +9,8 @@ use crate::header::PUB_HEADER_CHECKSUM_MARKER;
 use crate::header::PUB_HEADER_MARKER;
 use crate::header::PUB_HEADER_SALT_MARKER;
 use crate::header::PUB_HEADER_VERSION_MARKER;
-use crate::header::public_header_type::{PUB_HEADER_META_DATA_MARKER, PUB_HEADER_OPTION_MARKER};
+use crate::header::public_header_type::PUB_HEADER_META_DATA_MARKER;
+use crate::header::public_header_type::PUB_HEADER_OPTION_MARKER;
 use crate::header::PublicHeader;
 use crate::key::salt::Salt;
 use crate::util::FedResult;
@@ -82,6 +83,7 @@ mod tests {
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
             EncOptionSet::empty(),
+            Some((20, Checksum::fixed_for_test(vec![10]))),
         );
         let mut buf: Vec<u8> = Vec::new();
         write_public_header(&mut buf, &header, true).unwrap();
@@ -98,6 +100,7 @@ mod tests {
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
             EncOptionSet::all_for_test(),
+            Some((20, Checksum::fixed_for_test(vec![10]))),
         );
         let mut buf: Vec<u8> = Vec::new();
         write_public_header(&mut buf, &header, true).unwrap();

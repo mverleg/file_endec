@@ -20,6 +20,7 @@ use crate::util::FedResult;
 use crate::util::option::{EncOption, EncOptionSet};
 
 fn parse_version(header_data: &mut HashMap<String, String>, verbose: bool) -> FedResult<Version> {
+    //TODO @mark: do these ok_or cause too many allocations?
     let version_str = header_data.remove(PUB_HEADER_VERSION_MARKER)
         .ok_or("could not find the version in the file header".to_owned())?;
     match Version::parse(&version_str) {

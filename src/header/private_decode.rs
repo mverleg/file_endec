@@ -1,10 +1,12 @@
 use ::std::collections::HashMap;
 use ::std::io::BufRead;
+use std::convert::TryInto;
 
 use crate::header::decode_util::HeaderErr;
 use crate::header::decode_util::read_header_keys;
-use crate::header::private_header_type::{PRIV_HEADER_ACCESSED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_MODIFIED, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE};
+use crate::header::private_header_type::{PRIV_HEADER_ACCESSED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_MODIFIED, PRIV_HEADER_PADDING, PRIV_HEADER_PEPPER, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE};
 use crate::header::private_header_type::PrivateHeader;
+use crate::key::Salt;
 use crate::util::base::small_str_to_u128;
 use crate::util::base::small_str_to_u64;
 use crate::util::FedResult;
@@ -30,6 +32,17 @@ fn parse_sizes(header_data: &mut HashMap<String, String>) -> FedResult<(Option<u
 fn parse_size(header_data: &mut HashMap<String, String>) -> FedResult<u64> {
     header_data.remove(PRIV_HEADER_SIZE).map(|sz| small_str_to_u64(&sz).unwrap())
         .ok_or("could not find the original file size in the private file header".to_owned())
+}
+
+/// Pepper and padding are included to obfuscate metadata.
+fn parse_obfuscation(header_data: &mut HashMap<String, String>) -> FedResult<(Salt, u16)> {
+    let pepper = header_data.remove(PRIV_HEADER_PEPPER).map(|pepr| Salt::parse_base64(&pepr, false))
+        .ok_or("could not find the pepper (private salt) in the private file header".to_owned())??;
+    let padding_len = header_data.remove(PRIV_HEADER_PADDING).map(|pad| pad.len().try_into())
+        .ok_or("could not find the padding in the private file header".to_owned())?
+        //TODO @mark: test error?
+        .ok_or("padding was too large in the private file header".to_owned())?;
+    Ok((pepper, padding_len))
 }
 
 //TODO @mark: include filename in error at caller?

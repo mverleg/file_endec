@@ -47,7 +47,9 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
         )),
         Verbosity::Debug => Box::new(LogProgress::new()),
     };
+    // Public and private salt are different from eachother, but the same for all files.
     let salt = Salt::generate_random()?;
+    let pepper = Salt::generate_random()?;
     let stretched_key = stretch_key(
         config.raw_key(),
         &salt,
@@ -59,6 +61,8 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
     for file in &files_info {
         let mut reader = open_reader(&file, config.verbosity())?;
         let mut data = Vec::with_capacity(file.size_b as usize + 2048);
+        // This padding length has expectation value 85, which is the order of magnitude of file size length.
+        let padding_len = (pepper[0] + pepper[1]) / 3;
         let priv_header = PrivateHeader::new(
             file.file_name(),
             file.permissions,
@@ -66,6 +70,8 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             file.changed_ns,
             file.accessed_ns,
             file.size_b,
+            pepper.clone(),
+            padding_len,
         );
         write_private_header(
             &mut data,

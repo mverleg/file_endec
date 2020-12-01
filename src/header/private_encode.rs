@@ -34,6 +34,7 @@ mod tests {
     use ::std::str::from_utf8;
 
     use super::*;
+    use crate::key::Salt;
 
     #[test]
     fn write_vanilla() {
@@ -44,6 +45,8 @@ mod tests {
             Some(987_654_321_000),
             Some(999_999_999_999),
             1024_000,
+            Salt::fixed_for_test(246_801_357),
+            0,
         );
         let mut buf: Vec<u8> = Vec::new();
         write_private_header(&mut buf, &header, &EncOptionSet::empty(), true).unwrap();
@@ -61,6 +64,8 @@ mod tests {
             Some(987_654_321_000),
             Some(999_999_999_999),
             1024_000,
+            Salt::fixed_for_test(246_801_357),
+            10,
         );
         let mut buf: Vec<u8> = Vec::new();
         write_private_header(&mut buf, &header, &EncOptionSet::all_for_test(), true).unwrap();
@@ -78,6 +83,8 @@ mod tests {
             Some(987_654_321_000),
             None,
             1024_000,
+            Salt::fixed_for_test(246_801_357),
+            10,
         );
         let mut buf: Vec<u8> = Vec::new();
         write_private_header(&mut buf, &header, &EncOptionSet::all_for_test(), true).unwrap();

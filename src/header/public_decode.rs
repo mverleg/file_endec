@@ -80,21 +80,14 @@ fn parse_private_header_meta(header_data: &mut HashMap<String, String>) -> FedRe
     let priv_meta = header_data.remove(PUB_HEADER_PRIVATE_HEADER_META_MARKER)
         .ok_or("could not find the private header metadata in the public file header".to_owned())?;
     let mut parts = priv_meta.splitn(2, ' ');
-    let format_version = parts.next().unwrap();
-    if format_version != "1" {
-        return Err(format!("version '{}' of private header metadata is not supported (tag '{}')",
-            format_version, PUB_HEADER_PRIVATE_HEADER_META_MARKER))
-    }
 
-    let length_str = parts.next()
-        .ok_or("metadata about private header has two missing separators")?;
-    let length = small_str_to_u64(length_str)
+    let length = small_str_to_u64(parts.next().unwrap())
         .ok_or("metadata about private header contained an incorrectly formatted length")?;
 
     let checksum_str = parts.next()
         .ok_or("metadata about private header has a missing separator")?;
     let checksum = Checksum::parse(checksum_str)
-        .ok_or("metadata about private header contained an incorrectly formatted checksum")?;
+        .map_err("metadata about private header contained an incorrectly formatted checksum")?;
 
     Ok((length, checksum))
 }
@@ -102,7 +95,6 @@ fn parse_private_header_meta(header_data: &mut HashMap<String, String>) -> FedRe
 //TODO @mark: include filename in error at caller?
 pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<(usize, PublicHeader)> {
 
-    eprintln!("START parse_public_header");   //TODO @mark: TEMPORARY! REMOVE THIS!
     let (index, mut header_data) = match read_header_keys(reader, Some(PUB_HEADER_MARKER), &[PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER]) {
         Ok(map) => map,
         Err(err) => return Err(if verbose {
@@ -121,7 +113,6 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
             }
         }),
     };
-    eprintln!("END parse_public_header");   //TODO @mark: TEMPORARY! REMOVE THIS!
 
     let version = parse_version(&mut header_data, verbose)?;
     let options = parse_options(&mut header_data, verbose)?;

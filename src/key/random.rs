@@ -8,8 +8,13 @@ use ::std::time::SystemTime;
 
 use ::rand::RngCore;
 use ::rand::rngs::OsRng;
+use ::rand::rngs::ThreadRng;
+use ::rand::Rng;
 
-use crate::key::Salt;
+thread_local! {
+    // Note: implements CryptoRng
+    static RNG: ThreadRng = ThreadRng::default();
+}
 
 /// Generate a secure random series of bytes, showing a
 /// warning on stderr if it takes long.
@@ -42,6 +47,15 @@ pub fn generate_secure_random_timed(buffer: &mut [u8]) {
     }
 }
 
-pub fn generate_pseudo_random(seed: &Salt) {
-    unimplemented!()
+/// This is 'secure' in the sense that next or previous values aren't preductable; it is still
+/// pseudorandom and not 'true' random.
+pub fn generate_secure_pseudo_random(buffer: &mut [u8]) {
+    RNG.fill_bytes(buffer);
+}
+
+/// Like `generate_secure_pseudo_random`, but in most of the non-whitespace, printable ascii range.
+pub fn generate_secure_pseudo_random_printable(buffer: &mut [u8]) {
+    //TODO: perhaps there is a faster way?
+    buffer.iter_mut()
+        .for_each(|val| *val = RNG.gen_range(33, 127))
 }

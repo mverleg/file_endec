@@ -7,6 +7,14 @@ use crate::util::base::u128_to_small_str;
 use crate::util::base::u64_to_small_str;
 use crate::util::base::u8s_to_base64str;
 use crate::util::FedResult;
+use crate::key::random::generate_secure_pseudo_random_printable;
+
+fn generate_padding(length: u16) -> Vec<u8> {
+    //TODO @mark: prevent an allocation? with thread-local?
+    let mut buffer = vec![0; length as usize];
+    generate_secure_pseudo_random_printable(&mut buffer);
+    buffer
+}
 
 pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, options: &EncOptionSet, verbose: bool) -> FedResult<()> {
     if options.has(EncOption::HideMeta) {
@@ -27,7 +35,7 @@ pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, opt
     //if options.has(EncOption::PadSize) {  //TODO @mark: keep it required? even if not used?
     write_line(writer, PRIV_HEADER_SIZE, Some(&u64_to_small_str(header.size())), verbose)?;
     write_line(writer, PRIV_HEADER_PEPPER, Some(&u8s_to_base64str(&header.pepper().salt)), verbose)?;
-    write_line(writer, PRIV_HEADER_PADDING, Some(header.padding_len()), verbose)?;
+    write_line(writer, PRIV_HEADER_PADDING, Some(generate_padding(header.padding_len())), verbose)?;
     write_line(writer, PRIV_HEADER_DATA, None, verbose)?;
     Ok(())
 }

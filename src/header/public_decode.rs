@@ -87,7 +87,7 @@ fn parse_private_header_meta(header_data: &mut HashMap<String, String>) -> FedRe
     let checksum_str = parts.next()
         .ok_or("metadata about private header has a missing separator")?;
     let checksum = Checksum::parse(checksum_str)
-        .map_err("metadata about private header contained an incorrectly formatted checksum")?;
+        .map_err(|_| "metadata about private header contained an incorrectly formatted checksum")?;
 
     Ok((length, checksum))
 }
@@ -174,6 +174,7 @@ mod tests {
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
             EncOptionSet::empty(),  // always empty for v1.0
+            Some((10, Checksum::fixed_for_test(vec![5]))),
         );
         let mut buf = input.as_bytes();
         let (length, header) = parse_public_header(&mut buf, false).unwrap();
@@ -190,6 +191,7 @@ mod tests {
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
             EncOptionSet::empty(),  // always empty for v1.0
+            Some((20, Checksum::fixed_for_test(vec![5]))),
         );
         let mut buf = input.as_bytes();
         let (length, header) = parse_public_header(&mut buf, true).unwrap();

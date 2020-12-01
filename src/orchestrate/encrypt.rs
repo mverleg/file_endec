@@ -100,7 +100,8 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             &strategy.symmetric_algorithms,
             &mut |alg| progress.start_sym_alg_for_file(&alg, &file),
         );
-        let pub_header = PublicHeader::new(version.clone(), salt.clone(), checksum, config.options().clone());
+        //TODO @mark: private header meta
+        let pub_header = PublicHeader::new(version.clone(), salt.clone(), checksum, config.options().clone(), unimplemented!());
         if !config.dry_run() {
             write_output_file(config, &file, &secret, Some(&pub_header), &mut || {
                 progress.start_write_for_file(&file)

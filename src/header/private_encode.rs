@@ -2,8 +2,8 @@ use ::std::io::Write;
 
 use crate::{EncOption, EncOptionSet};
 use crate::header::encode_util::write_line;
-use crate::header::private_header_type::{PRIV_HEADER_ACCESSED, PRIV_HEADER_MODIFIED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE, PrivateHeader};
-use crate::util::base::u128_to_small_str;
+use crate::header::private_header_type::{PRIV_HEADER_ACCESSED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_MODIFIED, PRIV_HEADER_PADDING, PRIV_HEADER_PEPPER, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE, PrivateHeader};
+use crate::util::base::{base64str_to_u8s, u128_to_small_str, u8s_to_base64str};
 use crate::util::base::u64_to_small_str;
 use crate::util::FedResult;
 
@@ -25,6 +25,8 @@ pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, opt
     }
     //if options.has(EncOption::PadSize) {  //TODO @mark: keep it required? even if not used?
     write_line(writer, PRIV_HEADER_SIZE, Some(&u64_to_small_str(header.size())), verbose)?;
+    write_line(writer, PRIV_HEADER_PEPPER, Some(&u8s_to_base64str(&header.pepper().salt)), verbose)?;
+    write_line(writer, PRIV_HEADER_PADDING, Some(header.padding_len()), verbose)?;
     write_line(writer, PRIV_HEADER_DATA, None, verbose)?;
     Ok(())
 }
@@ -33,8 +35,9 @@ pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, opt
 mod tests {
     use ::std::str::from_utf8;
 
-    use super::*;
     use crate::key::Salt;
+
+    use super::*;
 
     #[test]
     fn write_vanilla() {

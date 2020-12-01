@@ -1,5 +1,7 @@
 #![cfg(test)]
 
+//TODO @mark: more e2e tests for all the v1.1 features
+
 use ::std::env;
 use ::std::fs;
 use ::std::path::PathBuf;

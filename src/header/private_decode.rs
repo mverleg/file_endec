@@ -1,6 +1,5 @@
 use ::std::collections::HashMap;
 use ::std::io::BufRead;
-use std::convert::TryInto;
 
 use crate::header::decode_util::HeaderErr;
 use crate::header::decode_util::read_header_keys;
@@ -38,10 +37,8 @@ fn parse_size(header_data: &mut HashMap<String, String>) -> FedResult<u64> {
 fn parse_obfuscation(header_data: &mut HashMap<String, String>) -> FedResult<(Salt, u16)> {
     let pepper = header_data.remove(PRIV_HEADER_PEPPER).map(|pepr| Salt::parse_base64(&pepr, false))
         .ok_or("could not find the pepper (private salt) in the private file header".to_owned())??;
-    let padding_len = header_data.remove(PRIV_HEADER_PADDING).map(|pad| pad.len().try_into())
-        .ok_or("could not find the padding in the private file header".to_owned())?
-        //TODO @mark: test error?
-        .ok_or("padding was too large in the private file header".to_owned())?;
+    let padding_len = header_data.remove(PRIV_HEADER_PADDING).map(|pad| pad.len() as u16)
+        .ok_or("could not find the padding in the private file header".to_owned())?;
     Ok((pepper, padding_len))
 }
 
@@ -65,6 +62,7 @@ pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<(usize, Pri
     let permissions = parse_permissions(&mut header_data)?;
     let (created, changed, accessed) = parse_sizes(&mut header_data)?;
     let size = parse_size(&mut header_data)?;
+    let (pepper, padding_len) = parse_obfuscation(&mut header_data)?;
 
     if !header_data.is_empty() {
         let key_names = header_data.iter()
@@ -80,6 +78,8 @@ pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<(usize, Pri
         changed,
         accessed,
         size,
+        pepper,
+        padding_len,
     )))
 }
 
@@ -89,6 +89,7 @@ mod tests {
 
     use crate::header::private_decode::{parse_permissions, parse_private_header};
     use crate::header::private_header_type::{PRIV_HEADER_PERMISSIONS, PrivateHeader};
+    use crate::key::Salt;
 
     #[test]
     fn permissions() {
@@ -110,6 +111,8 @@ mod tests {
             None,
             None,
             1024_000,
+            Salt::fixed_for_test(010_101_010),
+            10,
         );
         assert_eq!(length, 34);
         assert_eq!(actual, expected);
@@ -126,6 +129,8 @@ mod tests {
             Some(987_654_321_000),
             Some(999_999_999_999),
             1024_000,
+            Salt::fixed_for_test(010_101_010),
+            5,
         );
         assert_eq!(length, 79);
         assert_eq!(actual, expected);
@@ -142,6 +147,8 @@ mod tests {
             Some(987_654_321_000),
             None,
             1024_000,
+            Salt::fixed_for_test(010_101_010),
+            0,
         );
         assert_eq!(length, 58);
         assert_eq!(actual, expected);

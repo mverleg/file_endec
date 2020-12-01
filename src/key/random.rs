@@ -39,3 +39,7 @@ pub fn generate_secure_random_timed(buffer: &mut [u8]) {
         eprintln!("secure random number generation ready after {} ms", timer.elapsed().unwrap().as_millis());
     }
 }
+
+pub fn generate_pseudo_random() {
+    pass
+}

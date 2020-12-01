@@ -14,13 +14,16 @@ pub struct PrivateHeader {
     size: u64,
     // Secret seed for values like checksum. This prevents an attacker from verifying whether
     // an encrypted file contains a specific file that the attacker has access to.
+    //TODO @mark: make sure pepper influences the checksum
     pepper: Salt,
     // Padding bytes length to obfuscate header size.
+    //TODO @mark: padding data must not be very compressible, but should be deterministic
     padding_len: u16,
 }
 
 impl PrivateHeader {
     pub fn new(filename: String, permissions: Option<u32>, created_ns: Option<u128>, changed_ns: Option<u128>, accessed_ns: Option<u128>, size: u64, pepper: Salt, padding_len: u16) -> Self {
+        debug_assert!(padding_len <= 1024);  // implementation detail in padding data generation
         assert!(!filename.contains('\n'));
         PrivateHeader {
             filename,

@@ -50,6 +50,7 @@ fn write_checksum(writer: &mut impl Write, checksum: &Checksum, verbose: bool) -
     )
 }
 
+
 pub fn write_public_header(writer: &mut impl Write, header: &PublicHeader, verbose: bool) -> FedResult<()> {
     write_marker(writer, verbose)?;
     write_version(writer, header.version(), verbose)?;

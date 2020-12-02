@@ -13,6 +13,7 @@ use ::rand::Rng;
 
 thread_local! {
     // Note: implements CryptoRng
+    //TODO @mark: is seeding secure enough?
     static RNG: ThreadRng = ThreadRng::default();
 }
 
@@ -47,15 +48,12 @@ pub fn generate_secure_random_timed(buffer: &mut [u8]) {
     }
 }
 
-/// This is 'secure' in the sense that next or previous values aren't preductable; it is still
-/// pseudorandom and not 'true' random.
-pub fn generate_secure_pseudo_random(buffer: &mut [u8]) {
-    RNG.fill_bytes(buffer);
-}
-
-/// Like `generate_secure_pseudo_random`, but in most of the non-whitespace, printable ascii range.
-pub fn generate_secure_pseudo_random_printable(buffer: &mut [u8]) {
-    //TODO: perhaps there is a faster way?
-    buffer.iter_mut()
-        .for_each(|val| *val = RNG.gen_range(33, 127))
+/// This is 'secure' in the sense that next or previous values aren't predictable; it is still pseudo-
+/// random and not 'true' random. Characters in most of the non-whitespace, printable ascii range.
+pub fn generate_secure_pseudo_random_printable(buffer: &mut String, length: u16) {
+    buffer.clear();
+    for i in 0 .. length {
+        //TODO: would this be faster in batches?
+        buffer[i] = RNG.gen_range(33, 127);
+    }
 }

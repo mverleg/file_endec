@@ -19,7 +19,7 @@ fn write_padding(length: u16, write: impl FnOnce(&str) -> FedResult<()>) -> FedR
     // Use a per-thread shared buffer to prevent allocations.
     BUFFER.with(|buf| {
         let mut padding = buf.borrow_mut();
-        generate_secure_pseudo_random_printable(padding.borrow_mut(), length);
+        generate_secure_pseudo_random_printable(padding.borrow_mut(), length as usize);
         write(&padding)
     })
 }

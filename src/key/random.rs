@@ -1,3 +1,4 @@
+use ::std::cell::RefCell;
 use ::std::sync::Arc;
 use ::std::sync::atomic::AtomicBool;
 use ::std::sync::atomic::Ordering;
@@ -6,15 +7,16 @@ use ::std::thread::spawn;
 use ::std::time::Duration;
 use ::std::time::SystemTime;
 
+use ::rand::Rng;
 use ::rand::RngCore;
 use ::rand::rngs::OsRng;
-use ::rand::rngs::ThreadRng;
-use ::rand::Rng;
+use ::rand::rngs::StdRng;
+use ::rand::SeedableRng;
 
 thread_local! {
-    // Note: implements CryptoRng
+    // Note: implements CryptoRng  //TODO @mark: test <--
     //TODO @mark: is seeding secure enough?
-    static RNG: ThreadRng = ThreadRng::default();
+    static RNG: RefCell<StdRng> = RefCell::new(StdRng::from_entropy());
 }
 
 /// Generate a secure random series of bytes, showing a
@@ -50,10 +52,13 @@ pub fn generate_secure_random_timed(buffer: &mut [u8]) {
 
 /// This is 'secure' in the sense that next or previous values aren't predictable; it is still pseudo-
 /// random and not 'true' random. Characters in most of the non-whitespace, printable ascii range.
-pub fn generate_secure_pseudo_random_printable(buffer: &mut String, length: u16) {
+pub fn generate_secure_pseudo_random_printable(buffer: &mut String, length: usize) {
     buffer.clear();
-    for i in 0 .. length {
-        //TODO: would this be faster in batches?
-        buffer[i] = RNG.gen_range(33, 127);
-    }
+    RNG.with(|rng| {
+        let mut rng = rng.borrow_mut();
+        for _ in 0..length {
+            buffer.push(rng.gen_range(33, 127) as u8 as char)
+            //TODO: would this be faster in batches?
+        }
+    })
 }

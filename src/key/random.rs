@@ -62,3 +62,15 @@ pub fn generate_secure_pseudo_random_printable(buffer: &mut String, length: usiz
         }
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use ::rand::CryptoRng;
+
+    use super::*;
+
+    fn test_is_sescure() -> impl CryptoRng {
+        // This fails at compile time if not cryptographic.
+        RNG.with(|rng| rng.borrow().clone())
+    }
+}

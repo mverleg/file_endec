@@ -8,18 +8,23 @@ use crate::util::option::EncOptionSet;
 pub struct PublicHeader {
     version: Version,
     salt: Salt,
-    checksum: Checksum,
+    data_checksum: Checksum,
     options: EncOptionSet,
     // Length and checksum; required from v1.1
     private_header: Option<(u64, Checksum)>,
 }
 
 impl PublicHeader {
-    pub fn new(version: Version, salt: Salt, checksum: Checksum, options: EncOptionSet, private_header: Option<(u64, Checksum)>) -> Self {
+    pub fn new(version: Version, salt: Salt, checksum: Checksum, options: EncOptionSet, private_header: (u64, Checksum)) -> Self {
+        Self::legacy(version, salt, checksum, options, Some(private_header))
+    }
+
+    /// Legacy version (which may not have private headers if it was before v1.1)
+    pub fn legacy(version: Version, salt: Salt, data_checksum: Checksum, options: EncOptionSet, private_header: Option<(u64, Checksum)>) -> Self {
         PublicHeader {
             version,
             salt,
-            checksum,
+            data_checksum,
             options,
             private_header,
         }
@@ -34,7 +39,7 @@ impl PublicHeader {
     }
 
     pub fn checksum(&self) -> &Checksum {
-        &self.checksum
+        &self.data_checksum
     }
 
     pub fn options(&self) -> &EncOptionSet {

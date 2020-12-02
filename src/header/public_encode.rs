@@ -97,7 +97,7 @@ mod tests {
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
             EncOptionSet::empty(),
-            Some((20, Checksum::fixed_for_test(vec![10]))),
+            (20, Checksum::fixed_for_test(vec![10])),
         );
         let mut buf: Vec<u8> = Vec::new();
         write_public_header(&mut buf, &header, true).unwrap();
@@ -114,7 +114,7 @@ mod tests {
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
             EncOptionSet::all_for_test(),
-            Some((20, Checksum::fixed_for_test(vec![10]))),
+            (20, Checksum::fixed_for_test(vec![10])),
         );
         let mut buf: Vec<u8> = Vec::new();
         write_public_header(&mut buf, &header, true).unwrap();

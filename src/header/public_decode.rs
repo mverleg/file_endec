@@ -131,7 +131,7 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
         eprintln!("encountered unknown header keys '{}'; this may happen if the file is encrypted using a newer version of file_endec, or if the file is corrupt; ignoring this problem", key_names);
     }
 
-    Ok((index, PublicHeader::new(version, salt, checksum, options, private_header)))
+    Ok((index, PublicHeader::legacy(version, salt, checksum, options, private_header)))
 }
 
 #[cfg(test)]
@@ -174,7 +174,7 @@ mod tests {
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
             EncOptionSet::empty(),  // always empty for v1.0
-            Some((10, Checksum::fixed_for_test(vec![5]))),
+            (10, Checksum::fixed_for_test(vec![5])),
         );
         let mut buf = input.as_bytes();
         let (length, header) = parse_public_header(&mut buf, false).unwrap();
@@ -191,7 +191,7 @@ mod tests {
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
             EncOptionSet::empty(),  // always empty for v1.0
-            Some((20, Checksum::fixed_for_test(vec![5]))),
+            (20, Checksum::fixed_for_test(vec![5])),
         );
         let mut buf = input.as_bytes();
         let (length, header) = parse_public_header(&mut buf, true).unwrap();

@@ -79,7 +79,8 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             config.options(),
             config.verbosity().debug()
         )?;
-        let end_header_index = data.len();
+        let priv_header_len = data.len();
+        let priv_header_checksum = calculate_checksum(&data, &mut || progress.start_checksum_for_file(&file));
         read_file(
             &mut data,
             &mut reader,
@@ -89,7 +90,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             &mut || progress.start_read_for_file(&file),
         )?;
         // Do not include the private header in the checksum (by skipping it).
-        let checksum = calculate_checksum(&data[end_header_index..], &mut || progress.start_checksum_for_file(&file));
+        let data_checksum = calculate_checksum(&data[priv_header_len..], &mut || progress.start_checksum_for_file(&file));
         let small = compress_file(data, &strategy.compression_algorithm, &mut |alg| {
             progress.start_compress_alg_for_file(&alg, &file)
         })?;
@@ -101,7 +102,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             &mut |alg| progress.start_sym_alg_for_file(&alg, &file),
         );
         //TODO @mark: private header meta
-        let pub_header = PublicHeader::new(version.clone(), salt.clone(), checksum, config.options().clone(), unimplemented!());
+        let pub_header = PublicHeader::new(version.clone(), salt.clone(), data_checksum, config.options().clone(), (priv_header_len as u64, priv_header_checksum));
         if !config.dry_run() {
             write_output_file(config, &file, &secret, Some(&pub_header), &mut || {
                 progress.start_write_for_file(&file)

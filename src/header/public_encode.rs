@@ -52,7 +52,7 @@ fn write_checksum(writer: &mut impl Write, checksum: &Checksum, verbose: bool) -
 }
 
 fn write_private_header_meta(writer: &mut impl Write, length: u64, checksum: &Checksum, verbose: bool) -> FedResult<()> {
-    let value = format!("{} / {}", u64_to_small_str(length), checksum);
+    let value = format!("{} {}", u64_to_small_str(length), checksum);
     write_line(
         writer,
         PUB_HEADER_PRIVATE_HEADER_META_MARKER,

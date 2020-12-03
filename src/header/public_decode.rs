@@ -79,7 +79,7 @@ fn parse_checksum(header_data: &mut HashMap<String, String>) -> FedResult<Checks
 fn parse_private_header_meta(header_data: &mut HashMap<String, String>) -> FedResult<(u64, Checksum)> {
     let priv_meta = header_data.remove(PUB_HEADER_PRIVATE_HEADER_META_MARKER)
         .ok_or("could not find the private header metadata in the public file header".to_owned())?;
-    let mut parts = priv_meta.splitn(2, ' ');
+    let mut parts = priv_meta.splitn(2, " / ");
 
     let length = small_str_to_u64(parts.next().unwrap())
         .ok_or("metadata about private header contained an incorrectly formatted length")?;

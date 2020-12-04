@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn read_hide_meta_size() {
-        let mut txt = "name my_filename.ext\nperm 754\ncrt Ax9lQnI\ncng NWzxOMo\nacs NiToP-_\nsz C4_A\nenc:\n".as_bytes();
+        let mut txt = "name my_filename.ext\nperm 754\ncrt Ax9lQnI\ncng NWzxOMo\nacs NiToP-_\nsz C4_A\npepr zeO1DgAAAADN47UOAAAAAM3jtQ4AAAAAzeO1DgAAAADN47UOAAAAAM3jtQ4AAAAAzeO1DgAAAADN47UOAAAAAA\npad I(R#:Y:r$F\nenc:\n".as_bytes();
         let (length, actual) = parse_private_header(&mut txt).unwrap();
         let expected = PrivateHeader::new(
             "my_filename.ext".to_owned(),
@@ -129,16 +129,16 @@ mod tests {
             Some(987_654_321_000),
             Some(999_999_999_999),
             1024_000,
-            Salt::fixed_for_test(010_101_010),
-            5,
+            Salt::fixed_for_test(246_801_357),
+            10,
         );
-        assert_eq!(length, 79);
+        assert_eq!(length, 186);
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn read_hide_unsupported() {
-        let mut txt = "name my_filename.ext\ncrt Ax9lQnI\ncng NWzxOMo\nsz C4_A\nenc:\n".as_bytes();
+        let mut txt = "name my_filename.ext\ncrt Ax9lQnI\ncng NWzxOMo\nsz C4_A\npepr zeO1DgAAAADN47UOAAAAAM3jtQ4AAAAAzeO1DgAAAADN47UOAAAAAM3jtQ4AAAAAzeO1DgAAAADN47UOAAAAAA\npad 'Z\";&(-GRt~rTrp>_nb[2Lc*13!Bn)\nenc:\n".as_bytes();
         let (length, actual) = parse_private_header(&mut txt).unwrap();
         let expected = PrivateHeader::new(
             "my_filename.ext".to_owned(),
@@ -147,10 +147,10 @@ mod tests {
             Some(987_654_321_000),
             None,
             1024_000,
-            Salt::fixed_for_test(010_101_010),
-            0,
+            Salt::fixed_for_test(246_801_357),
+            30,
         );
-        assert_eq!(length, 58);
+        assert_eq!(length, 185);
         assert_eq!(actual, expected);
     }
 }

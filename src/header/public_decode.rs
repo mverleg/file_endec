@@ -166,15 +166,14 @@ mod tests {
 
     #[test]
     fn read_v1_0_0_one() {
-        let version = Version::parse("1.0.0").unwrap();
         let input =
             "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\ncheck xx_sha256 Ag\ndata:\n";
-        let expected = PublicHeader::new(
-            version,
+        let expected = PublicHeader::legacy(
+            Version::parse("1.0.0").unwrap(),
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
             EncOptionSet::empty(),  // always empty for v1.0
-            (10, Checksum::fixed_for_test(vec![5])),
+            None,
         );
         let mut buf = input.as_bytes();
         let (length, header) = parse_public_header(&mut buf, false).unwrap();
@@ -183,19 +182,35 @@ mod tests {
     }
 
     #[test]
-    fn read_v1_0_0_two() {
-        let version = Version::parse("1.0.0").unwrap();
-        let input = "github.com/mverleg/file_endec\0\nv 1.0.0\nsalt FV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2AQ\ncheck xx_sha256 AAUABQAFAAUABQAF\ndata:\n";
+    fn read_v1_1_0_one() {
+        let input =
+            "github.com/mverleg/file_endec\0\nv 1.1.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\ncheck xx_sha256 Ag\nprv U xx_sha256 ChQe\nmeta1+data:\n";
         let expected = PublicHeader::new(
-            version,
+            Version::parse("1.1.0").unwrap(),
+            Salt::fixed_for_test(1),
+            Checksum::fixed_for_test(vec![2]),
+            EncOptionSet::empty(),  // always empty for v1.0
+            (20, Checksum::fixed_for_test(vec![10, 20, 30])),
+        );
+        let mut buf = input.as_bytes();
+        let (length, header) = parse_public_header(&mut buf, false).unwrap();
+        assert_eq!(length, 183);
+        assert_eq!(expected, header);
+    }
+
+    #[test]
+    fn read_v1_1_0_two() {
+        let input = "github.com/mverleg/file_endec\0\nv 1.1.0\nopts fast hide-meta pad-size\nsalt FV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2AQ\ncheck xx_sha256 AAUABQAFAAUABQAF\nprv U xx_sha256 CmQ\nmeta1+data:\n";
+        let expected = PublicHeader::new(
+            Version::parse("1.1.0").unwrap(),
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
-            EncOptionSet::empty(),  // always empty for v1.0
-            (20, Checksum::fixed_for_test(vec![5])),
+            EncOptionSet::all_for_test(),
+            (20, Checksum::fixed_for_test(vec![10, 100])),
         );
         let mut buf = input.as_bytes();
         let (length, header) = parse_public_header(&mut buf, true).unwrap();
-        assert_eq!(length, 170);
+        assert_eq!(length, 225);
         assert_eq!(expected, header);
     }
 }

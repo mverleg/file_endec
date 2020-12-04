@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn read_vanilla() {
-        let mut txt = "name my_filename.ext\nsz C4_A\nenc:\n".as_bytes();
+        let mut txt = "name my_filename.ext\nsz C4_A\npepr EiGaAAAAAAASIZoAAAAAABIhmgAAAAAAEiGaAAAAAAASIZoAAAAAABIhmgAAAAAAEiGaAAAAAAASIZoAAAAAAA\npad \nenc:\n".as_bytes();
         let (length, actual) = parse_private_header(&mut txt).unwrap();
         let expected = PrivateHeader::new(
             "my_filename.ext".to_owned(),
@@ -112,9 +112,9 @@ mod tests {
             None,
             1024_000,
             Salt::fixed_for_test(010_101_010),
-            10,
+            0,
         );
-        assert_eq!(length, 34);
+        assert_eq!(length, 131);
         assert_eq!(actual, expected);
     }
 

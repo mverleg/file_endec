@@ -25,8 +25,8 @@ fn write_padding(length: u16, write: impl FnOnce(&str) -> FedResult<()>) -> FedR
 }
 
 pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, options: &EncOptionSet, verbose: bool) -> FedResult<()> {
+    write_line(writer, PRIV_HEADER_FILENAME, Some(header.filename()), verbose)?;
     if options.has(EncOption::HideMeta) {
-        write_line(writer, PRIV_HEADER_FILENAME, Some(header.filename()), verbose)?;
         if let Some(perms) = header.permissions() {
             write_line(writer, PRIV_HEADER_PERMISSIONS, Some(&format!("{:o}", perms)), verbose)?;
         }
@@ -60,18 +60,18 @@ mod tests {
     fn write_vanilla() {
         let header = PrivateHeader::new(
             "my_filename.ext".to_owned(),
-            Some(0o754),
-            Some(123_456_789_000),
-            Some(987_654_321_000),
-            Some(999_999_999_999),
+            None,
+            None,
+            None,
+            None,
             1024_000,
-            Salt::fixed_for_test(246_801_357),
+            Salt::fixed_for_test(010_101_010),
             0,
         );
         let mut buf: Vec<u8> = Vec::new();
         write_private_header(&mut buf, &header, &EncOptionSet::empty(), true).unwrap();
         let expected =
-            "enc:\n";
+            "name my_filename.ext\nsz C4_A\npepr EiGaAAAAAAASIZoAAAAAABIhmgAAAAAAEiGaAAAAAAASIZoAAAAAABIhmgAAAAAAEiGaAAAAAAASIZoAAAAAAA\npad \nenc:\n";
         assert_eq!(expected, from_utf8(&buf).unwrap());
     }
 
@@ -89,9 +89,13 @@ mod tests {
         );
         let mut buf: Vec<u8> = Vec::new();
         write_private_header(&mut buf, &header, &EncOptionSet::all_for_test(), true).unwrap();
-        let expected =
-            "name my_filename.ext\nperm 754\ncrt Ax9lQnI\ncng NWzxOMo\nacs NiToP-_\nsz C4_A\nenc:\n";
-        assert_eq!(expected, from_utf8(&buf).unwrap());
+        let txt = from_utf8(&buf).unwrap();
+        let expected_prefix =
+            "name my_filename.ext\nperm 754\ncrt Ax9lQnI\ncng NWzxOMo\nacs NiToP-_\nsz C4_A\npepr zeO1DgAAAADN47UOAAAAAM3jtQ4AAAAAzeO1DgAAAADN47UOAAAAAM3jtQ4AAAAAzeO1DgAAAADN47UOAAAAAA\npad ";
+        let expected_postfix = "\nenc:\n";
+        assert!(txt.starts_with(expected_prefix));
+        assert!(txt.ends_with(expected_postfix));
+        assert_eq!(txt.len(), expected_prefix.len() + expected_postfix.len() + 10);
     }
 
     #[test]
@@ -104,12 +108,16 @@ mod tests {
             None,
             1024_000,
             Salt::fixed_for_test(246_801_357),
-            10,
+            30,
         );
         let mut buf: Vec<u8> = Vec::new();
         write_private_header(&mut buf, &header, &EncOptionSet::all_for_test(), true).unwrap();
-        let expected =
-            "name my_filename.ext\ncrt Ax9lQnI\ncng NWzxOMo\nsz C4_A\nenc:\n";
-        assert_eq!(expected, from_utf8(&buf).unwrap());
+        let txt = from_utf8(&buf).unwrap();
+        let expected_prefix =
+            "name my_filename.ext\ncrt Ax9lQnI\ncng NWzxOMo\nsz C4_A\npepr zeO1DgAAAADN47UOAAAAAM3jtQ4AAAAAzeO1DgAAAADN47UOAAAAAM3jtQ4AAAAAzeO1DgAAAADN47UOAAAAAA\npad ";
+        let expected_postfix = "\nenc:\n";
+        assert!(txt.starts_with(expected_prefix));
+        assert!(txt.ends_with(expected_postfix));
+        assert_eq!(txt.len(), expected_prefix.len() + expected_postfix.len() + 30);
     }
 }

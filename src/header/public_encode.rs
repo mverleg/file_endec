@@ -97,12 +97,12 @@ mod tests {
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
             EncOptionSet::empty(),
-            (20, Checksum::fixed_for_test(vec![10])),
+            (20, Checksum::fixed_for_test(vec![10, 20, 30])),
         );
         let mut buf: Vec<u8> = Vec::new();
         write_public_header(&mut buf, &header, true).unwrap();
         let expected =
-            "github.com/mverleg/file_endec\0\nv 1.1.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\ncheck xx_sha256 Ag\nmeta1+data:\n";
+            "github.com/mverleg/file_endec\0\nv 1.1.0\nsalt AQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAA\ncheck xx_sha256 Ag\nprv U xx_sha256 ChQe\nmeta1+data:\n";
         assert_eq!(expected, from_utf8(&buf).unwrap());
     }
 
@@ -114,11 +114,11 @@ mod tests {
             Salt::fixed_for_test(123_456_789_123_456_789),
             Checksum::fixed_for_test(vec![0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5]),
             EncOptionSet::all_for_test(),
-            (20, Checksum::fixed_for_test(vec![10])),
+            (20, Checksum::fixed_for_test(vec![10, 100])),
         );
         let mut buf: Vec<u8> = Vec::new();
         write_public_header(&mut buf, &header, true).unwrap();
-        let expected = "github.com/mverleg/file_endec\0\nv 1.1.0\nopts fast hide-meta pad-size\nsalt FV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2AQ\ncheck xx_sha256 AAUABQAFAAUABQAF\nmeta1+data:\n";
+        let expected = "github.com/mverleg/file_endec\0\nv 1.1.0\nopts fast hide-meta pad-size\nsalt FV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2ARVf0KxLm7YBFV_QrEubtgEVX9CsS5u2AQ\ncheck xx_sha256 AAUABQAFAAUABQAF\nprv U xx_sha256 CmQ\nmeta1+data:\n";
         assert_eq!(expected, from_utf8(&buf).unwrap());
     }
 }

@@ -8,6 +8,7 @@ use crate::util::option::EncOptionSet;
 pub struct PublicHeader {
     version: Version,
     salt: Salt,
+    //TODO: move data_checksum to private header?
     data_checksum: Checksum,
     options: EncOptionSet,
     // Length and checksum; required from v1.1

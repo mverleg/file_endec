@@ -100,11 +100,16 @@ impl IndicatifProgress {
                 } else {
                     TaskType::Stretch(alg.clone(), Some(file_strat.file().in_path.to_owned()))
                 };
+                let weight = match alg {
+                    KeyHashAlg::BCrypt => 60,
+                    KeyHashAlg::Argon2i => 90,
+                    KeyHashAlg::Sha512 => 130,
+                };
                 todo.insert(
                     typ,
                     TaskInfo {
                         text: format!("{} key stretch", &alg),
-                        size: file_strat.strategy().stretch_count * 6,
+                        size: file_strat.strategy().stretch_count * weight,
                     },
                 );
             }
@@ -112,7 +117,7 @@ impl IndicatifProgress {
                 TaskType::Read(file_strat.file().in_path.to_owned()),
                 TaskInfo {
                     text: format!("read {}", &file_strat.file().file_name()),
-                    size: file_strat.file().size_kb(),
+                    size: file_strat.file().size_kb() / 80 + 1,
                 },
             );
             todo.insert(
@@ -127,7 +132,7 @@ impl IndicatifProgress {
                             .unwrap()
                             .to_string_lossy()
                     ),
-                    size: file_strat.file().size_kb() * 2,
+                    size: file_strat.file().size_kb() / 2 + 1,
                 },
             );
             if delete_input {
@@ -143,26 +148,31 @@ impl IndicatifProgress {
                 TaskType::PrivateHeader(file_strat.file().in_path.to_owned()),
                 TaskInfo {
                     text: format!("header {}", &file_strat.file().file_name()),
-                    //TODO @mark: some way to log time per size?
-                    //TODO @mark: tune this value:
-                    size: 3,
+                    size: 650,
                 },
             );
             for alg in &file_strat.strategy().compression_algorithm {
+                let size_factor = match alg {
+                    CompressionAlg::Brotli => 11,
+                };
                 todo.insert(
                     TaskType::Compress(alg.clone(), file_strat.file().in_path.to_owned()),
                     TaskInfo {
                         text: format!("{} {}", &alg, &file_strat.file().file_name()),
-                        size: file_strat.file().size_kb() * 3,
+                        size: file_strat.file().size_kb() * size_factor,
                     },
                 );
             }
             for alg in &file_strat.strategy().symmetric_algorithms {
+                let size_factor = match alg {
+                    SymmetricEncryptionAlg::Aes256 => 5,
+                    SymmetricEncryptionAlg::Twofish => 1,
+                };
                 todo.insert(
                     TaskType::Symmetric(alg.clone(), file_strat.file().in_path.to_owned()),
                     TaskInfo {
                         text: format!("{} {}", &alg, &file_strat.file().file_name()),
-                        size: file_strat.file().size_kb() * 3,
+                        size: file_strat.file().size_kb() * size_factor,
                     },
                 );
             }
@@ -170,7 +180,7 @@ impl IndicatifProgress {
                 TaskType::Checksum(file_strat.file().in_path.to_owned()),
                 TaskInfo {
                     text: format!("checksum {}", &file_strat.file().file_name()),
-                    size: file_strat.file().size_kb(),
+                    size: file_strat.file().size_kb() / 7 + 1,
                 },
             );
         }

@@ -72,8 +72,8 @@ fn large_file() {
 
 //TODO @mark: test that metadata is actually hidden (maybe not e2e?)
 
-#[test]
 #[cfg_attr(not(feature = "test-e2e"), ignore)]
+#[test]
 fn mixed_options() {
     struct Options<'a> {
         size: usize,
@@ -96,7 +96,8 @@ fn mixed_options() {
     let mut encrypted = vec![];
     for options in &option_sets {
         let (tmp, file, data) = write_test_file(options.size);
-        let enc_pth = filename_append_enc(file.as_path());
+        // let enc_pth = filename_append_enc(file.as_path());
+        let enc_pth = file.as_path().to_path_buf();
         let mut args = options.args.to_vec();
         args.push("-v");
         args.push("-k");
@@ -116,14 +117,14 @@ fn mixed_options() {
     let decrypt_paths = encrypted.iter().map(|enc| enc.path.as_path()).collect::<Vec<_>>();
     test_decrypt(
         &decrypt_paths,
-        &["-k", "env:FED_E2E_OPTIONS_FILE_TESTKEY", "-v"],
+        &["-k", "env:FED_E2E_OPTIONS_FILE_TESTKEY", "-f", "-v",],
         None,
         true,
     );
-    encrypted.drain(|encrypted| {
+    encrypted.drain(..).for_each(|encrypt_info: Encrypted| {
         assert!(encrypt_info.path.as_path().exists());
         assert_eq!(fs::read(encrypt_info.path.as_path()).unwrap(), encrypt_info.data);
-        (&encrypt_info.tmp).close().unwrap();
+        encrypt_info.tmp.close().unwrap();
     });
 }
 

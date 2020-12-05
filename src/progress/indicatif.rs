@@ -20,6 +20,7 @@ enum TaskType {
     Compress(CompressionAlg, PathBuf),
     Symmetric(SymmetricEncryptionAlg, PathBuf),
     Checksum(PathBuf),
+    HeaderChecksum(PathBuf),
     Write(PathBuf),
     ShredInput(PathBuf),
 }

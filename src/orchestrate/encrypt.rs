@@ -64,6 +64,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
         let mut data = Vec::with_capacity(file.size_b as usize + 2048);
         // This padding length has expectation value 128, which is probably enough to obfuscate most filename lengths.
         let padding_len = pepper.salt[0] as u16;
+        //TODO @mark: start a progress tracker here
         let priv_header = PrivateHeader::new(
             file.file_name(),
             file.permissions,
@@ -81,7 +82,8 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity().debug()
         )?;
         let priv_header_len = data.len();
-        let priv_header_checksum = calculate_checksum(&data, &mut || progress.start_checksum_for_file(&file));
+        let priv_header_checksum = calculate_checksum(&data, &mut || {});
+        //TODO @mark: finish a progress tracker here
         read_file(
             &mut data,
             &mut reader,

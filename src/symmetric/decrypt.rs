@@ -14,17 +14,15 @@ pub fn decrypt_file(
     start_progress: &mut impl FnMut(&SymmetricEncryptionAlg),
 ) -> FedResult<Vec<u8>> {
     assert!(!encrypt_algs.is_empty());
-    let mut owned = vec![];
+    let mut data = data.to_vec();  //TODO @mark: extra allocation here
     for decrypt_alg in encrypt_algs.iter().rev() {
         start_progress(decrypt_alg);
-        //TODO: do the decrypt algorithms need to reallocate?
-        owned = match decrypt_alg {
-            SymmetricEncryptionAlg::Aes256 => decrypt_aes256(data, key, salt)?,
-            SymmetricEncryptionAlg::Twofish => decrypt_twofish(data, key, salt)?,
+        data = match decrypt_alg {
+            SymmetricEncryptionAlg::Aes256 => decrypt_aes256(&data, key, salt)?,
+            SymmetricEncryptionAlg::Twofish => decrypt_twofish(&data, key, salt)?,
         };
-        data = owned.as_slice();
     }
-    Ok(owned)
+    Ok(data)
 }
 
 pub fn decrypt_aes256(data: &[u8], key: &StretchKey, salt: &Salt) -> FedResult<Vec<u8>> {

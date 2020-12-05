@@ -101,16 +101,15 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
-        let priv_header_len = file_strat.header.private_header().map(|hdr| hdr.0 as usize).unwrap_or(0);
-        let start_data_index = file_strat.pub_header_len + priv_header_len;
+        let priv_header_len = file_strat.header.private_header().as_ref().map(|hdr| hdr.0 as usize).unwrap_or(0);
         let priv_header = if version_has_options_meta(&file_strat.header.version()) {
-            let index_header = parse_private_header(&mut data[file_strat.pub_header_len..start_data_index])?;
+            let index_header = parse_private_header(&mut &data[..priv_header_len])?;
             Some(index_header.1)
         } else {
             None
         };
         let revealed = decrypt_file(
-            &data[start_data_index..],
+            &data[priv_header_len..],
             &stretched_key,
             &salt,
             &file_strat.strategy.symmetric_algorithms,

@@ -7,7 +7,7 @@ use crate::{FedResult, Verbosity};
 pub struct FileHeaderStrategy<'a> {
     pub file: &'a FileInfo<'a>,
     pub header: PublicHeader,
-    pub header_len: usize,
+    pub pub_header_len: usize,
     pub strategy: &'a Strategy,
 }
 
@@ -17,7 +17,7 @@ impl<'a> FileHeaderStrategy<'a> {
         Ok(FileHeaderStrategy {
             file,
             header,
-            header_len,
+            pub_header_len: header_len,
             strategy,
         })
     }

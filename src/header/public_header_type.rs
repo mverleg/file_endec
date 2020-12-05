@@ -47,8 +47,13 @@ impl PublicHeader {
         &self.options
     }
 
-    pub fn private_header(&self) -> &Option<(u64, Checksum)> {
-        &self.private_header
+    pub fn private_header_len(&self) -> &Option<u64> {
+        &self.private_header.0
+    }
+
+    //TODO @mark: check
+    pub fn private_header_checksum(&self) -> &Option<Checksum> {
+        &self.private_header.1
     }
 }
 

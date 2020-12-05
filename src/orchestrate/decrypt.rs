@@ -77,7 +77,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
     let mut out_pths = vec![];
     for file_strat in &files_strats {
         let mut reader = open_reader(&file_strat.file, config.verbosity())?;
-        reader.seek(SeekFrom::Start(file_strat.header_len as u64)).unwrap();
+        reader.seek(SeekFrom::Start(file_strat.pub_header_len as u64)).unwrap();
         let salt = file_strat.header.salt().clone();
         let stretched_key = if let Some(sk) = key_cache.get(&salt) {
             sk.clone()
@@ -101,8 +101,15 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
+        let start_data_index = file_strat.pub_header_len + file_strat.header.private_header();
+        let (_, priv_header) = if version_has_options_meta(&file_strat.header.version()) {
+            let index_header = parse_private_header(&mut data[..file_strat.pub_header_len])?;
+            (index_header.0, Some(index_header.1))
+        } else {
+            (0, None)
+        };
         let revealed = decrypt_file(
-            data,
+            &data[start_data_index..],
             &stretched_key,
             &salt,
             &file_strat.strategy.symmetric_algorithms,
@@ -113,14 +120,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             &file_strat.strategy.compression_algorithm,
             &mut |alg| progress.start_compress_alg_for_file(alg, &file_strat.file),
         )?;
-        let (end_header_index, priv_header) = if version_has_options_meta(&file_strat.header.version()) {
-            let index_header = parse_private_header(&mut big.as_slice())?;
-            (index_header.0, Some(index_header.1))
-        } else {
-            (0, None)
-        };
-        let plain = &big[end_header_index..];
-        let actual_checksum = calculate_checksum(&plain, &mut || {
+        let actual_checksum = calculate_checksum(&big, &mut || {
             progress.start_checksum_for_file(&file_strat.file)
         });
         if !validate_checksum_matches(
@@ -131,7 +131,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         ) {
             checksum_failure_count += 1;
         }
-        write_output_file(config, &file_strat.file, &plain, None, &mut || {
+        write_output_file(config, &file_strat.file, &big, None, &mut || {
             progress.start_write_for_file(&file_strat.file)
         })?;
         if config.delete_input() {
@@ -147,7 +147,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
                 "successfully decrypted '{}' to '{}' ({} kb)",
                 &file_strat.file.path_str(),
                 &file_strat.file.out_pth.to_string_lossy(),
-                plain.len() / 1024,
+                big.len() / 1024,
             );
         }
         out_pths.push(file_strat.file.out_pth.clone());

@@ -13,6 +13,7 @@ pub fn get_current_version() -> Version {
 /// Whether two features were used in the given version:
 /// * private header with metadata
 /// * customization options
+//TODO v2.0: this should always be true, remove code for false branch
 pub fn version_has_options_meta(version: &Version) -> bool {
     version >= &*OPTIONS_INTORDUCED_IN_VERSION
 }

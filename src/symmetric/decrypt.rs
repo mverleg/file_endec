@@ -7,21 +7,24 @@ use crate::symmetric::{Aes256Cbc, TwofishCbc};
 use crate::util::FedResult;
 
 pub fn decrypt_file(
-    mut data: Vec<u8>,
+    mut data: &[u8],
     key: &StretchKey,
     salt: &Salt,
     encrypt_algs: &[SymmetricEncryptionAlg],
     start_progress: &mut impl FnMut(&SymmetricEncryptionAlg),
 ) -> FedResult<Vec<u8>> {
     assert!(!encrypt_algs.is_empty());
+    let mut owned = vec![];
     for decrypt_alg in encrypt_algs.iter().rev() {
         start_progress(decrypt_alg);
-        data = match decrypt_alg {
-            SymmetricEncryptionAlg::Aes256 => decrypt_aes256(&data, key, salt)?,
-            SymmetricEncryptionAlg::Twofish => decrypt_twofish(&data, key, salt)?,
+        //TODO: do the decrypt algorithms need to reallocate?
+        owned = match decrypt_alg {
+            SymmetricEncryptionAlg::Aes256 => decrypt_aes256(data, key, salt)?,
+            SymmetricEncryptionAlg::Twofish => decrypt_twofish(data, key, salt)?,
         };
+        data = owned.as_slice();
     }
-    Ok(data)
+    Ok(owned)
 }
 
 pub fn decrypt_aes256(data: &[u8], key: &StretchKey, salt: &Salt) -> FedResult<Vec<u8>> {

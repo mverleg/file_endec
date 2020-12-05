@@ -11,7 +11,7 @@ use crate::files::reading::{open_reader, read_file};
 use crate::files::write_output::write_output_file;
 use crate::header::private_encode::write_private_header;
 use crate::header::private_header_type::PrivateHeader;
-use crate::header::PublicHeader;
+use crate::header::{PublicHeader, Strategy};
 use crate::header::strategy::get_current_version_strategy;
 use crate::header::strategy::Verbosity;
 use crate::key::key::StretchKey;
@@ -28,7 +28,7 @@ use crate::util::version::get_current_version;
 
 //TODO @mark: I need to add some random number of bytes to private header, because the attacker knows the size of the cyphertext, so they can deduce private header information
 
-fn encrypt_private_header(pepper: &Salt, key: &StretchKey, file: &FileInfo, config: &EncryptConfig, start_progress: &mut impl FnMut()) -> FedResult<(Vec<u8>, Checksum)> {
+fn encrypt_private_header(pepper: &Salt, key: &StretchKey, file: &FileInfo, strategy: &Strategy, config: &EncryptConfig, start_progress: &mut impl FnMut()) -> FedResult<(Vec<u8>, Checksum)> {
     // This padding length has expectation value 128, which is probably enough to obfuscate most filename lengths.
     start_progress();
     let padding_len = pepper.salt[0] as u16;
@@ -51,7 +51,14 @@ fn encrypt_private_header(pepper: &Salt, key: &StretchKey, file: &FileInfo, conf
     )?;
     //TODO @mark: encrypt, maybe compress
     let checksum = calculate_checksum(&data, &mut || {});
-    Ok((data, checksum))
+    let secret = encrypt_file(
+        data,
+        &key,
+        &pepper,
+        &strategy.symmetric_algorithms,
+        &mut |_| {},
+    );
+    Ok((secret, checksum))
 }
 
 /// Encrypt one or more files and return the new paths.
@@ -91,7 +98,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
     let mut out_pths = vec![];
     for file in &files_info {
         let (priv_header_data, priv_header_checksum) = encrypt_private_header(
-            &pepper, &stretched_key, file, config,
+            &pepper, &stretched_key, file, &strategy, config,
             &mut || progress.start_private_header_for_file(&file))?;
         let priv_header_len = priv_header_data.len();
 

@@ -21,8 +21,6 @@ default = []
 expose = []
 # Feature 'test-e2e' enables some expensive end-to-end tests as part of unit tests.
 test-e2e = []
-# Feature 'dev-mode' adds debug information like timings. Not meant for those who are just using file_endec.
-dev-mode = []
 
 [[bin]]
 name = "fileenc"

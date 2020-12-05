@@ -89,6 +89,8 @@ impl IndicatifProgress {
         delete_input: bool,
         verbosity: Verbosity,
     ) -> Self {
+        // Note about sizes: I tuned them to be around 1 unit per ms to encrypt a 100MB file,
+        // but of course that depends on hardware. As long as time per size unit is constant-ish.
         if verbosity.quiet() {
             return IndicatifProgress { data: None };
         }
@@ -117,7 +119,7 @@ impl IndicatifProgress {
                 TaskType::Read(file_strat.file().in_path.to_owned()),
                 TaskInfo {
                     text: format!("read {}", &file_strat.file().file_name()),
-                    size: file_strat.file().size_kb() / 80 + 1,
+                    size: file_strat.file().size_kb() / 100 + 1,
                 },
             );
             todo.insert(
@@ -132,7 +134,7 @@ impl IndicatifProgress {
                             .unwrap()
                             .to_string_lossy()
                     ),
-                    size: file_strat.file().size_kb() / 2 + 1,
+                    size: file_strat.file().size_kb() / 3 + 1,
                 },
             );
             if delete_input {
@@ -140,7 +142,7 @@ impl IndicatifProgress {
                     TaskType::ShredInput(file_strat.file().in_path.to_owned()),
                     TaskInfo {
                         text: format!("shred input {}", &file_strat.file().file_name()),
-                        size: file_strat.file().size_kb() * 3,
+                        size: file_strat.file().size_kb() / 2 + 1,
                     },
                 );
             }
@@ -153,26 +155,26 @@ impl IndicatifProgress {
             );
             for alg in &file_strat.strategy().compression_algorithm {
                 let size_factor = match alg {
-                    CompressionAlg::Brotli => 11,
+                    CompressionAlg::Brotli => 35,
                 };
                 todo.insert(
                     TaskType::Compress(alg.clone(), file_strat.file().in_path.to_owned()),
                     TaskInfo {
                         text: format!("{} {}", &alg, &file_strat.file().file_name()),
-                        size: file_strat.file().size_kb() * size_factor,
+                        size: file_strat.file().size_kb() / size_factor + 1,
                     },
                 );
             }
             for alg in &file_strat.strategy().symmetric_algorithms {
                 let size_factor = match alg {
-                    SymmetricEncryptionAlg::Aes256 => 5,
-                    SymmetricEncryptionAlg::Twofish => 1,
+                    SymmetricEncryptionAlg::Aes256 => 21,
+                    SymmetricEncryptionAlg::Twofish => 3,
                 };
                 todo.insert(
                     TaskType::Symmetric(alg.clone(), file_strat.file().in_path.to_owned()),
                     TaskInfo {
                         text: format!("{} {}", &alg, &file_strat.file().file_name()),
-                        size: file_strat.file().size_kb() * size_factor,
+                        size: file_strat.file().size_kb() / size_factor + 1,
                     },
                 );
             }
@@ -180,7 +182,7 @@ impl IndicatifProgress {
                 TaskType::Checksum(file_strat.file().in_path.to_owned()),
                 TaskInfo {
                     text: format!("checksum {}", &file_strat.file().file_name()),
-                    size: file_strat.file().size_kb() / 7 + 1,
+                    size: file_strat.file().size_kb() / 63 + 1,
                 },
             );
         }

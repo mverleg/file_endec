@@ -58,11 +58,12 @@ impl ProgressData {
 
         // Set the message of the task that is starting.
         self.bar.set_message(&task.text);
+        // Increment the progress bar based on the task that was just completed.
+        eprintln!("incrementing {0:} for {1:}\nincrementing {0:} for {1:}", self.current.size, &self.current.text);  //TODO @mark: TEMPORARY! REMOVE THIS!
+        self.bar.inc(self.current.size);
         // Swap the completed task and the starting one, so that a new task becomes
         // current, and 'task' is now the previous task.
         mem::swap(&mut task, &mut self.current);
-        // Increment the progress bar based on the task that was just completed.
-        self.bar.inc(task.size);
     }
 }
 
@@ -89,7 +90,7 @@ impl IndicatifProgress {
         delete_input: bool,
         verbosity: Verbosity,
     ) -> Self {
-        // Note about sizes: I tuned them to be around 1 unit per ms to encrypt a 100MB file,
+        // Note about sizes: I tuned them to be around 1 ms/unit to encrypt a 100MB file,
         // but of course that depends on hardware. As long as time per size unit is constant-ish.
         if verbosity.quiet() {
             return IndicatifProgress { data: None };
@@ -187,12 +188,14 @@ impl IndicatifProgress {
             );
         }
         let total_size = todo.iter().map(|task| task.1.size).sum();
+        eprintln!("total_size = {0:}\ntotal_size = {0:}", total_size);  //TODO @mark: TEMPORARY! REMOVE THIS!
         let progress_bar = {
             let pb = ProgressBar::with_draw_target(total_size, ProgressDrawTarget::stderr());
+            pb.enable_steady_tick(50);
             pb.set_style(
                 ProgressStyle::default_bar()
                     // .template("[{elapsed}] {msg:25<} [{wide_bar:}] {percent:>2}%")
-                    .template("[{wide_bar:}] {percent:>3}% {msg:<40!}")
+                    .template("[{elapsed:>3}] [{wide_bar:}] {percent:>3}% {msg:<40!}")
                     .progress_chars("=> "),
             );
             pb.tick();
@@ -315,7 +318,8 @@ impl Progress for IndicatifProgress {
                 text: "finished".to_owned(),
                 size: 0,
             }));
-            data.bar.finish();
+            //TODO @mark: TEMPORARY! REMOVE THIS!
+            //data.bar.finish();
         }
     }
 }

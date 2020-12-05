@@ -1,8 +1,11 @@
 use ::std::collections::HashMap;
 use ::std::mem;
 use ::std::path::PathBuf;
+#[cfg(feature = "dev-mode")]
+use ::std::time::Instant;
 
 use ::indicatif::ProgressBar;
+use ::indicatif::ProgressDrawTarget;
 use ::indicatif::ProgressStyle;
 
 use crate::files::file_meta::FileInfo;
@@ -11,7 +14,6 @@ use crate::files::read_headers::FileStrategy;
 use crate::header::{CompressionAlg, KeyHashAlg, Strategy, SymmetricEncryptionAlg};
 use crate::progress::Progress;
 use crate::Verbosity;
-use indicatif::ProgressDrawTarget;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum TaskType {
@@ -37,11 +39,23 @@ struct ProgressData {
     bar: ProgressBar,
     current: TaskInfo,
     todo: HashMap<TaskType, TaskInfo>,
+    #[cfg(feature = "dev-mode")]
+    started_at: Instant,
 }
 
 impl ProgressData {
     fn next_step(&mut self, next_task: Option<TaskInfo>) {
         let mut task = next_task.expect("attempted to start progress on a task that is not known");
+
+        #[cfg(feature = "dev-mode")]
+        {
+            let duration_us = self.started_at.elapsed().as_micros();
+            let us_per_unit = (duration_us as f64 * 1e-3) / (self.current.size as f64);
+            let msg = format!("{}: {} ms for {} units, so {:.4} ms/u", &self.current.text, duration_us/1000, self.current.size, us_per_unit);
+            println!("== {}", &msg);
+            eprintln!("== {}", &msg);
+        }
+
         // Set the message of the task that is starting.
         self.bar.set_message(&task.text);
         // Swap the completed task and the starting one, so that a new task becomes
@@ -180,6 +194,8 @@ impl IndicatifProgress {
                     size: 1,
                 },
                 todo,
+                #[cfg(feature = "dev-mode")]
+                started_at: Instant::now(),
             }),
         }
     }

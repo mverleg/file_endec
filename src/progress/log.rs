@@ -6,7 +6,6 @@ use crate::progress::Progress;
 
 pub struct LogProgress {
     current: String,
-    current_weight: usize,  //TODO @mark: TEMPORARY! REMOVE THIS!
     started_at: Instant,
 }
 
@@ -14,7 +13,6 @@ impl LogProgress {
     pub fn new() -> Self {
         LogProgress {
             current: "initializing".to_owned(),
-            current_weight: 1,
             started_at: Instant::now(),
         }
     }
@@ -22,7 +20,6 @@ impl LogProgress {
     fn next_step(&mut self, next: String) {
         let duration = self.started_at.elapsed().as_millis();
         println!("> finish {} ({} ms)", &self.current, duration);
-        println!("== {}: {} ms for {} units, so {:.3} ms/u", &self.current, duration, self.current_weight, (self.started_at.elapsed().as_micros() as f64 * 1e-3) / (self.current_weight as f64));
         println!("< start  {}", &next);
         self.current = next;
         self.started_at = Instant::now();

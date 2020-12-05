@@ -22,7 +22,7 @@ RUN mkdir -p ./src && \
     printf 'fn main() { println!("placeholder for compiling dependencies") }' | tee src/encrypt.rs | tee src/decrypt.rs | tee src/bench.rs && \
     printf '' | tee src/lib.rs
 
-RUN cargo build --all-targets --all-features --release --tests
+RUN cargo build --all-targets --release --tests
 
 # Code changes invalidate cache beyond here main code separately
 
@@ -31,11 +31,11 @@ RUN bash -c 'touch -c src/*'
 
 # Build
 
-RUN cargo --offline build --all-targets --all-features --release --bin fileenc
-RUN cargo --offline build --all-targets --all-features --release --bin filedec
+RUN cargo --offline build --all-targets --release --bin fileenc
+RUN cargo --offline build --all-targets --release --bin filedec
 
-RUN cargo --offline run --all-features --release --bin fileenc -- --help
-RUN cargo --offline run --all-features --release --bin filedec -- --help
+RUN cargo --offline run --release --bin fileenc -- --help
+RUN cargo --offline run --release --bin filedec -- --help
 
 RUN mv "$(find . -executable -name fileenc)" "$(find . -executable -name filedec)" .
 
@@ -43,13 +43,13 @@ RUN mv "$(find . -executable -name fileenc)" "$(find . -executable -name filedec
 
 COPY ./test_files/ test_files/
 ENV ENDEC_TEST_FILE_DIR=/app/test_files/
-RUN cargo --offline test --release --all-targets --all-features
+RUN cargo --offline test --release --all-targets
 
-RUN cargo --offline clippy --release --all-targets --all-features -- -D warnings
+RUN cargo --offline clippy --release --all-targets -- -D warnings
 
 RUN cargo --offline fmt --all -- --check
 
-RUN cargo --offline doc --no-deps --all-features --release
+RUN cargo --offline doc --no-deps --release
 
 RUN cargo --offline audit --deny warnings
 RUN cargo --offline deny check advisories

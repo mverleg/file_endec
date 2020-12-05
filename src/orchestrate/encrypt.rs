@@ -1,15 +1,20 @@
 use ::std::path::PathBuf;
 
-use crate::{EncOption, EncryptConfig, FedResult, Verbosity};
+use crate::config::enc::EncryptConfig;
 use crate::config::typ::{EndecConfig, Extension};
+use crate::files::Checksum;
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::compress_file;
 use crate::files::delete::delete_input_file;
-use crate::files::file_meta::inspect_files;
+use crate::files::file_meta::{FileInfo, inspect_files};
 use crate::files::reading::{open_reader, read_file};
 use crate::files::write_output::write_output_file;
+use crate::header::private_encode::write_private_header;
+use crate::header::private_header_type::PrivateHeader;
 use crate::header::PublicHeader;
 use crate::header::strategy::get_current_version_strategy;
+use crate::header::strategy::Verbosity;
+use crate::key::key::StretchKey;
 use crate::key::Salt;
 use crate::key::stretch::stretch_key;
 use crate::progress::indicatif::IndicatifProgress;
@@ -17,11 +22,37 @@ use crate::progress::log::LogProgress;
 use crate::progress::Progress;
 use crate::progress::silent::SilentProgress;
 use crate::symmetric::encrypt::encrypt_file;
+use crate::util::errors::FedResult;
+use crate::util::option::EncOption;
 use crate::util::version::get_current_version;
-use crate::header::private_header_type::PrivateHeader;
-use crate::header::private_encode::write_private_header;
 
 //TODO @mark: I need to add some random number of bytes to private header, because the attacker knows the size of the cyphertext, so they can deduce private header information
+
+fn encrypt_private_header(pepper: &Salt, key: &StretchKey, file: &FileInfo, config: &EncryptConfig, start_progress: &mut impl FnMut()) -> FedResult<(Vec<u8>, Checksum)> {
+    // This padding length has expectation value 128, which is probably enough to obfuscate most filename lengths.
+    start_progress();
+    let padding_len = pepper.salt[0] as u16;
+    let priv_header = PrivateHeader::new(
+        file.file_name(),
+        file.permissions,
+        file.created_ns,
+        file.changed_ns,
+        file.accessed_ns,
+        file.size_b,
+        pepper.clone(),
+        padding_len,
+    );
+    let mut data = Vec::with_capacity(2048);
+    write_private_header(
+        &mut data,
+        &priv_header,
+        config.options(),
+        config.verbosity().debug()
+    )?;
+    //TODO @mark: encrypt, maybe compress
+    let checksum = calculate_checksum(&data, &mut || {});
+    Ok((data, checksum))
+}
 
 /// Encrypt one or more files and return the new paths.
 pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
@@ -59,30 +90,13 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
     );
     let mut out_pths = vec![];
     for file in &files_info {
+        let (priv_header_data, priv_header_checksum) = encrypt_private_header(
+            &pepper, &stretched_key, file, config,
+            &mut || progress.start_private_header_for_file(&file));
+        let priv_header_len = priv_header_data.len();
+
         let mut reader = open_reader(&file, config.verbosity())?;
         let mut data = Vec::with_capacity(file.size_b as usize + 2048);
-        //TODO @mark: start a progress tracker here
-        // This padding length has expectation value 128, which is probably enough to obfuscate most filename lengths.
-        let padding_len = pepper.salt[0] as u16;
-        let priv_header = PrivateHeader::new(
-            file.file_name(),
-            file.permissions,
-            file.created_ns,
-            file.changed_ns,
-            file.accessed_ns,
-            file.size_b,
-            pepper.clone(),
-            padding_len,
-        );
-        write_private_header(
-            &mut data,
-            &priv_header,
-            config.options(),
-            config.verbosity().debug()
-        )?;
-        let priv_header_len = data.len();
-        let priv_header_checksum = calculate_checksum(&data, &mut || {});
-        //TODO @mark: finish a progress tracker here
         read_file(
             &mut data,
             &mut reader,

@@ -8,6 +8,8 @@ pub trait Progress {
 
     fn start_read_for_file(&mut self, file: &FileInfo);
 
+    fn start_private_header_for_file(&mut self, file: &FileInfo);
+
     fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo);
 
     fn start_sym_alg_for_file(&mut self, alg: &SymmetricEncryptionAlg, file: &FileInfo);

@@ -17,6 +17,7 @@ use indicatif::ProgressDrawTarget;
 enum TaskType {
     Stretch(KeyHashAlg, Option<PathBuf>),
     Read(PathBuf),
+    PrivateHeader(PathBuf),
     Compress(CompressionAlg, PathBuf),
     Symmetric(SymmetricEncryptionAlg, PathBuf),
     Checksum(PathBuf),
@@ -124,6 +125,15 @@ impl IndicatifProgress {
                     },
                 );
             }
+            todo.insert(
+                TaskType::PrivateHeader(file_strat.file().in_path.to_owned()),
+                TaskInfo {
+                    text: format!("header {}", &file_strat.file().file_name()),
+                    //TODO @mark: some way to log time per size?
+                    //TODO @mark: tune this value:
+                    size: 3,
+                },
+            );
             for alg in &file_strat.strategy().compression_algorithm {
                 todo.insert(
                     TaskType::Compress(alg.clone(), file_strat.file().in_path.to_owned()),
@@ -217,6 +227,14 @@ impl Progress for IndicatifProgress {
     fn start_read_for_file(&mut self, file: &FileInfo) {
         if let Some(data) = &mut self.data {
             let typ = TaskType::Read(file.in_path.to_owned());
+            let info = data.todo.remove(&typ);
+            data.next_step(info);
+        }
+    }
+
+    fn start_private_header_for_file(&mut self, file: &FileInfo) {
+        if let Some(data) = &mut self.data {
+            let typ = TaskType::PrivateHeader(file.in_path.to_owned());
             let info = data.todo.remove(&typ);
             data.next_step(info);
         }

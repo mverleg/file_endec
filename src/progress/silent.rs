@@ -15,6 +15,8 @@ impl Progress for SilentProgress {
 
     fn start_read_for_file(&mut self, _file: &FileInfo) {}
 
+    fn start_private_header_for_file(&mut self, file: &FileInfo) {}
+
     fn start_compress_alg_for_file(&mut self, _alg: &CompressionAlg, _file: &FileInfo) {}
 
     fn start_sym_alg_for_file(&mut self, _alg: &SymmetricEncryptionAlg, _file: &FileInfo) {}

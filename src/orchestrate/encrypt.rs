@@ -92,7 +92,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
     for file in &files_info {
         let (priv_header_data, priv_header_checksum) = encrypt_private_header(
             &pepper, &stretched_key, file, config,
-            &mut || progress.start_private_header_for_file(&file));
+            &mut || progress.start_private_header_for_file(&file))?;
         let priv_header_len = priv_header_data.len();
 
         let mut reader = open_reader(&file, config.verbosity())?;

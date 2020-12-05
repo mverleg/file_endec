@@ -43,6 +43,10 @@ impl Progress for LogProgress {
         self.next(format!("reading {}", file.file_name()));
     }
 
+    fn start_private_header_for_file(&mut self, file: &FileInfo) {
+        self.next(format!("private header {}", file.file_name()));
+    }
+
     fn start_compress_alg_for_file(&mut self, alg: &CompressionAlg, file: &FileInfo) {
         self.next(format!(
             "(de)compressing {} using {}",

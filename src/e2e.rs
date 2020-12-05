@@ -51,7 +51,6 @@ fn large_file() {
             &format!("pass:{}", key),
             "--accept-weak-key",
             "-d",
-            "-s",
             "-v",
         ],
         None,
@@ -69,6 +68,63 @@ fn large_file() {
     assert!(file.as_path().exists());
     assert_eq!(fs::read(file.as_path()).unwrap(), data);
     tmp.close().unwrap();
+}
+
+//TODO @mark: test that metadata is actually hidden (maybe not e2e?)
+
+#[test]
+#[cfg_attr(not(feature = "test-e2e"), ignore)]
+fn mixed_options() {
+    struct Options<'a> {
+        size: usize,
+        args: &'a [&'a str],
+    }
+    struct Encrypted {
+        tmp: TempDir,
+        path: PathBuf,
+        data: Vec<u8>,
+    }
+    let key = "pass:G4yBazwH&iyuUK8qVjQwXIP%+s7VAS&j";
+    let option_sets = [
+        Options { size: 20 * 1024, args: &[] },
+        Options { size: 100 * 1024, args: &["--fast",] },
+        Options { size: 1024, args: &["--hide-meta", "--hide-size",] },
+        Options { size: 128, args: &["-s", "--hide-meta"] },
+    ];
+
+    // Encrypt one by one.
+    let mut encrypted = vec![];
+    for options in &option_sets {
+        let (tmp, file, data) = write_test_file(options.size);
+        let enc_pth = filename_append_enc(file.as_path());
+        let mut args = options.args.to_vec();
+        args.push("-v");
+        args.push("-k");
+        args.push(key);
+        test_encrypt(
+            &[file.as_path()],
+            &args,
+            None,
+        );
+        assert!(enc_pth.as_path().exists());
+        encrypted.push(Encrypted { tmp, path: enc_pth, data });
+    }
+    assert_eq!(option_sets.len(), encrypted.len());
+
+    // Decrypt all at once, and verify.
+    env::set_var("FED_E2E_OPTIONS_FILE_TESTKEY", key);
+    let decrypt_paths = encrypted.iter().map(|enc| enc.path.as_path()).collect::<Vec<_>>();
+    test_decrypt(
+        &decrypt_paths,
+        &["-k", "env:FED_E2E_OPTIONS_FILE_TESTKEY", "-v"],
+        None,
+        true,
+    );
+    encrypted.drain(|encrypted| {
+        assert!(encrypt_info.path.as_path().exists());
+        assert_eq!(fs::read(encrypt_info.path.as_path()).unwrap(), encrypt_info.data);
+        (&encrypt_info.tmp).close().unwrap();
+    });
 }
 
 #[test]

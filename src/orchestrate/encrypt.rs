@@ -59,6 +59,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
     );
     let mut out_pths = vec![];
     for file in &files_info {
+        //TODO @mark: read a specific number of bytes here
         let mut reader = open_reader(&file, config.verbosity())?;
         let mut data = Vec::with_capacity(file.size_b as usize + 2048);
         // This padding length has expectation value 128, which is probably enough to obfuscate most filename lengths.

@@ -51,9 +51,9 @@ pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<(usize, Pri
         Ok(map) => map,
         Err(err) => return Err(match err {
             HeaderErr::NoStartMarker => unreachable!(),
-            HeaderErr::NoEndMarker => format!("could not find the end of the private file header inside encrypted block; has the file been corrupted?"),
-            HeaderErr::HeaderSyntax(_) => format!("part of the private file header inside encrypted block could not be parsed because it did not have the expected format"),
-            HeaderErr::ReadError => format!("the private file header inside encrypted block could not be read; perhaps the file was not accessible, or the file header has been corrupted"),
+            HeaderErr::NoEndMarker => format!("could not find the end of the private file header; has the file been corrupted?"),
+            HeaderErr::HeaderSyntax(_) => format!("part of the private file header could not be parsed because it did not have the expected format"),
+            HeaderErr::ReadError => format!("the private file header could not be read; perhaps the file was not accessible, or the file header has been corrupted"),
         }),
     };
     eprintln!("END parse_private_header");   //TODO @mark: TEMPORARY! REMOVE THIS!

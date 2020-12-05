@@ -17,9 +17,11 @@ fn read_line(reader: &mut dyn BufRead, line: &mut String, index: &mut usize) -> 
         Ok(sz) => if sz == 0 {
             return Err(HeaderErr::NoEndMarker)
         },
-        Err(_) =>
+        Err(err) => {
+            //TODO @mark: remove this?
+            eprintln!("error: {}", err);
             return Err(HeaderErr::ReadError)
-        ,
+        },
     }
     *index = *index + line.len();
     line.pop();

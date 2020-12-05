@@ -7,20 +7,21 @@ use crate::symmetric::{Aes256Cbc, TwofishCbc};
 use crate::util::FedResult;
 
 pub fn decrypt_file(
-    mut data: &[u8],
+    mut data: Vec<u8>,
+    mut data_start_index: usize,
     key: &StretchKey,
     salt: &Salt,
     encrypt_algs: &[SymmetricEncryptionAlg],
     start_progress: &mut impl FnMut(&SymmetricEncryptionAlg),
 ) -> FedResult<Vec<u8>> {
     assert!(!encrypt_algs.is_empty());
-    let mut data = data.to_vec();  //TODO @mark: extra allocation here
     for decrypt_alg in encrypt_algs.iter().rev() {
         start_progress(decrypt_alg);
         data = match decrypt_alg {
             SymmetricEncryptionAlg::Aes256 => decrypt_aes256(&data, key, salt)?,
             SymmetricEncryptionAlg::Twofish => decrypt_twofish(&data, key, salt)?,
         };
+        data_start_index = 0;
     }
     Ok(data)
 }
@@ -29,6 +30,7 @@ pub fn decrypt_aes256(data: &[u8], key: &StretchKey, salt: &Salt) -> FedResult<V
     debug_assert!(key.len() >= 32);
     debug_assert!(salt.salt.len() >= 16);
     let cipher = Aes256Cbc::new_var(&key.unsecure_slice(32), &salt.salt[..16]).unwrap();
+    //TODO @mark: make this avoid allocation by using decrypt instead of decrypt_vec.
     match cipher.decrypt_vec(data) {
         Ok(plain) => Ok(plain),
         Err(err) => Err(format!("Decryption algorithm failed: {}", err)),
@@ -39,6 +41,7 @@ pub fn decrypt_twofish(data: &[u8], key: &StretchKey, salt: &Salt) -> FedResult<
     debug_assert!(key.len() >= 16);
     debug_assert!(salt.salt.len() >= 16);
     let cipher = TwofishCbc::new_var(&key.unsecure_slice(16), &salt.salt[..16]).unwrap();
+    //TODO @mark: make this avoid allocation by using decrypt instead of decrypt_vec.
     match cipher.decrypt_vec(data) {
         Ok(plain) => Ok(plain),
         Err(err) => Err(format!("Decryption algorithm failed: {}", err)),

@@ -109,7 +109,8 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             None
         };
         let revealed = decrypt_file(
-            &data[priv_header_len..],
+            data,
+            priv_header_len,
             &stretched_key,
             &salt,
             &file_strat.strategy.symmetric_algorithms,

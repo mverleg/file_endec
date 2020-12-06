@@ -16,6 +16,8 @@ use crate::util::test_cmd::test_encrypt;
 /// This test is always enabled as a fast encrypy/decrypt cycle (using -s mode, a small file and -q).
 #[test]
 fn fast() {
+    eprintln!("env:\n- {}", env::vars().map(|(k, _)| k).filter(|k| k.contains("CARGO")).collect::<Vec<_>>().join("\n- "));  //TODO @mark: TEMPORARY! REMOVE THIS!
+    eprintln!("exe1: {}", env::var("CARGO_BIN_EXE_FILEENC").expect("Cargo should set CARGO_BIN_EXE_FILEENC environment variable"));  //TODO @mark: TEMPORARY! REMOVE THIS!
     let key = "3Q#J3RwOIns@MK9TQDwZkpUK-EmH7T07";
     let (tmp, raw_pth, data) = write_test_file(1024);
     let enc_pth = filename_append_enc(raw_pth.as_path());

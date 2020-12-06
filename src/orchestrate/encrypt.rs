@@ -49,7 +49,6 @@ fn encrypt_private_header(pepper: &Salt, key: &StretchKey, file: &FileInfo, stra
         config.options(),
         config.verbosity().debug()
     )?;
-    //TODO @mark: encrypt, maybe compress
     let checksum = calculate_checksum(&data, &mut || {});
     let secret = encrypt_file(
         data,
@@ -97,13 +96,8 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
     );
     let mut out_pths = vec![];
     for file in &files_info {
-        let (priv_header_data, priv_header_checksum) = encrypt_private_header(
-            &pepper, &stretched_key, file, &strategy, config,
-            &mut || progress.start_private_header_for_file(&file))?;
-        let priv_header_len = priv_header_data.len();
-
         let mut reader = open_reader(&file, config.verbosity())?;
-        let mut data = Vec::with_capacity(file.size_b as usize + 2048);
+        let mut data = Vec::with_capacity(file.size_b as usize + 10_240);
         read_file(
             &mut data,
             &mut reader,
@@ -113,7 +107,14 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             &mut || progress.start_read_for_file(&file),
         )?;
         // Do not include the private header in the checksum (by skipping it).
-        let data_checksum = calculate_checksum(&data[priv_header_len..], &mut || progress.start_checksum_for_file(&file));
+        let data_checksum = calculate_checksum(&data, &mut || progress.start_checksum_for_file(&file));
+
+        //TODO @mark: move data checksum into private header for v1.1
+        let (priv_header_data, priv_header_checksum) = encrypt_private_header(
+            &pepper, &stretched_key, file, &strategy, config,
+            &mut || progress.start_private_header_for_file(&file))?;
+        let priv_header_len = priv_header_data.len() as u64;
+
         let small = compress_file(data, &strategy.compression_algorithm, &mut |alg| {
             progress.start_compress_alg_for_file(&alg, &file)
         })?;
@@ -124,9 +125,11 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             &strategy.symmetric_algorithms,
             &mut |alg| progress.start_sym_alg_for_file(&alg, &file),
         );
-        //TODO @mark: private header meta
-        let pub_header = PublicHeader::new(version.clone(), salt.clone(), data_checksum, config.options().clone(), (priv_header_len as u64, priv_header_checksum));
+
+        let pub_header = PublicHeader::new(version.clone(), salt.clone(), data_checksum, config.options().clone(), (priv_header_len, priv_header_checksum));
         if !config.dry_run() {
+            //TODO @mark: write private header here
+            //TODO @mark: add padding to file here
             write_output_file(config, &file, &secret, Some(&pub_header), &mut || {
                 progress.start_write_for_file(&file)
             })?;

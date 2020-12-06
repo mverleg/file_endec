@@ -28,9 +28,9 @@ use crate::util::version::get_current_version;
 
 //TODO @mark: I need to add some random number of bytes to private header, because the attacker knows the size of the cyphertext, so they can deduce private header information
 
-fn encrypt_private_header(pepper: &Salt, key: &StretchKey, file: &FileInfo, strategy: &Strategy, config: &EncryptConfig, start_progress: &mut impl FnMut()) -> FedResult<(Vec<u8>, Checksum)> {
-    // This padding length has expectation value 128, which is probably enough to obfuscate most filename lengths.
+fn encrypt_private_header(salt: &Salt, key: &StretchKey, pepper: &Salt, file: &FileInfo, strategy: &Strategy, config: &EncryptConfig, start_progress: &mut impl FnMut()) -> FedResult<(Vec<u8>, Checksum)> {
     start_progress();
+    // This padding length has expectation value 128, which is probably enough to obfuscate most filename lengths.
     let padding_len = pepper.salt[0] as u16;
     let priv_header = PrivateHeader::new(
         file.file_name(),
@@ -39,6 +39,7 @@ fn encrypt_private_header(pepper: &Salt, key: &StretchKey, file: &FileInfo, stra
         file.changed_ns,
         file.accessed_ns,
         file.size_b,
+        //TODO @mark: should this be pepper or salt?
         pepper.clone(),
         padding_len,
     );
@@ -52,8 +53,8 @@ fn encrypt_private_header(pepper: &Salt, key: &StretchKey, file: &FileInfo, stra
     let checksum = calculate_checksum(&data, &mut || {});
     let secret = encrypt_file(
         data,
-        &key,
-        &pepper,
+        key,
+        salt,
         &strategy.symmetric_algorithms,
         &mut |_| {},
     );
@@ -111,7 +112,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
 
         //TODO @mark: move data checksum into private header for v1.1
         let (priv_header_data, priv_header_checksum) = encrypt_private_header(
-            &pepper, &stretched_key, file, &strategy, config,
+            &salt, &stretched_key, &pepper, file, &strategy, config,
             &mut || progress.start_private_header_for_file(&file))?;
         let priv_header_len = priv_header_data.len() as u64;
 

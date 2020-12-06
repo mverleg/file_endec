@@ -16,7 +16,7 @@ use crate::files::reading::{open_reader, read_file};
 use crate::files::write_output::write_output_file;
 use crate::header::private_decode::parse_private_header;
 use crate::header::private_header_type::PrivateHeader;
-use crate::header::Strategy;
+use crate::header::{Strategy, PublicHeader};
 use crate::key::key::StretchKey;
 use crate::key::Salt;
 use crate::key::stretch::stretch_key;
@@ -54,32 +54,31 @@ fn validate_checksum_matches(
     false
 }
 
-fn decrypt_private_header(data: Vec<u8>, salt: &Salt, key: &StretchKey, strategy: &Strategy, config: &DecryptConfig, start_progress: &mut impl FnMut()) -> Result<Option<PrivateHeader>, ()> {
+fn decrypt_private_header(data: Vec<u8>, pub_header: &PublicHeader, key: &StretchKey, strategy: &Strategy, config: &DecryptConfig, filename: &str, start_progress: &mut impl FnMut()) -> FedResult<Option<PrivateHeader>> {
     start_progress();
     let revealed = decrypt_file(
         data,
-        0,
+        0,  // no offset
         key,
-        salt,
+        pub_header.salt(),
         &strategy.symmetric_algorithms,
-        &mut |alg| {},
+        &mut |_| {},
     )?;
     let actual_checksum = calculate_checksum(&revealed, &mut || {});
     if !validate_checksum_matches(
         &actual_checksum,
         pub_header.checksum(),
         config.verbosity(),
-        &file_strat.file.path_str(),
+        filename,
     ) {
-        return Err(());
+        return Err("private header was corrupted".to_owned());
     }
-    let priv_header = if version_has_options_meta(&pub_header.version()) {
-        let (_, priv_header) = parse_private_header(&mut &revealed)?;
+    Ok(if version_has_options_meta(&pub_header.version()) {
+        let (_, priv_header) = parse_private_header(&mut revealed.as_slice())?;
         Some(priv_header)
     } else {
         None
-    };
-    Ok(priv_header)
+    })
 }
 
 /// Decrypt one or more files and return the new paths.
@@ -131,22 +130,25 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
-        let priv_header = match file_strat.header.private_header().as_ref().map(|hdr| {
+        let priv_header = file_strat.header.private_header().as_ref().and_then(|hdr| {
             let priv_header_data = data[..hdr.0 as usize].to_vec();
-            decrypt_private_header(
+            match decrypt_private_header(
                 priv_header_data,
-                &salt,
+                &file_strat.header,
                 &stretched_key,
                 file_strat.strategy,
                 config,
-                &mut || progress.start_private_header_for_file(&file))
-        }) {
-            Ok(hdr) => hdr,
-            Err(()) => {
-                checksum_failure_count += 1;
-                continue;
+                &file_strat.file.file_name(),
+                &mut || progress.start_private_header_for_file(&file_strat.file)
+            ) {
+                // This 'inverts' Result<Option<_>> to Option<Result<_>>
+                Ok(Some(val)) => Some(Ok(val)),
+                Ok(None) => None,
+                Err(err) => Some(Err(err)),
             }
-        };
+        });
+        //TODO @mark: ^ continue to next file if failed (checksum_failure_count)
+        let priv_header_len = file_strat.header.private_header().as_ref().map_or_else(|| 0, |hdr| hdr.0 as usize);
         let revealed = decrypt_file(
             data,
             priv_header_len,

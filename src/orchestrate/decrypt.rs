@@ -151,6 +151,16 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
                 Err(err) => Some(Err(err)),
             }
         });
+
+        //TODO @mark: filename: String
+        //TODO @mark: permissions: Option<u32>
+        //TODO @mark: created_ns: Option<u128>
+        //TODO @mark: changed_ns: Option<u128>
+        //TODO @mark: accessed_ns: Option<u128>
+        //TODO @mark: size: u64
+        //TODO @mark: pepper: Salt
+        //TODO @mark: padding_len: u16
+
         //TODO @mark: ^ continue to next file if failed (checksum_failure_count)
         let priv_header_len = file_strat.header.private_header().as_ref().map_or_else(|| 0, |hdr| hdr.0 as usize);
         let revealed = decrypt_file(
@@ -177,7 +187,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         ) {
             checksum_failure_count += 1;
         }
-        write_output_file(config, &file_strat.file, &[], &big, None, &mut || {
+        write_output_file(config, &file_strat.file, &[&big], None, &mut || {
             progress.start_write_for_file(&file_strat.file)
         })?;
         if config.delete_input() {

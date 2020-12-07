@@ -25,6 +25,8 @@ use crate::symmetric::encrypt::encrypt_file;
 use crate::util::errors::FedResult;
 use crate::util::option::EncOption;
 use crate::util::version::get_current_version;
+use crate::key::random::generate_secure_pseudo_random_bytes;
+use crate::util::rounding::round_up_to_power_of_two;
 
 //TODO @mark: I need to add some random number of bytes to private header, because the attacker knows the size of the cyphertext, so they can deduce private header information
 
@@ -97,6 +99,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
         &strategy.key_hash_algorithms,
         &mut |alg| progress.start_stretch_alg(&alg, None),
     );
+    let mut file_padding = Vec::with_capacity(4096);
     let mut out_pths = vec![];
     for file in &files_info {
         let mut reader = open_reader(&file, config.verbosity())?;
@@ -128,12 +131,12 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             &strategy.symmetric_algorithms,
             &mut |alg| progress.start_sym_alg_for_file(&alg, &file),
         );
-
+        let padding_len = round_up_to_power_of_two((priv_header_data.len() + secret.len()) as u64) as usize;
+        generate_secure_pseudo_random_bytes(&mut file_padding, padding_len);
         let pub_header = PublicHeader::new(version.clone(), salt.clone(), data_checksum, config.options().clone(), (priv_header_len, priv_header_checksum));
         if !config.dry_run() {
-            //TODO @mark: write private header here
             //TODO @mark: add padding to file here
-            write_output_file(config, &file, &priv_header_data, &secret, Some(&pub_header), &mut || {
+            write_output_file(config, &file, &[&priv_header_data, &secret, &file_padding], Some(&pub_header), &mut || {
                 progress.start_write_for_file(&file)
             })?;
             //TODO @mark: test that file is removed?

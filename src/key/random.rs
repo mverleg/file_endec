@@ -51,7 +51,20 @@ pub fn generate_secure_random_timed(buffer: &mut [u8]) {
 }
 
 /// This is 'secure' in the sense that next or previous values aren't predictable; it is still pseudo-
-/// random and not 'true' random. Characters in most of the non-whitespace, printable ascii range.
+/// random and not 'true' random.
+pub fn generate_secure_pseudo_random_bytes(buffer: &mut Vec<u8>, length: usize) {
+    buffer.clear();
+    RNG.with(|rng| {
+        let mut rng = rng.borrow_mut();
+        for _ in 0..length {
+            buffer.push(rng.gen())
+            //TODO: would this be faster in batches?
+        }
+    })
+}
+
+/// Secure psuedo-random like `generate_secure_pseudo_random_bytes`, but characters are in most
+/// of the non-whitespace, printable ascii range.
 pub fn generate_secure_pseudo_random_printable(buffer: &mut String, length: usize) {
     buffer.clear();
     RNG.with(|rng| {
@@ -69,8 +82,28 @@ mod tests {
 
     use super::*;
 
-    fn test_is_sescure() -> impl CryptoRng {
+    fn test_is_secure() -> impl CryptoRng {
         // This fails at compile time if not cryptographic.
         RNG.with(|rng| rng.borrow().clone())
+    }
+
+    const N: usize = 100;
+
+    #[test]
+    fn bytes() {
+        let mut data = Vec::with_capacity(N);
+        generate_secure_pseudo_random_bytes(&mut data, N);
+        assert_eq!(data.len(), N);
+        let total: u64 = data.into_iter().map(|v| v as u64).sum();
+        assert!(total > 0, "all random bytes were 0; this has probability < 1e-240");
+    }
+
+    #[test]
+    fn printable() {
+        let mut data = String::with_capacity(N);
+        generate_secure_pseudo_random_printable(&mut data, N);
+        assert_eq!(data.len(), N);
+        let total: u64 = data.as_bytes().iter().map(|v| *v as u64).sum();
+        assert!(total > 0, "all random characters were 0; this has probability < 1e-240");
     }
 }

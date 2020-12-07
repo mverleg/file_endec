@@ -12,11 +12,11 @@ use crate::util::FedResult;
 pub fn write_output_file(
     config: &impl EndecConfig,
     file: &FileInfo,
-    priv_header_data: &[u8],
-    file_data: &[u8],
+    datas: &[&[u8]],
     header: Option<&PublicHeader>,
     start_progress: &mut impl FnMut(),
 ) -> FedResult<()> {
+    debug_assert!(datas.len() >= 1);
     start_progress();
     if file.out_pth.exists() {
         if config.overwrite() {
@@ -47,8 +47,9 @@ pub fn write_output_file(
                 &file.out_pth.to_string_lossy()
             )
         },
-        out_file.write_all(&priv_header_data)
-            .and(out_file.write_all(&file_data)),
+        datas.iter()
+            .map(|data| out_file.write_all(data))
+            .collect::<Result<Vec<_>, _>>(),
     )?;
     if config.debug() {
         println!("encrypted {}", &file.file_name());

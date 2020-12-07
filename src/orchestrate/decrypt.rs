@@ -55,6 +55,7 @@ fn validate_checksum_matches(
 }
 
 fn decrypt_private_header(data: Vec<u8>, pub_header: &PublicHeader, key: &StretchKey, strategy: &Strategy, config: &DecryptConfig, filename: &str, start_progress: &mut impl FnMut()) -> FedResult<Option<PrivateHeader>> {
+    eprintln!("START DECRYPTING PRIVATE HEADER (len {})", &data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
     start_progress();
     let revealed = decrypt_file(
         data,
@@ -74,9 +75,11 @@ fn decrypt_private_header(data: Vec<u8>, pub_header: &PublicHeader, key: &Stretc
         return Err("private header was corrupted".to_owned());
     }
     Ok(if version_has_options_meta(&pub_header.version()) {
+        eprintln!("FINISHED DECRYPTING PRIVATE HEADER");  //TODO @mark: TEMPORARY! REMOVE THIS!
         let (_, priv_header) = parse_private_header(&mut revealed.as_slice())?;
         Some(priv_header)
     } else {
+        eprintln!("NO PRIVATE HEADER");  //TODO @mark: TEMPORARY! REMOVE THIS!
         None
     })
 }

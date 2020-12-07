@@ -30,8 +30,8 @@ use crate::util::version::get_current_version;
 
 fn encrypt_private_header(salt: &Salt, key: &StretchKey, pepper: &Salt, file: &FileInfo, strategy: &Strategy, config: &EncryptConfig, start_progress: &mut impl FnMut()) -> FedResult<(Vec<u8>, Checksum)> {
     start_progress();
-    // This padding length has expectation value 128, which is probably enough to obfuscate most filename lengths.
-    let padding_len = pepper.salt[0] as u16;
+    // This padding length has expectation value 256, which is probably enough to obfuscate most filename lengths.
+    let padding_len = (pepper.salt[0] as u16) + (pepper.salt[1] as u16);
     let priv_header = PrivateHeader::new(
         file.file_name(),
         file.permissions,
@@ -50,6 +50,7 @@ fn encrypt_private_header(salt: &Salt, key: &StretchKey, pepper: &Salt, file: &F
         config.options(),
         config.verbosity().debug()
     )?;
+    println!("private header (len {}):\n{}", data.len(), ::std::str::from_utf8(&data).unwrap());  //TODO @mark: TEMPORARY! REMOVE THIS!
     let checksum = calculate_checksum(&data, &mut || {});
     let secret = encrypt_file(
         data,
@@ -58,6 +59,7 @@ fn encrypt_private_header(salt: &Salt, key: &StretchKey, pepper: &Salt, file: &F
         &strategy.symmetric_algorithms,
         &mut |_| {},
     );
+    println!("private header, encrypted len {}", secret.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
     Ok((secret, checksum))
 }
 

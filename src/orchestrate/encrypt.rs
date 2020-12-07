@@ -133,7 +133,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
         if !config.dry_run() {
             //TODO @mark: write private header here
             //TODO @mark: add padding to file here
-            write_output_file(config, &file, &secret, Some(&pub_header), &mut || {
+            write_output_file(config, &file, &priv_header_data, &secret, Some(&pub_header), &mut || {
                 progress.start_write_for_file(&file)
             })?;
             //TODO @mark: test that file is removed?

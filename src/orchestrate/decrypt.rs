@@ -72,6 +72,7 @@ fn decrypt_private_header(data: Vec<u8>, pub_header: &PublicHeader, key: &Stretc
         config.verbosity(),
         filename,
     ) {
+        eprintln!("PRIVATE HEADER FAILED");  //TODO @mark: TEMPORARY! REMOVE THIS!
         return Err("private header was corrupted".to_owned());
     }
     Ok(if version_has_options_meta(&pub_header.version()) {
@@ -176,7 +177,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         ) {
             checksum_failure_count += 1;
         }
-        write_output_file(config, &file_strat.file, &big, None, &mut || {
+        write_output_file(config, &file_strat.file, &[], &big, None, &mut || {
             progress.start_write_for_file(&file_strat.file)
         })?;
         if config.delete_input() {

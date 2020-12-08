@@ -11,7 +11,7 @@ pub struct PrivateHeader {
     changed_ns: Option<u128>,
     accessed_ns: Option<u128>,
     // Original filesize in bytes.
-    size: u64,
+    data_size: u64,
     // Secret seed for values like checksum. This prevents an attacker from verifying whether
     // an encrypted file contains a specific file that the attacker has access to.
     //TODO @mark: make sure pepper influences the checksum
@@ -22,7 +22,7 @@ pub struct PrivateHeader {
 }
 
 impl PrivateHeader {
-    pub fn new(filename: String, permissions: Option<u32>, created_ns: Option<u128>, changed_ns: Option<u128>, accessed_ns: Option<u128>, size: u64, pepper: Salt, padding_len: u16) -> Self {
+    pub fn new(filename: String, permissions: Option<u32>, created_ns: Option<u128>, changed_ns: Option<u128>, accessed_ns: Option<u128>, data_size: u64, pepper: Salt, padding_len: u16) -> Self {
         debug_assert!(padding_len <= 1024);  // implementation detail in padding data generation
         assert!(!filename.contains('\n'));
         PrivateHeader {
@@ -31,7 +31,7 @@ impl PrivateHeader {
             created_ns,
             changed_ns,
             accessed_ns,
-            size,
+            data_size,
             pepper,
             padding_len,
         }
@@ -57,8 +57,8 @@ impl PrivateHeader {
         self.accessed_ns
     }
 
-    pub fn size(&self) -> u64 {
-        self.size
+    pub fn data_size(&self) -> u64 {
+        self.data_size
     }
 
     pub fn pepper(&self) -> &Salt {

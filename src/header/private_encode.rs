@@ -41,7 +41,7 @@ pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, opt
         }
     }
     //if options.has(EncOption::PadSize) {  //TODO @mark: keep it required? even if not used?
-    write_line(writer, PRIV_HEADER_SIZE, Some(&u64_to_small_str(header.size())), verbose)?;
+    write_line(writer, PRIV_HEADER_SIZE, Some(&u64_to_small_str(header.data_size())), verbose)?;
     write_line(writer, PRIV_HEADER_PEPPER, Some(&u8s_to_base64str(&header.pepper().salt)), verbose)?;
     write_padding(header.padding_len(), |pad| write_line(writer, PRIV_HEADER_PADDING, Some(pad), verbose))?;
     write_line(writer, PRIV_HEADER_DATA, None, verbose)?;

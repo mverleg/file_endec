@@ -54,31 +54,41 @@ fn validate_checksum_matches(
     false
 }
 
-fn decrypt_private_header(data: Vec<u8>, pub_header: &PublicHeader, key: &StretchKey, priv_header_checksum: &Checksum, strategy: &Strategy, config: &DecryptConfig, filename: &str, start_progress: &mut impl FnMut()) -> FedResult<Option<PrivateHeader>> {
+/// Generate private header, private header byte length, and unpadded size of header+data.
+fn decrypt_private_header(data: Vec<u8>, pub_header: &PublicHeader, key: &StretchKey, priv_header_checksum: &Checksum, strategy: &Strategy, config: &DecryptConfig, filename: &str, start_progress: &mut impl FnMut()) -> FedResult<(Option<PrivateHeader>, usize, usize)> {
     start_progress();
-    let revealed = decrypt_file(
-        data,
-        0,  // no offset
-        key,
-        pub_header.salt(),
-        &strategy.symmetric_algorithms,
-        &mut |_| {},
-    )?;
-    let actual_checksum = calculate_checksum(&revealed, &mut || {});
-    if !validate_checksum_matches(
-        &actual_checksum,
-        //TODO @mark: is this the wrong checksum? should be private header one
-        priv_header_checksum,
-        config.verbosity(),
-        filename,
-    ) {
-        return Err("private header was corrupted".to_owned());
-    }
-    Ok(if version_has_options_meta(&pub_header.version()) {
+    Ok(if let Some((len, priv_header_checksum)) = strategy.private_header() {
+        let hdr_len = *len as usize;
+        let data = data[..hdr_len].to_vec();
+        let revealed = decrypt_file(
+            data,
+            0,  // no offset
+            key,
+            pub_header.salt(),
+            &strategy.symmetric_algorithms,
+            &mut |_| {},
+        )?;
+        let actual_checksum = calculate_checksum(&revealed, &mut || {});
+        if !validate_checksum_matches(
+            &actual_checksum,
+            //TODO @mark: is this the wrong checksum? should be private header one
+            priv_header_checksum,
+            config.verbosity(),
+            filename,
+        ) {
+            return Err("private header was corrupted".to_owned());
+        }
         let (_, priv_header) = parse_private_header(&mut revealed.as_slice())?;
-        Some(priv_header)
+        match priv_header {
+            Some(header) => {
+                let data_size = header.data_size() as usize;
+                (Some(header), hdr_len, data_size)
+            },
+            None => (None, 0, data.len()),
+        }
     } else {
-        None
+        debug_assert!(!version_has_options_meta(&pub_header.version()), "metadata about private header is missing");
+        (None, 0, data.len())
     })
 }
 
@@ -131,9 +141,10 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
-        let priv_header = if let Some((len, checksum)) = file_strat.header.private_header() {
-            let priv_header_data = data[..*len as usize].to_vec();
-            decrypt_private_header(
+        let (priv_header, priv_header_len, unpadded_data_len) = if let Some((len, checksum)) = file_strat.header.private_header() {
+            let hdr_len = *len as usize;
+            let priv_header_data = data[..hdr_len].to_vec();
+            match decrypt_private_header(
                 priv_header_data,
                 &file_strat.header,
                 &stretched_key,
@@ -142,9 +153,15 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
                 config,
                 &file_strat.file.file_name(),
                 &mut || progress.start_private_header_for_file(&file_strat.file)
-            )?
+            )? {
+                Some(header) => {
+                    let data_size = header.data_size() as usize;
+                    (Some(header), hdr_len, data_size)
+                },
+                None => (None, 0, data.len()),
+            }
         } else {
-            None
+            (None, 0, data.len())
         };
 
         //TODO @mark: filename: String
@@ -157,14 +174,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         //TODO @mark: padding_len: u16
 
         //TODO @mark: ^ continue to next file if failed (checksum_failure_count)
-        let priv_header_len = file_strat.header.private_header().as_ref().map_or_else(|| 0, |hdr| hdr.0 as usize);
-        let data_len = priv_header.as_ref().map(|hdr| hdr.size() as usize).unwrap_or(0);
-        let unpadded_len = priv_header_len + data_len;
-        dbg!(&priv_header);  //TODO @mark: TEMPORARY! REMOVE THIS!
-        dbg!(priv_header_len);  //TODO @mark: TEMPORARY! REMOVE THIS!
-        dbg!(data_len);  //TODO @mark: TEMPORARY! REMOVE THIS!
-        dbg!(unpadded_len);  //TODO @mark: TEMPORARY! REMOVE THIS!
-        data.truncate(unpadded_len);
+        data.truncate(unpadded_data_len);
         let revealed = decrypt_file(
             data,
             priv_header_len,

@@ -55,12 +55,7 @@ fn validate_checksum_matches(
 }
 
 fn decrypt_private_header(data: Vec<u8>, pub_header: &PublicHeader, key: &StretchKey, priv_header_checksum: &Checksum, strategy: &Strategy, config: &DecryptConfig, filename: &str, start_progress: &mut impl FnMut()) -> FedResult<Option<PrivateHeader>> {
-    eprintln!("START DECRYPTING PRIVATE HEADER (len {})", &data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
     start_progress();
-    println!("priv2 {:?} ... {:?}", &data[..3], &data[(data.len()-5)..]);  //TODO @mark: TEMPORARY! REMOVE THIS!
-    println!("key {:?}", key.unsecure_slice(8)); //TODO @mark: TEMPORARY! REMOVE THIS!
-    println!("salt {:?}", pub_header.salt()); //TODO @mark: TEMPORARY! REMOVE THIS!
-    println!("symalg {:?}", &strategy.symmetric_algorithms); //TODO @mark: TEMPORARY! REMOVE THIS!
     let revealed = decrypt_file(
         data,
         0,  // no offset
@@ -77,15 +72,12 @@ fn decrypt_private_header(data: Vec<u8>, pub_header: &PublicHeader, key: &Stretc
         config.verbosity(),
         filename,
     ) {
-        eprintln!("PRIVATE HEADER FAILED because of checksum");  //TODO @mark: TEMPORARY! REMOVE THIS!
         return Err("private header was corrupted".to_owned());
     }
     Ok(if version_has_options_meta(&pub_header.version()) {
-        eprintln!("FINISHED DECRYPTING PRIVATE HEADER");  //TODO @mark: TEMPORARY! REMOVE THIS!
         let (_, priv_header) = parse_private_header(&mut revealed.as_slice())?;
         Some(priv_header)
     } else {
-        eprintln!("NO PRIVATE HEADER");  //TODO @mark: TEMPORARY! REMOVE THIS!
         None
     })
 }
@@ -166,7 +158,13 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
 
         //TODO @mark: ^ continue to next file if failed (checksum_failure_count)
         let priv_header_len = file_strat.header.private_header().as_ref().map_or_else(|| 0, |hdr| hdr.0 as usize);
-        data.truncate(priv_header_len + priv_header.map(|hdr| hdr.size() as usize).unwrap_or(0));
+        let data_len = priv_header.as_ref().map(|hdr| hdr.size() as usize).unwrap_or(0);
+        let unpadded_len = priv_header_len + data_len;
+        dbg!(&priv_header);  //TODO @mark: TEMPORARY! REMOVE THIS!
+        dbg!(priv_header_len);  //TODO @mark: TEMPORARY! REMOVE THIS!
+        dbg!(data_len);  //TODO @mark: TEMPORARY! REMOVE THIS!
+        dbg!(unpadded_len);  //TODO @mark: TEMPORARY! REMOVE THIS!
+        data.truncate(unpadded_len);
         let revealed = decrypt_file(
             data,
             priv_header_len,

@@ -20,8 +20,7 @@ pub fn encrypt_file(
             SymmetricEncryptionAlg::Twofish => encrypt_twofish(&data, key, salt),
         }
     }
-    eprintln!("(after)&data[0..6]: {:?}", &data[0..6]);  //TODO @mark: TEMPORARY! REMOVE THIS!
-    dbg!(data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
+    eprintln!("(after)&data[0..6]: {:?} len {}", &data[0..6], data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
     data
 }
 

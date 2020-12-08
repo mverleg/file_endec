@@ -15,8 +15,7 @@ pub fn decrypt_file(
     encrypt_algs: &[SymmetricEncryptionAlg],
     start_progress: &mut impl FnMut(&SymmetricEncryptionAlg),
 ) -> FedResult<Vec<u8>> {
-    eprintln!("&data[data_start_index..data_start_index+6]: {:?}", &data[data_start_index..data_start_index+6]);  //TODO @mark: TEMPORARY! REMOVE THIS!
-    dbg!(data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
+    eprintln!("&data[data_start_index..data_start_index+6]: {:?} len {}", &data[data_start_index..data_start_index+6], data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
     assert!(!encrypt_algs.is_empty());
     for decrypt_alg in encrypt_algs.iter().rev() {
         start_progress(decrypt_alg);

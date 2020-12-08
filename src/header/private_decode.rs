@@ -46,7 +46,6 @@ fn parse_obfuscation(header_data: &mut HashMap<String, String>) -> FedResult<(Sa
 /// Parses the data in the private header and returns it, along with the index of the first byte after the header.
 pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<(usize, PrivateHeader)> {
 
-    eprintln!("START parse_private_header");   //TODO @mark: TEMPORARY! REMOVE THIS!
     let (index, mut header_data) = match read_header_keys(reader, None, &[PRIV_HEADER_DATA]) {
         Ok(map) => map,
         Err(err) => return Err(match err {
@@ -56,7 +55,6 @@ pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<(usize, Pri
             HeaderErr::ReadError => format!("the private file header could not be read; perhaps the file was not accessible, or the file header has been corrupted"),
         }),
     };
-    eprintln!("END parse_private_header");   //TODO @mark: TEMPORARY! REMOVE THIS!
 
     let filename = parse_filename(&mut header_data)?;
     let permissions = parse_permissions(&mut header_data)?;

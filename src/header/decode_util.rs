@@ -25,7 +25,6 @@ fn read_line(reader: &mut dyn BufRead, line: &mut String, index: &mut usize) -> 
     }
     *index = *index + line.len();
     line.pop();
-    dbg!(&line);  //TODO @mark: TEMPORARY! REMOVE THIS!
     Ok(())
 }
 

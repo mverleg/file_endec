@@ -82,6 +82,7 @@ mod tests {
 
     use super::*;
 
+    #[allow(dead_code)]
     fn test_is_secure() -> impl CryptoRng {
         // This fails at compile time if not cryptographic.
         RNG.with(|rng| rng.borrow().clone())

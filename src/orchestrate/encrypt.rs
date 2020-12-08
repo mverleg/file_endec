@@ -26,7 +26,7 @@ use crate::util::errors::FedResult;
 use crate::util::option::EncOption;
 use crate::util::version::get_current_version;
 use crate::key::random::generate_secure_pseudo_random_bytes;
-use crate::util::rounding::round_up_to_power_of_two;
+use crate::util::rounding::remainder_to_power_of_two;
 
 //TODO @mark: I need to add some random number of bytes to private header, because the attacker knows the size of the cyphertext, so they can deduce private header information
 
@@ -135,7 +135,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             &strategy.symmetric_algorithms,
             &mut |alg| progress.start_sym_alg_for_file(&alg, &file),
         );
-        let padding_len = round_up_to_power_of_two((priv_header_data.len() + secret.len()) as u64) as usize;
+        let padding_len = remainder_to_power_of_two((priv_header_data.len() + secret.len()) as u64) as usize;
         generate_secure_pseudo_random_bytes(&mut file_padding, padding_len);
         let pub_header = PublicHeader::new(version.clone(), salt.clone(), data_checksum, config.options().clone(), (priv_header_len, priv_header_checksum));
         if !config.dry_run() {

@@ -135,7 +135,6 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
         generate_secure_pseudo_random_bytes(&mut file_padding, padding_len);
         let pub_header = PublicHeader::new(version.clone(), salt.clone(), data_checksum, config.options().clone(), (priv_header_len, priv_header_checksum));
         if !config.dry_run() {
-            //TODO @mark: add padding to file here
             write_output_file(config, &file, &[&priv_header_data, &secret, &file_padding], Some(&pub_header), &mut || {
                 progress.start_write_for_file(&file)
             })?;

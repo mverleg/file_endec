@@ -55,10 +55,11 @@ fn validate_checksum_matches(
 }
 
 /// Generate private header, private header byte length, and unpadded size of header+data.
-fn decrypt_private_header(data: Vec<u8>, pub_header: &PublicHeader, key: &StretchKey, priv_header_checksum: &Checksum, strategy: &Strategy, config: &DecryptConfig, filename: &str, start_progress: &mut impl FnMut()) -> FedResult<(Option<PrivateHeader>, usize, usize)> {
+fn decrypt_private_header(data: &[u8], pub_header: &PublicHeader, key: &StretchKey, strategy: &Strategy, config: &DecryptConfig, filename: &str, start_progress: &mut impl FnMut()) -> FedResult<(Option<PrivateHeader>, usize, usize)> {
     start_progress();
-    Ok(if let Some((len, priv_header_checksum)) = strategy.private_header() {
+    Ok(if let Some((len, priv_header_checksum)) = pub_header.private_header() {
         let hdr_len = *len as usize;
+        // Some extra allocation with `to_vec`, but the header is usually small, and it saves a bunch of code
         let data = data[..hdr_len].to_vec();
         let revealed = decrypt_file(
             data,
@@ -79,13 +80,8 @@ fn decrypt_private_header(data: Vec<u8>, pub_header: &PublicHeader, key: &Stretc
             return Err("private header was corrupted".to_owned());
         }
         let (_, priv_header) = parse_private_header(&mut revealed.as_slice())?;
-        match priv_header {
-            Some(header) => {
-                let data_size = header.data_size() as usize;
-                (Some(header), hdr_len, data_size)
-            },
-            None => (None, 0, data.len()),
-        }
+        let data_size = priv_header.data_size() as usize;
+        (Some(priv_header), hdr_len, data_size)
     } else {
         debug_assert!(!version_has_options_meta(&pub_header.version()), "metadata about private header is missing");
         (None, 0, data.len())
@@ -141,28 +137,15 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
-        let (priv_header, priv_header_len, unpadded_data_len) = if let Some((len, checksum)) = file_strat.header.private_header() {
-            let hdr_len = *len as usize;
-            let priv_header_data = data[..hdr_len].to_vec();
-            match decrypt_private_header(
-                priv_header_data,
-                &file_strat.header,
-                &stretched_key,
-                checksum,
-                file_strat.strategy,
-                config,
-                &file_strat.file.file_name(),
-                &mut || progress.start_private_header_for_file(&file_strat.file)
-            )? {
-                Some(header) => {
-                    let data_size = header.data_size() as usize;
-                    (Some(header), hdr_len, data_size)
-                },
-                None => (None, 0, data.len()),
-            }
-        } else {
-            (None, 0, data.len())
-        };
+        let (priv_header, priv_header_len, unpadded_data_len) = decrypt_private_header(
+            &data,
+            &file_strat.header,
+            &stretched_key,
+            file_strat.strategy,
+            config,
+            &file_strat.file.file_name(),
+            &mut || progress.start_private_header_for_file(&file_strat.file)
+        )?;
 
         //TODO @mark: filename: String
         //TODO @mark: permissions: Option<u32>

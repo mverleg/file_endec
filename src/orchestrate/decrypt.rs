@@ -57,6 +57,10 @@ fn validate_checksum_matches(
 fn decrypt_private_header(data: Vec<u8>, pub_header: &PublicHeader, key: &StretchKey, strategy: &Strategy, config: &DecryptConfig, filename: &str, start_progress: &mut impl FnMut()) -> FedResult<Option<PrivateHeader>> {
     eprintln!("START DECRYPTING PRIVATE HEADER (len {})", &data.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
     start_progress();
+    println!("priv2 {:?} ... {:?}", &data[..3], &data[(data.len()-5)..]);  //TODO @mark: TEMPORARY! REMOVE THIS!
+    println!("key {:?}", key.unsecure_slice(8)); //TODO @mark: TEMPORARY! REMOVE THIS!
+    println!("salt {:?}", pub_header.salt()); //TODO @mark: TEMPORARY! REMOVE THIS!
+    println!("symalg {:?}", &strategy.symmetric_algorithms); //TODO @mark: TEMPORARY! REMOVE THIS!
     let revealed = decrypt_file(
         data,
         0,  // no offset

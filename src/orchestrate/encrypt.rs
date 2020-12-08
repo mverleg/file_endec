@@ -61,6 +61,10 @@ fn encrypt_private_header(salt: &Salt, key: &StretchKey, pepper: &Salt, file: &F
         &strategy.symmetric_algorithms,
         &mut |_| {},
     );
+    println!("priv1 {:?} ... {:?}", &secret[..3], &secret[(secret.len()-5)..]);  //TODO @mark: TEMPORARY! REMOVE THIS!
+    println!("key {:?}", key.unsecure_slice(8)); //TODO @mark: TEMPORARY! REMOVE THIS!
+    println!("salt {:?}", salt); //TODO @mark: TEMPORARY! REMOVE THIS!
+    println!("symalg {:?}", &strategy.symmetric_algorithms); //TODO @mark: TEMPORARY! REMOVE THIS!
     println!("private header, encrypted len {}", secret.len());  //TODO @mark: TEMPORARY! REMOVE THIS!
     Ok((secret, checksum))
 }

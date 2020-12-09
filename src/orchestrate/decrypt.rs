@@ -54,7 +54,7 @@ fn validate_checksum_matches(
     false
 }
 
-/// Generate private header, private header byte length, and unpadded size of header+data.
+/// Generate private header, private header byte length, and unpadded size of data.
 fn decrypt_private_header(data: &[u8], pub_header: &PublicHeader, key: &StretchKey, strategy: &Strategy, config: &DecryptConfig, filename: &str, start_progress: &mut impl FnMut()) -> FedResult<(Option<PrivateHeader>, usize, usize)> {
     start_progress();
     Ok(if let Some((len, priv_header_checksum)) = pub_header.private_header() {
@@ -152,12 +152,11 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         //TODO @mark: created_ns: Option<u128>
         //TODO @mark: changed_ns: Option<u128>
         //TODO @mark: accessed_ns: Option<u128>
-        //TODO @mark: size: u64
         //TODO @mark: pepper: Salt
         //TODO @mark: padding_len: u16
 
         //TODO @mark: ^ continue to next file if failed (checksum_failure_count)
-        data.truncate(unpadded_data_len);
+        data.truncate(priv_header_len + unpadded_data_len);
         let revealed = decrypt_file(
             data,
             priv_header_len,

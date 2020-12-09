@@ -152,8 +152,6 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         //TODO @mark: created_ns: Option<u128>
         //TODO @mark: changed_ns: Option<u128>
         //TODO @mark: accessed_ns: Option<u128>
-        //TODO @mark: pepper: Salt
-        //TODO @mark: padding_len: u16
 
         //TODO @mark: ^ continue to next file if failed (checksum_failure_count)
         data.truncate(priv_header_len + unpadded_data_len);
@@ -181,7 +179,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         ) {
             checksum_failure_count += 1;
         }
-        write_output_file(config, &file_strat.file, &[&big], None, &mut || {
+        write_output_file(config, &file_strat.file.out_pth, &[&big], None, &mut || {
             progress.start_write_for_file(&file_strat.file)
         })?;
         if config.delete_input() {
@@ -208,8 +206,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
     }
     if checksum_failure_count > 0 {
         return Err(format!(
-            "there were {} files whose checksums did not match; they \
-        likely do not contain real data",
+            "there were {} files whose checksums did not match; they likely do not contain real data",
             checksum_failure_count
         ));
     }

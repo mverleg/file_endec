@@ -55,7 +55,7 @@ fn validate_checksum_matches(
 }
 
 /// Generate private header, private header byte length, and unpadded size of data.
-fn decrypt_private_header(data: &[u8], pub_header: &PublicHeader, key: &StretchKey, strategy: &Strategy, config: &DecryptConfig, filename: &str, start_progress: &mut impl FnMut()) -> FedResult<(Option<PrivateHeader>, usize, usize)> {
+fn decrypt_private_header(data: &[u8], pub_header: &PublicHeader, key: &StretchKey, strategy: &Strategy, config: &DecryptConfig, filename: &str, checksum_failure_count: &mut usize, start_progress: &mut impl FnMut()) -> FedResult<(Option<PrivateHeader>, usize, usize)> {
     start_progress();
     Ok(if let Some((len, priv_header_checksum)) = pub_header.private_header() {
         let hdr_len = *len as usize;
@@ -72,12 +72,11 @@ fn decrypt_private_header(data: &[u8], pub_header: &PublicHeader, key: &StretchK
         let actual_checksum = calculate_checksum(&revealed, &mut || {});
         if !validate_checksum_matches(
             &actual_checksum,
-            //TODO @mark: is this the wrong checksum? should be private header one
             priv_header_checksum,
             config.verbosity(),
             filename,
         ) {
-            return Err("private header was corrupted".to_owned());
+            *checksum_failure_count += 1;
         }
         let (_, priv_header) = parse_private_header(&mut revealed.as_slice())?;
         let data_size = priv_header.data_size() as usize;
@@ -144,16 +143,20 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             file_strat.strategy,
             config,
             &file_strat.file.file_name(),
-            &mut || progress.start_private_header_for_file(&file_strat.file)
+            &mut checksum_failure_count,
+            &mut || progress.start_private_header_for_file(&file_strat.file),
         )?;
+        //TODO @mark: ^ continue to next file if failed (checksum_failure_count)
 
-        //TODO @mark: filename: String
         //TODO @mark: permissions: Option<u32>
         //TODO @mark: created_ns: Option<u128>
         //TODO @mark: changed_ns: Option<u128>
         //TODO @mark: accessed_ns: Option<u128>
 
-        //TODO @mark: ^ continue to next file if failed (checksum_failure_count)
+        let mut out_pth = file_strat.file.out_pth.clone();
+        if let Some(name) = priv_header.as_ref().map(|hdr| hdr.filename()) {
+            out_pth.set_file_name(name);
+        };
         data.truncate(priv_header_len + unpadded_data_len);
         let revealed = decrypt_file(
             data,
@@ -179,7 +182,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         ) {
             checksum_failure_count += 1;
         }
-        write_output_file(config, &file_strat.file.out_pth, &[&big], None, &mut || {
+        write_output_file(config, &out_pth, &[&big], None, &mut || {
             progress.start_write_for_file(&file_strat.file)
         })?;
         if config.delete_input() {

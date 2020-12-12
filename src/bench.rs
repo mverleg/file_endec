@@ -227,6 +227,8 @@ mod back_and_forth {
 }
 
 #[cfg(not(feature = "expose"))]
+use ::criterion::Criterion;
+#[cfg(not(feature = "expose"))]
 pub fn need_expose_feature(_: &mut Criterion) {
     panic!("benchmarks require feature 'expose' to be enabled")
 }

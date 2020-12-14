@@ -1,7 +1,5 @@
 #![cfg(test)]
 
-//TODO @mark: more e2e tests for all the v1.1 features
-
 use ::std::env;
 use ::std::fs;
 use ::std::path::PathBuf;
@@ -126,6 +124,52 @@ fn mixed_options() {
         assert_eq!(fs::read(encrypt_info.path.as_path()).unwrap(), encrypt_info.data);
         encrypt_info.tmp.close().unwrap();
     });
+}
+
+#[test]
+#[cfg_attr(not(feature = "test-e2e"), ignore)]
+fn hiding() {
+    let rep_count = 3;
+    let key = "siqHpFEe&D=Mu2,6mTlH8j%m2oAJ9UjR";
+    let mut enc_datas = vec![];
+    for rep in 0 .. rep_count {
+        let raw_size = 100 + rep * 32 * 1024;
+        let (tmp, file, data) = write_test_file(raw_size);
+        let enc_pth = file.with_file_name(&format!("{:04}.enc", rep));
+        test_encrypt(
+            &[file.as_path()],
+            &[
+                "-k",
+                &format!("pass:{}", key),
+                "-d",
+                "--hide-meta",
+                "--hide-name",
+                "-s",
+            ],
+            None,
+        );
+        assert!(enc_pth.as_path().exists());
+        assert!(!file.as_path().exists());
+        //TODO @mark: test size
+        //TODO @mark: test meta
+        unimplemented!();
+        enc_datas.push((file, enc_pth, data, tmp));
+    }
+    for (raw_pth, enc_pth, data, tmp) in enc_datas {
+        env::set_var("FED_E2E_LARGE_FILE_TESTKEY", key);
+        test_decrypt(
+            &[enc_pth.as_path()],
+            &["-k", "env:FED_E2E_LARGE_FILE_TESTKEY", "-d", "-v"],
+            None,
+            true,
+        );
+        assert!(!enc_pth.as_path().exists());
+        assert!(raw_pth.as_path().exists());
+        assert_eq!(fs::read(raw_pth.as_path()).unwrap(), data);
+        //TODO @mark: test size
+        //TODO @mark: test meta
+        tmp.close().unwrap();
+    }
 }
 
 #[test]

@@ -133,7 +133,7 @@ fn hiding() {
     let key = "siqHpFEe&D=Mu2,6mTlH8j%m2oAJ9UjR";
     let mut enc_datas = vec![];
     for rep in 0 .. rep_count {
-        let raw_size = 100 + rep * 32 * 1024;
+        let raw_size = 100 + rep * 10 * 1024;
         let (tmp, file, data) = write_test_file(raw_size);
         let enc_pth = file.with_file_name(&format!("{:04}.enc", rep));
         test_encrypt(
@@ -150,6 +150,11 @@ fn hiding() {
         );
         assert!(enc_pth.as_path().exists());
         assert!(!file.as_path().exists());
+        let enc_data = &fs::read(&enc_pth).unwrap();
+        let data_header = b"\nmeta1+data:\n";
+        let header_index = enc_data.find(data_header).expect("did not find the v1.1 data header");
+        let enc_size = enc_data.len() - header_index - data_header.len();
+        assert_eq!(enc_size, raw_size);
         //TODO @mark: test size
         //TODO @mark: test meta
         unimplemented!();

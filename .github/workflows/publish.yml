@@ -6,6 +6,8 @@ on:
     branches:
       - main
       - master
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
 
 jobs:
@@ -15,6 +17,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Determine tag
+        uses: allenevans/set-env@v2
+        with:
+          TAG: $(python -c 'from re import findall as f; from os import environ as e; ref = e.get("GITHUB_REF", "latest").split("/")[-1]; tag = f(r"^v?\d+\.\d+\.\d+", ref); print(tag[0][1:] if tag else "latest")')
       - name: Push to DockerHub
         uses: docker/build-push-action@v1
         with:
@@ -22,5 +28,5 @@ jobs:
           username: mverleg
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: mverleg/file-endec
-          tags: latest
+          tags: ${TAG}
 

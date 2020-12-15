@@ -2,12 +2,13 @@
 
 use ::std::env;
 use ::std::fs;
-use ::std::path::PathBuf;
 use ::std::fs::File;
 use ::std::io::BufRead;
 use ::std::io::BufReader;
+use ::std::path::PathBuf;
 
-use ::tempfile::{NamedTempFile, TempDir};
+use ::tempfile::NamedTempFile;
+use ::tempfile::TempDir;
 
 use crate::files::mockfile::write_test_file;
 use crate::util::test_cmd::filename_append_enc;

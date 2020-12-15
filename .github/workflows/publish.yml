@@ -18,7 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Determine tag
-        uses: allenevans/set-env@v2
+        uses: allenevans/set-env@v2.0.0
         with:
           TAG: $(python -c 'from re import findall as f; from os import environ as e; ref = e.get("GITHUB_REF", "latest").split("/")[-1]; tag = f(r"^v?\d+\.\d+\.\d+", ref); print(tag[0][1:] if tag else "latest")')
       - name: Push to DockerHub

@@ -24,12 +24,16 @@ pub fn generate_available_name(directory: &Path, extension: &str) -> PathBuf {
     assert!(directory.is_dir());
     let mut file = directory.to_path_buf();
     file.push(make_name(0, extension));
+    dbg!("--");  //TODO @mark: TEMPORARY! REMOVE THIS!
     loop {
-        let nr = LAST_INDEX.fetch_add(1, Ordering::AcqRel);
-        file.with_file_name(make_name(nr, extension));
+        let nr = LAST_INDEX.fetch_add(10, Ordering::AcqRel);
+        file.set_file_name(make_name(nr, extension));
+        dbg!(&file);  //TODO @mark: TEMPORARY! REMOVE THIS!
+        dbg!(&nr);  //TODO @mark: TEMPORARY! REMOVE THIS!
         if !file.exists() {
             return file
         }
+        dbg!("wrap");  //TODO @mark: TEMPORARY! REMOVE THIS!
     }
 }
 

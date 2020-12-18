@@ -1,10 +1,12 @@
+use ::std::cell::RefCell;
+use ::std::collections::HashMap;
 use ::std::path::Path;
 use ::std::path::PathBuf;
-use ::std::sync::atomic::AtomicU32;
 use ::std::sync::atomic::AtomicU64;
-use ::std::sync::atomic::Ordering;
 
-const LAST_INDEX: AtomicU64 = AtomicU64::new(1);
+thread_local! {
+    static LAST_COUNTS: RefCell<HashMap<String, u64>> = RefCell::new(HashMap::new())
+}
 
 fn make_name(nr: u64, extension: &str) -> String {
     format!("{0:04}.{1:}", nr, extension)
@@ -23,18 +25,34 @@ fn make_name(nr: u64, extension: &str) -> String {
 pub fn generate_available_name(directory: &Path, extension: &str) -> PathBuf {
     assert!(directory.is_dir());
     let mut file = directory.to_path_buf();
-    file.push(make_name(0, extension));
-    dbg!("--");  //TODO @mark: TEMPORARY! REMOVE THIS!
-    loop {
-        let nr = LAST_INDEX.fetch_add(10, Ordering::AcqRel);
-        file.set_file_name(make_name(nr, extension));
-        dbg!(&file);  //TODO @mark: TEMPORARY! REMOVE THIS!
-        dbg!(&nr);  //TODO @mark: TEMPORARY! REMOVE THIS!
-        if !file.exists() {
-            return file
+    file.push("".to_string());
+    LAST_COUNTS.with(|counts| {
+        let mut counts = counts.borrow_mut();
+        let mut nr = match counts.get(extension) {
+            Some(cnt) => *cnt,
+            None => 0,
+        };
+        loop {
+            nr += 1;
+            file.set_file_name(make_name(nr, extension));
+            if !file.exists() {
+                break
+            }
         }
-        dbg!("wrap");  //TODO @mark: TEMPORARY! REMOVE THIS!
-    }
+        counts.insert(extension.to_owned(), nr);
+    });
+    file
+    // dbg!("--");  //TODO @mark: TEMPORARY! REMOVE THIS!
+    // loop {
+    //     let nr = LAST_INDEX.fetch_add(10, Ordering::AcqRel);
+    //     file.set_file_name(make_name(nr, extension));
+    //     dbg!(&file);  //TODO @mark: TEMPORARY! REMOVE THIS!
+    //     dbg!(&nr);  //TODO @mark: TEMPORARY! REMOVE THIS!
+    //     if !file.exists() {
+    //         return file
+    //     }
+    //     dbg!("wrap");  //TODO @mark: TEMPORARY! REMOVE THIS!
+    // }
 }
 
 #[cfg(test)]

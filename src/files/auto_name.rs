@@ -25,7 +25,7 @@ fn make_name(nr: u64, extension: &str) -> String {
 pub fn generate_available_name(directory: &Path, extension: &str) -> PathBuf {
     assert!(directory.is_dir());
     let mut file = directory.to_path_buf();
-    file.push("".to_string());
+    file.push("f".to_string());
     LAST_COUNTS.with(|counts| {
         let mut counts = counts.borrow_mut();
         let mut nr = match counts.get(extension) {
@@ -42,17 +42,6 @@ pub fn generate_available_name(directory: &Path, extension: &str) -> PathBuf {
         counts.insert(extension.to_owned(), nr);
     });
     file
-    // dbg!("--");  //TODO @mark: TEMPORARY! REMOVE THIS!
-    // loop {
-    //     let nr = LAST_INDEX.fetch_add(10, Ordering::AcqRel);
-    //     file.set_file_name(make_name(nr, extension));
-    //     dbg!(&file);  //TODO @mark: TEMPORARY! REMOVE THIS!
-    //     dbg!(&nr);  //TODO @mark: TEMPORARY! REMOVE THIS!
-    //     if !file.exists() {
-    //         return file
-    //     }
-    //     dbg!("wrap");  //TODO @mark: TEMPORARY! REMOVE THIS!
-    // }
 }
 
 #[cfg(test)]

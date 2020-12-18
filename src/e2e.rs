@@ -152,6 +152,7 @@ fn hiding() {
             ],
             None,
         );
+        dbg!(&enc_pth);  //TODO @mark: TEMPORARY! REMOVE THIS!
         assert!(enc_pth.as_path().exists());
         assert!(!file.as_path().exists());
         let data_header = "\nmeta1+data:\n";
@@ -163,7 +164,6 @@ fn hiding() {
         let end_data_len = fs::read(enc_pth.as_path()).unwrap().len();
         assert_eq!(end_data_len - header_len, raw_size/*TODO: rounded*/);
         //TODO @mark: test meta
-        unimplemented!();
         enc_datas.push((file, enc_pth, data, tmp));
     }
     for (raw_pth, enc_pth, data, tmp) in enc_datas {

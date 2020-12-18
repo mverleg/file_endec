@@ -11,6 +11,15 @@ pub enum Extension<'a> {
     Strip,
 }
 
+impl <'a> Extension<'a> {
+    pub fn unwrap_add(&self) -> &str {
+        match self {
+            Extension::Add(ext) => ext,
+            Extension::String => panic!("unwrapping extension that is set to strip"),
+        }
+    }
+}
+
 pub trait EndecConfig: Debug {
     fn files(&self) -> &[PathBuf];
 

@@ -2,7 +2,6 @@ use ::std::cell::RefCell;
 use ::std::collections::HashMap;
 use ::std::path::Path;
 use ::std::path::PathBuf;
-use ::std::sync::atomic::AtomicU64;
 
 thread_local! {
     static LAST_COUNTS: RefCell<HashMap<String, u64>> = RefCell::new(HashMap::new())
@@ -20,7 +19,7 @@ fn make_name(nr: u64, extension: &str) -> String {
 /// Subsequent calls will start from where the previous one stopped,
 /// effectively assuming that no files are deleted between calls.
 ///
-/// Continues to find names after `9999.enc` (`10000.enc`), but not that
+/// Continues to find names after `9999.enc` (`10000.enc`), but note that
 /// having so many files would involve 10.000 disk operations.
 pub fn generate_available_name(directory: &Path, extension: &str) -> PathBuf {
     assert!(directory.is_dir());

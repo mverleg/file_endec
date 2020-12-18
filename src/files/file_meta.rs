@@ -12,6 +12,7 @@ use crate::header::strategy::Verbosity;
 use crate::util::FedResult;
 use crate::util::pth::determine_output_path;
 use std::fs::Metadata;
+use crate::files::auto_name::generate_available_name;
 
 #[derive(Debug)]
 pub struct FileInfo<'a> {
@@ -88,6 +89,7 @@ pub fn inspect_files<'a>(
     overwrite: bool,
     extension: Extension,
     output_dir: Option<&Path>,
+    hide_name: bool,
 ) -> FedResult<Vec<FileInfo<'a>>> {
     let mut not_found_cnt: u32 = 0;
     let mut output_exists_cnt: u32 = 0;
@@ -117,7 +119,14 @@ pub fn inspect_files<'a>(
         }
 
         // Output file
-        let output_file = determine_output_path(file.as_path(), extension, output_dir);
+        //TODO @mark: test for hide_name
+        let output_file = if hide_name {
+            // `hide_name` only applies to encryption (not decryption), so extension should be available.
+            let dir = file.parent().unwrap();
+            generate_available_name(dir, extension.unwrap_add())
+        } else {
+            determine_output_path(file.as_path(), extension, output_dir)
+        };
         if !overwrite && output_file.exists() {
             eprintln!(
                 "output path '{}' already exists",

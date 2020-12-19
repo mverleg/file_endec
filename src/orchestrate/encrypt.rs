@@ -76,6 +76,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
         config.overwrite(),
         Extension::Add(config.output_extension()),
         config.output_dir(),
+        config.options().has(EncOption::HideMeta),
     )?;
     let mut progress: Box<dyn Progress> = match config.verbosity() {
         Verbosity::Quiet => Box::new(SilentProgress::new()),

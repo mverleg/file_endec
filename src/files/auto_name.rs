@@ -47,7 +47,6 @@ pub fn generate_available_name(directory: &Path, extension: &str) -> PathBuf {
 mod tests {
     use ::std::fs;
 
-    use ::tempfile::NamedTempFile;
     use ::tempfile::TempDir;
 
     use super::*;

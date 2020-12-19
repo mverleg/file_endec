@@ -203,6 +203,7 @@ mod tests {
             config.overwrite(),
             Extension::Add(".enc"),
             config.output_dir(),
+            false,
         )
         .unwrap();
         assert_eq!(2, out_files.len());

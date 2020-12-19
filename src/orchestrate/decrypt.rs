@@ -96,6 +96,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         config.overwrite(),
         Extension::Strip,
         config.output_dir(),
+        false,
     )?;
     let files_strats = read_file_strategies(&files_info, config.verbosity())?;
     let mut progress: Box<dyn Progress> = match config.verbosity() {
@@ -153,10 +154,12 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         //TODO @mark: changed_ns: Option<u128>
         //TODO @mark: accessed_ns: Option<u128>
 
+        //TODO @mark: maybe remove the output file determination when decrypting?
         let mut out_pth = file_strat.file.out_pth.clone();
         if let Some(name) = priv_header.as_ref().map(|hdr| hdr.filename()) {
             out_pth.set_file_name(name);
         };
+        assert!(!out_pth.exists(), "see https://github.com/mverleg/file_endec/issues/25; for now make sure output path '{}' does not exist", out_pth.to_string_lossy());
         data.truncate(priv_header_len + unpadded_data_len);
         let revealed = decrypt_file(
             data,

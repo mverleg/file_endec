@@ -20,7 +20,7 @@ use crate::util::test_cmd::test_encrypt;
 fn fast() {
     let key = "3Q#J3RwOIns@MK9TQDwZkpUK-EmH7T07";
     let (tmp, raw_pth, data) = write_test_file(1024);
-    let enc_pth = filename_append_enc(raw_pth.as_path());
+    let enc_pth = raw_pth.with_file_name("0001.enc");
     test_encrypt(
         &[raw_pth.as_path()],
         &["-k", &format!("pass:{}", key), "-d", "-q", "-s", "--hide-meta"],

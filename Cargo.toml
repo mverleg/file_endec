@@ -39,45 +39,45 @@ harness = false
 
 [dependencies]
 # command line interaction
-structopt = { version = "^0.3.20", default-features = false }
-indicatif = "^0.15.0"
+structopt = { version = "0.3.21", default-features = false }
+indicatif = "0.15.0"
 
 # encryption key
-rpassword = "^5.0.0"
-secstr = "^0.4.0"
-zxcvbn = "^2.0.1"
+rpassword = "5.0.0"
+secstr = "0.4.0"
+zxcvbn = "2.1.1"
 
 # encyrption and decryption
-twofish = "^0.5.0"
-aes = "^0.6.0"
-block-modes = "^0.7.0"
+twofish = "0.5.0"
+aes = "0.6.0"
+block-modes = "0.7.0"
 
 # hashing
-ring = "^0.16.17"
-argon2rs = "^0.2.5"
-bcrypt = "^0.9.0"
-twox-hash = "^1.6.0"
+ring = "0.16.19"
+argon2rs = "0.2.5"
+bcrypt = "0.9.0"
+twox-hash = "1.6.0"
 
 # headers
-semver = "^0.11.0"
-data-encoding = "^2.3.1"
+semver = "0.11.0"
+data-encoding = "2.3.1"
 
 # compression
-brotli = "^3.3.0"
+brotli = "3.3.0"
 
 # shredding
-file_shred = "^1.1.0"
+file_shred = "1.1.0"
 
 # utilities
-lazy_static = "^1.4.0"
-rand = "^0.7.3"
-number2name = "^1.1.1"
+lazy_static = "1.4.0"
+rand = "0.8.0"
+number2name = "1.1.2"
 
 [dev-dependencies]
-criterion = "^0.3.3"
-regex = "^1.4.2"
-tempfile = "^3.1.0"
-datatest = "^0.6.3"
+criterion = "0.3.3"
+regex = "1.4.2"
+tempfile = "3.1.0"
+datatest = "0.6.3"
 
 [profile.test]
 # note: might not be working...

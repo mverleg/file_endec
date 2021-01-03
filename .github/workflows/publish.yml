@@ -17,17 +17,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Determine tag
-        run: |
-          TAG="$(python -c 'from re import findall as f; from os import environ as e; ref = e.get("GITHUB_REF", "latest").split("/")[-1]; tag = f(r"^v?\d+\.\d+\.\d+", ref); print(tag[0][1:] if tag else "latest")')" \
-          printf "TAG=${TAG}\n" \
-          printf "TAG=${TAG}\n" >> $GITHUB_ENV
-      - name: Push to DockerHub
-        uses: docker/build-push-action@v1
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
         with:
-          dockerfile: Dockerfile
           username: mverleg
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: mverleg/file-endec
-          tags: ${TAG}
+      - name: Determine tag
+        run: |
+          TAG="$(python -c 'from re import findall as f; from os import environ as e; ref = e.get("GITHUB_REF", "latest").split("/")[-1]; tag = f(r"^v?\d+\.\d+\.\d+", ref); print(tag[0][1:] if tag else "latest")')" && \
+          printf "TAG=${TAG}\n" && \
+          printf "TAG=${TAG}\n" >>  $GITHUB_ENV
+      - name: Push to DockerHub
+        uses: docker/build-push-action@v2
+        with:
+          file: ./Dockerfile
+          tags: mverleg/file-endec:${{ env.TAG }}
+          push: true
 

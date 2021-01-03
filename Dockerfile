@@ -1,5 +1,5 @@
 
-FROM ekidd/rust-musl-builder:1.48.0 AS build
+FROM ekidd/rust-musl-builder:nightly-2020-11-19 AS build
 
 ENV RUST_BACKTRACE=1
 ENV CARGO_HOME=/home/rust/.cargo

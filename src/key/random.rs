@@ -57,7 +57,7 @@ pub fn generate_secure_pseudo_random_printable(buffer: &mut String, length: usiz
     RNG.with(|rng| {
         let mut rng = rng.borrow_mut();
         for _ in 0..length {
-            buffer.push(rng.gen_range(33, 127) as u8 as char)
+            buffer.push(rng.gen_range(33 .. 127) as u8 as char)
             //TODO: would this be faster in batches?
         }
     })

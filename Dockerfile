@@ -54,7 +54,7 @@ RUN cargo --offline doc --no-deps --release
 RUN cargo --offline audit --deny warnings
 RUN cargo --offline deny check advisories
 RUN cargo --offline deny check bans
-RUN cargo --offline outdated --exit-code 1
+#RUN cargo --offline outdated --exit-code 1
 
 
 # Executable-only image

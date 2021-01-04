@@ -31,8 +31,8 @@ RUN bash -c 'touch -c src/*'
 
 # Build
 
-RUN cargo --offline build --all-targets --release --bin fileenc
-RUN cargo --offline build --all-targets --release --bin filedec
+RUN cargo --offline build --all-targets --features expose,test-e2e --release --bin fileenc
+RUN cargo --offline build --all-targets --features expose,test-e2e --release --bin filedec
 
 RUN cargo --offline run --release --bin fileenc -- --help
 RUN cargo --offline run --release --bin filedec -- --help

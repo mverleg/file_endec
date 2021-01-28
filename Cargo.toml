@@ -43,7 +43,7 @@ structopt = { version = "0.3.21", default-features = false }
 indicatif = "0.15.0"
 
 # encryption key
-rpassword = "5.0.0"
+rpassword = "5.0.1"
 secstr = "0.4.0"
 zxcvbn = "2.1.1"
 
@@ -70,13 +70,13 @@ file_shred = "1.1.0"
 
 # utilities
 lazy_static = "1.4.0"
-rand = "0.8.0"
+rand = "0.8.3"
 number2name = "1.1.2"
 
 [dev-dependencies]
-criterion = "0.3.3"
-regex = "1.4.2"
-tempfile = "3.1.0"
+criterion = "0.3.4"
+regex = "1.4.3"
+tempfile = "3.2.0"
 datatest = "0.6.3"
 
 [profile.test]

@@ -113,7 +113,10 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             &mut || progress.start_read_for_file(&file),
         )?;
         // Do not include the private header in the checksum (by skipping it).
-        let data_checksum = calculate_checksum(&data[priv_header_len..], &mut || progress.start_checksum_for_file(&file));
+        let data_checksum = calculate_checksum(
+            &data[priv_header_len..],
+            &mut || progress.start_checksum_for_file(&file));
+        //TODO @mark: why isn't `priv_header_data` written?
         let small = compress_file(data, &strategy.compression_algorithm, &mut |alg| {
             progress.start_compress_alg_for_file(&alg, &file)
         })?;

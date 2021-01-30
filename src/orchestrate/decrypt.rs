@@ -78,7 +78,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
     for file_strat in &files_strats {
         let mut reader = open_reader(&file_strat.file, config.verbosity())?;
         reader.seek(SeekFrom::Start(file_strat.pub_header_len as u64)).unwrap();
-        let salt = file_strat.header.salt().clone();
+        let salt = file_strat.pub_header.salt().clone();
         let stretched_key = if let Some(sk) = key_cache.get(&salt) {
             sk.clone()
         } else {
@@ -101,8 +101,8 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
-        let priv_header_len = file_strat.header.private_header().as_ref().map(|hdr| hdr.0 as usize).unwrap_or(0);
-        let priv_header = if version_has_options_meta(&file_strat.header.version()) {
+        let priv_header_len = file_strat.pub_header.private_header().as_ref().map(|hdr| hdr.0 as usize).unwrap_or(0);
+        let priv_header = if version_has_options_meta(&file_strat.pub_header.version()) {
             let index_header = parse_private_header(&mut &data[..priv_header_len])?;
             Some(index_header.1)
         } else {
@@ -126,7 +126,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         });
         if !validate_checksum_matches(
             &actual_checksum,
-            file_strat.header.checksum(),
+            file_strat.pub_header.checksum(),
             config.verbosity(),
             &file_strat.file.path_str(),
         ) {

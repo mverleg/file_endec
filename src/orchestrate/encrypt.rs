@@ -103,7 +103,8 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
         let priv_header_len = priv_header_data.len();
 
         let mut reader = open_reader(&file, config.verbosity())?;
-        let mut data = Vec::with_capacity(file.size_b as usize + 2048);
+        let mut data = Vec::with_capacity(file.size_b as usize + priv_header_len + 2048);
+        data.extend(priv_header_data);
         read_file(
             &mut data,
             &mut reader,

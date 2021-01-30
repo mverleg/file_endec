@@ -64,6 +64,7 @@ impl PrivateHeader {
     pub fn pepper(&self) -> &Salt {
         &self.pepper
     }
+
     pub fn padding_len(&self) -> u16 {
         self.padding_len
     }

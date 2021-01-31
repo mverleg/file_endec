@@ -103,6 +103,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         )?;
         let priv_header_len = file_strat.pub_header.private_header().as_ref().map(|hdr| hdr.0 as usize).unwrap_or(0);
         let priv_header = if version_has_options_meta(&file_strat.pub_header.version()) {
+            dbg!(&data[..priv_header_len]);  //TODO @mark: TEMPORARY! REMOVE THIS!
             let index_header = parse_private_header(&mut &data[..priv_header_len])?;
             Some(index_header.1)
         } else {

@@ -104,6 +104,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
 
         let mut reader = open_reader(&file, config.verbosity())?;
         let mut data = Vec::with_capacity(file.size_b as usize + priv_header_len + 2048);
+        todo!("private header should be encrypted separately, because it has to be decrypted separately to deal with padding");
         data.extend(priv_header_data);
         read_file(
             &mut data,

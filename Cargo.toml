@@ -77,7 +77,8 @@ number2name = "1.1.2"
 criterion = "0.3.4"
 regex = "1.4.3"
 tempfile = "3.2.0"
-datatest = "0.6.3"
+#TODO @mark: use version when PR merged
+datatest = { git = "https://github.com/cormacrelf/datatest" }
 
 [profile.test]
 # note: might not be working...

@@ -10,6 +10,8 @@ readme = "README.md"
 license = "BSD-3-Clause"
 keywords = ["files", "encryption", "security"]
 
+build = "build.rs"
+
 [lib]
 name = "file_endec"
 path = "src/lib.rs"
@@ -77,6 +79,9 @@ number2name = "1.1.2"
 criterion = "0.3.5"
 regex = "1.5.4"
 tempfile = "3.2.0"
+
+[build-dependencies]
+indoc = "1.0.3"
 
 [profile.test]
 # note: might not be working...

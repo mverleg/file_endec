@@ -1,5 +1,3 @@
-#![feature(custom_test_frameworks)]
-#![test_runner(datatest::runner)]
 
 pub use crate::config::DecryptConfig;
 pub use crate::config::EncryptConfig;

@@ -1,5 +1,5 @@
 
-FROM ekidd/rust-musl-builder:1.48.0 AS build
+FROM ekidd/rust-musl-builder:nightly-2020-11-19 AS build
 
 ENV RUST_BACKTRACE=1
 ENV CARGO_HOME=/home/rust/.cargo
@@ -31,8 +31,8 @@ RUN bash -c 'touch -c src/*'
 
 # Build
 
-RUN cargo --offline build --all-targets --release --bin fileenc
-RUN cargo --offline build --all-targets --release --bin filedec
+RUN cargo --offline build --all-targets --features expose,test-e2e --release --bin fileenc
+RUN cargo --offline build --all-targets --features expose,test-e2e --release --bin filedec
 
 RUN cargo --offline run --release --bin fileenc -- --help
 RUN cargo --offline run --release --bin filedec -- --help

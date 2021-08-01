@@ -1,5 +1,3 @@
-#![feature(custom_test_frameworks)]
-#![test_runner(datatest::runner)]
 
 pub use crate::config::DecryptConfig;
 pub use crate::config::EncryptConfig;
@@ -54,18 +52,9 @@ mod tests {
     use ::block_modes::block_padding::Iso7816;
     use ::block_modes::BlockMode;
     use ::block_modes::Cbc;
-    use ::lazy_static::lazy_static;
-    use ::regex::Regex;
     use ::secstr::SecVec;
 
-    use crate::key::key::Key;
-
     type Aes256Cbc = Cbc<Aes256, Iso7816>;
-
-    lazy_static! {
-        static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");
-        static ref COMPAT_FILE_RE: Regex = Regex::new(r"^original_v(\d+\.\d+\.\d+)(_\w*)?.png$").unwrap();
-    }
 
     /// The demo used in this blog post:
     /// https://markv.nl/blog/symmetric-encryption-in-rust

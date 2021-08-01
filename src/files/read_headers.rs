@@ -6,7 +6,7 @@ use crate::{FedResult, Verbosity};
 #[derive(Debug)]
 pub struct FileHeaderStrategy<'a> {
     pub file: &'a FileInfo<'a>,
-    pub header: PublicHeader,
+    pub pub_header: PublicHeader,
     pub pub_header_len: usize,
     pub strategy: &'a Strategy,
 }
@@ -16,7 +16,7 @@ impl<'a> FileHeaderStrategy<'a> {
         let strategy = get_version_strategy(header.version(), header.options(), verbosity.debug())?;
         Ok(FileHeaderStrategy {
             file,
-            header,
+            pub_header: header,
             pub_header_len: header_len,
             strategy,
         })

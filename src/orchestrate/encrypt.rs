@@ -55,8 +55,8 @@ fn encrypt_private_header(salt: &Salt, key: &StretchKey, pepper: &Salt, file: &F
     let checksum = calculate_checksum(&data, &mut || {});
     let secret = encrypt_file(
         data,
-        key,
-        salt,
+        &key,
+        &pepper,
         &strategy.symmetric_algorithms,
         &mut |_| {},
     );
@@ -101,8 +101,15 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
     let mut file_padding = Vec::with_capacity(4096);
     let mut out_pths = vec![];
     for file in &files_info {
+        let (priv_header_data, priv_header_checksum) = encrypt_private_header(
+            &pepper, &stretched_key, file, &strategy, config,
+            &mut || progress.start_private_header_for_file(&file))?;
+        let priv_header_len = priv_header_data.len();
+
         let mut reader = open_reader(&file, config.verbosity())?;
-        let mut data = Vec::with_capacity(file.size_b as usize + 10_240);
+        let mut data = Vec::with_capacity(file.size_b as usize + priv_header_len + 10_240);
+        todo!("private header should be encrypted separately, because it has to be decrypted separately to deal with padding");
+        data.extend(priv_header_data);
         read_file(
             &mut data,
             &mut reader,
@@ -112,8 +119,9 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
             &mut || progress.start_read_for_file(&file),
         )?;
         // Do not include the private header in the checksum (by skipping it).
-        let data_checksum = calculate_checksum(&data, &mut || progress.start_checksum_for_file(&file));
-
+        let data_checksum = calculate_checksum(
+            &data, &mut || progress.start_checksum_for_file(&file));
+//TODO @mark: why isn't `priv_header_data` written?
         let small = compress_file(data, &strategy.compression_algorithm, &mut |alg| {
             progress.start_compress_alg_for_file(&alg, &file)
         })?;
@@ -170,7 +178,6 @@ mod tests {
     use ::std::fs;
 
     use ::lazy_static::lazy_static;
-    use ::regex::Regex;
     use tempfile::tempdir;
 
     use crate::config::EncryptConfig;
@@ -180,10 +187,11 @@ mod tests {
     use crate::key::key::Key;
     use crate::util::option::EncOptionSet;
     use crate::util::version::get_current_version;
+    use crate::config::enc::RunMode;
+    use crate::config::typ::{OnFileExist, InputAction};
 
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");
-        static ref COMPAT_FILE_RE: Regex = Regex::new(r"^original_v(\d+\.\d+\.\d+).png$").unwrap();
     }
 
     struct Variation {
@@ -223,11 +231,11 @@ mod tests {
                 //TODO @mark: try different options
                 variation.options,
                 Verbosity::Debug,
-                true,
-                false,
+                OnFileExist::Overwrite,
+                InputAction::Keep,
                 Some(dir.path().to_owned()),
                 ".enc".to_string(),
-                false,
+                RunMode::IsReal,
             );
             let tmp_pth = {
                 let mut p = dir.path().to_owned();

@@ -173,13 +173,14 @@ mod tests {
     use ::tempfile::TempDir;
 
     use crate::config::EncryptConfig;
-    use crate::config::typ::EndecConfig;
+    use crate::config::typ::{EndecConfig, InputAction, OnFileExist};
     use crate::config::typ::Extension;
     use crate::header::strategy::Verbosity;
     use crate::key::Key;
     use crate::util::option::EncOptionSet;
 
     use super::*;
+    use crate::config::enc::RunMode;
 
     #[test]
     fn output_path() {
@@ -191,11 +192,11 @@ mod tests {
             Key::new("secret"),
             EncOptionSet::empty(),
             Verbosity::Debug,
-            true,
-            true,
+            OnFileExist::Overwrite,
+            InputAction::Delete,
             None,
             ".enc".to_owned(),
-            false,
+            RunMode::IsReal,
         );
         let out_files = inspect_files(
             config.files(),

@@ -1,7 +1,7 @@
 use ::std::path::Path;
 use ::std::path::PathBuf;
 
-use crate::config::typ::EndecConfig;
+use crate::config::typ::{EndecConfig, InputAction, OnFileExist};
 use crate::header::strategy::Verbosity;
 use crate::key::Key;
 
@@ -10,8 +10,8 @@ pub struct DecryptConfig {
     files: Vec<PathBuf>,
     raw_key: Key,
     verbosity: Verbosity,
-    overwrite: bool,
-    delete_input: bool,
+    overwrite: OnFileExist,
+    delete_input: InputAction,
     output_dir: Option<PathBuf>,
 }
 
@@ -21,8 +21,8 @@ impl DecryptConfig {
         files: Vec<PathBuf>,
         raw_key: Key,
         verbosity: Verbosity,
-        overwrite: bool,
-        delete_input: bool,
+        overwrite: OnFileExist,
+        delete_input: InputAction,
         output_dir: Option<PathBuf>,
     ) -> Self {
         assert!(!files.is_empty());
@@ -58,11 +58,11 @@ impl EndecConfig for DecryptConfig {
     }
 
     fn overwrite(&self) -> bool {
-        self.overwrite
+        self.overwrite == OnFileExist::Overwrite
     }
 
     fn delete_input(&self) -> bool {
-        self.delete_input
+        self.delete_input == InputAction::Delete
     }
 
     fn output_dir(&self) -> Option<&Path> {

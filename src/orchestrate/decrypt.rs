@@ -114,7 +114,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
     for file_strat in &files_strats {
         let mut reader = open_reader(&file_strat.file, config.verbosity())?;
         reader.seek(SeekFrom::Start(file_strat.pub_header_len as u64)).unwrap();
-        let salt = file_strat.header.salt().clone();
+        let salt = file_strat.pub_header.salt().clone();
         let stretched_key = if let Some(sk) = key_cache.get(&salt) {
             sk.clone()
         } else {
@@ -137,27 +137,35 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
-        let (priv_header, priv_header_len, unpadded_data_len) = decrypt_private_header(
-            &data,
-            &file_strat.header,
-            &stretched_key,
-            file_strat.strategy,
-            config,
-            &file_strat.file.file_name(),
-            &mut checksum_failure_count,
-            &mut || progress.start_private_header_for_file(&file_strat.file),
-        )?;
-        //TODO @mark: ^ continue to next file if failed (checksum_failure_count)
-
-        //TODO @mark: permissions: Option<u32>
-        //TODO @mark: created_ns: Option<u128>
-        //TODO @mark: changed_ns: Option<u128>
-        //TODO @mark: accessed_ns: Option<u128>
-
-        //TODO @mark: maybe remove the output file determination when decrypting?
-        let mut out_pth = file_strat.file.out_pth.clone();
-        if let Some(name) = priv_header.as_ref().map(|hdr| hdr.filename()) {
-            out_pth.set_file_name(name);
+        todo!("this comment removed in merge:");
+        // let (priv_header, priv_header_len, unpadded_data_len) = decrypt_private_header(
+        //     &data,
+        //     &file_strat.header,
+        //     &stretched_key,
+        //     file_strat.strategy,
+        //     config,
+        //     &file_strat.file.file_name(),
+        //     &mut checksum_failure_count,
+        //     &mut || progress.start_private_header_for_file(&file_strat.file),
+        // )?;
+        // //TODO @mark: ^ continue to next file if failed (checksum_failure_count)
+        //
+        // //TODO @mark: permissions: Option<u32>
+        // //TODO @mark: created_ns: Option<u128>
+        // //TODO @mark: changed_ns: Option<u128>
+        // //TODO @mark: accessed_ns: Option<u128>
+        //
+        // //TODO @mark: maybe remove the output file determination when decrypting?
+        // let mut out_pth = file_strat.file.out_pth.clone();
+        // if let Some(name) = priv_header.as_ref().map(|hdr| hdr.filename()) {
+        //     out_pth.set_file_name(name);
+        let priv_header_len = file_strat.pub_header.private_header().as_ref().map(|hdr| hdr.0 as usize).unwrap_or(0);
+        let priv_header = if version_has_options_meta(&file_strat.pub_header.version()) {
+            dbg!(&data[..priv_header_len]);  //TODO @mark: TEMPORARY! REMOVE THIS!
+            let index_header = parse_private_header(&mut &data[..priv_header_len])?;
+            Some(index_header.1)
+        } else {
+            None
         };
         assert!(!out_pth.exists(), "see https://github.com/mverleg/file_endec/issues/25; for now make sure output path '{}' does not exist", out_pth.to_string_lossy());
         data.truncate(priv_header_len + unpadded_data_len);
@@ -179,7 +187,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         });
         if !validate_checksum_matches(
             &actual_checksum,
-            file_strat.header.checksum(),
+            file_strat.pub_header.checksum(),
             config.verbosity(),
             &file_strat.file.path_str(),
         ) {
@@ -223,13 +231,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
 /// https://markv.nl/blog/symmetric-encryption-in-rust
 #[cfg(test)]
 mod tests {
-    use ::std::fs;
-    use ::std::fs::File;
-    use ::std::io::Read;
-    use ::std::path::Path;
-
     use ::lazy_static::lazy_static;
-    use ::regex::Regex;
     use ::tempfile::tempdir;
 
     use crate::config::DecryptConfig;
@@ -237,44 +239,10 @@ mod tests {
     use crate::files::scan::TEST_FILE_DIR;
     use crate::header::strategy::Verbosity;
     use crate::key::key::Key;
+    use crate::config::typ::{OnFileExist, InputAction};
 
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");
-        static ref COMPAT_FILE_RE: Regex = Regex::new(r"^original_v(\d+\.\d+\.\d+).png$").unwrap();
-    }
-
-    /// Open the files in 'test_files/' that were encrypted with previous versions,
-    /// and make sure they can still be decrypted (and match the original).
-    #[datatest::files("test_files", {
-        input in r"/original_v(?:\d+\.\d+\.\d+)(?:_\w+)?.png.enc$",
-    })]
-    #[test]
-    fn load_version(input: &Path) {
-        let mut original_pth = TEST_FILE_DIR.clone();
-        original_pth.push("original.png".to_owned());
-        let conf = DecryptConfig::new(
-            vec![input.to_owned()],
-            COMPAT_KEY.clone(),
-            Verbosity::Debug,
-            true,
-            false,
-            None,
-        );
-        let dec_pths = decrypt(&conf).unwrap();
-        assert_eq!(dec_pths.len(), 1);
-        let dec_pth = dec_pths.first().unwrap();
-        let mut original_data = vec![];
-        File::open(&original_pth)
-            .unwrap()
-            .read_to_end(&mut original_data)
-            .unwrap();
-        let mut dec_data = vec![];
-        File::open(&dec_pth)
-            .unwrap()
-            .read_to_end(&mut dec_data)
-            .unwrap();
-        assert_eq!(&original_data, &dec_data);
-        fs::remove_file(&dec_pth).unwrap();
     }
 
     #[test]
@@ -286,8 +254,8 @@ mod tests {
             vec![enc_pth],
             COMPAT_KEY.clone(),
             Verbosity::Normal,
-            false,
-            false,
+            OnFileExist::Fail,
+            InputAction::Keep,
             Some(out_pth.path().to_owned()),
         );
         let result = decrypt(&conf);

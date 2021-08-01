@@ -52,11 +52,7 @@ mod tests {
     use ::block_modes::block_padding::Iso7816;
     use ::block_modes::BlockMode;
     use ::block_modes::Cbc;
-    use ::lazy_static::lazy_static;
-    use ::regex::Regex;
     use ::secstr::SecVec;
-
-    use crate::key::key::Key;
 
     type Aes256Cbc = Cbc<Aes256, Iso7816>;
 

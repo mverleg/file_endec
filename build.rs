@@ -2,13 +2,6 @@ use ::std::fs;
 
 use ::indoc::indoc;
 
-use ::lazy_static::lazy_static;
-use ::regex::Regex;
-
-lazy_static! {
-    static ref COMPAT_FILE_RE: Regex = Regex::new(r"^original_v(\d+\.\d+\.\d+)(_\w*)?.png$").unwrap();
-}
-
 fn main() {
     generate_compatibility_tests();
 }
@@ -36,11 +29,9 @@ fn generate_compatibility_tests() {
         use ::std::fs;
         use ::std::fs::File;
         use ::std::io::Read;
-        use ::std::path::Path;
 
         use ::lazy_static::lazy_static;
-        use ::regex::Regex;
-        use ::tempfile::tempdir;
+        use ::tempfile::TempDir;
 
         use crate::config::DecryptConfig;
         use crate::decrypt;
@@ -50,6 +41,36 @@ fn generate_compatibility_tests() {
 
         lazy_static! {
             static ref COMPAT_KEY: Key = Key::new(\" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ \");
+        }
+
+        fn test_compatibility(enc_pth: PathBuf) {
+            let out_dir = TempDir::new().unwrap();
+            let mut original_pth = enc_pth.clone();
+            original_pth.pop();
+            original_pth.push(\"original.png\".to_owned());
+            let conf = DecryptConfig::new(
+                vec![enc_pth.to_owned()],
+                COMPAT_KEY.clone(),
+                Verbosity::Debug,
+                OnFileExist::Overwrite,
+                InputAction::Keep,
+                Some(out_dir.path().to_owned()),
+            );
+            let dec_pths = decrypt(&conf).unwrap();
+            assert_eq!(dec_pths.len(), 1);
+            let dec_pth = dec_pths.first().unwrap();
+            let mut original_data = vec![];
+            File::open(&original_pth)
+                .unwrap()
+                .read_to_end(&mut original_data)
+                .unwrap();
+            let mut dec_data = vec![];
+            File::open(&dec_pth)
+                .unwrap()
+                .read_to_end(&mut dec_data)
+                .unwrap();
+            assert_eq!(&original_data, &dec_data);
+            fs::remove_file(&dec_pth).unwrap();
         }
         "
     )
@@ -63,34 +84,7 @@ fn generate_compatibility_tests() {
             indoc!(r#"
             #[test]
             fn compat_test_{}() {{
-                let out_dir = tempdir::TempDir::new().unwrap();
-                let enc_pth = PathBuf::from("{}");
-                let mut original_pth = enc_pth.clone();
-                original_pth.pop();
-                original_pth.push("original.png".to_owned());
-                let conf = DecryptConfig::new(
-                    vec![enc_pth.to_owned()],
-                    COMPAT_KEY.clone(),
-                    Verbosity::Debug,
-                    OnFileExist::Overwrite,
-                    InputAction::Keep,
-                    Some(out_dir),
-                );
-                let dec_pths = decrypt(&conf).unwrap();
-                assert_eq!(dec_pths.len(), 1);
-                let dec_pth = dec_pths.first().unwrap();
-                let mut original_data = vec![];
-                File::open(&original_pth)
-                    .unwrap()
-                    .read_to_end(&mut original_data)
-                    .unwrap();
-                let mut dec_data = vec![];
-                File::open(&dec_pth)
-                    .unwrap()
-                    .read_to_end(&mut dec_data)
-                    .unwrap();
-                assert_eq!(&original_data, &dec_data);
-                fs::remove_file(&dec_pth).unwrap();
+                test_compatibility(PathBuf::from("{}"))
             }}
             "#
             ),

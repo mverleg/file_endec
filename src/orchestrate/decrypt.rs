@@ -172,13 +172,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
 /// https://markv.nl/blog/symmetric-encryption-in-rust
 #[cfg(test)]
 mod tests {
-    use ::std::fs;
-    use ::std::fs::File;
-    use ::std::io::Read;
-    use ::std::path::Path;
-
     use ::lazy_static::lazy_static;
-    use ::regex::Regex;
     use ::tempfile::tempdir;
 
     use crate::config::DecryptConfig;

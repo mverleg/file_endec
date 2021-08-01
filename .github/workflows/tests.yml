@@ -2,10 +2,11 @@
 name: 'Test file_endec'
 
 on:
+  pull_request:
   push:
+    branches:
+      - master
   workflow_dispatch:
-  schedule:
-    - cron: '0 3 1 * 0'
 
 jobs:
   push_to_registry:

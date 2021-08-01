@@ -5,7 +5,7 @@ use ::semver::Version;
 
 use crate::files::Checksum;
 use crate::header::decode_util::{HeaderErr, read_header_keys};
-use crate::header::PUB_HEADER_CHECKSUM_MARKER;
+use crate::header::{PUB_HEADER_CHECKSUM_MARKER, PUB_HEADER_OPTION_MARKER};
 use crate::header::PUB_HEADER_MARKER;
 use crate::header::PUB_HEADER_META_DATA_MARKER;
 use crate::header::PUB_HEADER_PRIVATE_HEADER_META_MARKER;
@@ -18,6 +18,8 @@ use crate::util::base::small_str_to_u64;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
 use crate::util::version::version_has_options_meta;
+use crate::{EncOptionSet, EncOption};
+use std::str::FromStr;
 
 fn parse_version(header_data: &mut HashMap<String, String>, verbose: bool) -> FedResult<Version> {
     //TODO @mark: do these ok_or cause too many allocations? use ok_or_else?
@@ -31,6 +33,34 @@ fn parse_version(header_data: &mut HashMap<String, String>, verbose: bool) -> Fe
             err,
         )),
     }
+}
+
+fn parse_options(header_data: &mut HashMap<String, String>, verbose: bool) -> FedResult<EncOptionSet> {
+    let options_str = match header_data.remove(PUB_HEADER_OPTION_MARKER) {
+        Some(val) => val,
+        None => return Ok(EncOptionSet::empty()),
+    };
+    let mut option_vec = vec![];
+    for option_str in options_str.split_whitespace() {
+        match EncOption::from_str(option_str) {
+            Ok(option) => option_vec.push(option),
+            Err(err) => return Err(add_err(
+                format!("could not determine the options of fileenc that encrypted this file (got {} which is unknown); maybe it was encrypted with a newer version?", option_str),
+                verbose,
+                err,
+            )),
+        }
+    }
+    let option_count = option_vec.len();
+    let options: EncOptionSet = option_vec.into();
+    if options.len() != option_count {
+        return Err(add_err(
+            format!("there were duplicate encryption options in the file header; it is possible the header has been meddled with"),
+            verbose,
+            format!("found {}", options_str),
+        ));
+    }
+    Ok(options)
 }
 
 fn parse_salt(header_data: &mut HashMap<String, String>, verbose: bool) -> FedResult<Salt> {
@@ -84,6 +114,7 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
     };
 
     let version = parse_version(&mut header_data, verbose)?;
+    let options = parse_options(&mut header_data, verbose)?;
     let salt = parse_salt(&mut header_data, verbose)?;
     let checksum = parse_checksum(&mut header_data)?;
     let private_header = if version_has_options_meta(&version) {
@@ -99,7 +130,7 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
         eprintln!("encountered unknown header keys '{}'; this may happen if the file is encrypted using a newer version of file_endec, or if the file is corrupt; ignoring this problem", key_names);
     }
 
-    Ok((index, PublicHeader::legacy(version, salt, checksum)))
+    Ok((index, PublicHeader::legacy(version, salt, checksum, options)))
 }
 
 #[cfg(test)]

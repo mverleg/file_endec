@@ -107,7 +107,7 @@ lazy_static! {
 }
 
 /// Get the encryption strategy used for a specific code version.
-pub fn get_version_strategy(version: &Version, verbose: bool) -> FedResult<&'static Strategy> {
+pub fn get_version_strategy(version: &Version, options: &EncOptionSet, verbose: bool) -> FedResult<&'static Strategy> {
     // This should return the strategy for all old versions - don't delete any, just add new ones!
     if version < &Version::parse("1.0.0").unwrap() {
         return Err(if verbose {

@@ -101,11 +101,6 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
     let mut file_padding = Vec::with_capacity(4096);
     let mut out_pths = vec![];
     for file in &files_info {
-        let (priv_header_data, priv_header_checksum) = encrypt_private_header(
-            &pepper, &stretched_key, file, &strategy, config,
-            &mut || progress.start_private_header_for_file(&file))?;
-        let priv_header_len = priv_header_data.len();
-
         let mut reader = open_reader(&file, config.verbosity())?;
         let mut data = Vec::with_capacity(file.size_b as usize + priv_header_len + 10_240);
         todo!("private header should be encrypted separately, because it has to be decrypted separately to deal with padding");
@@ -140,6 +135,7 @@ pub fn encrypt(config: &EncryptConfig) -> FedResult<Vec<PathBuf>> {
         let priv_header_len = priv_header_data.len() as u64;
 
         let padding_len = remainder_to_power_of_two((priv_header_data.len() + secret.len()) as u64) as usize;
+        //TODO @mark: make this padding deterministic, i.e. seed with hash of filename+size+salt?
         generate_secure_pseudo_random_bytes(&mut file_padding, padding_len);
         let pub_header = PublicHeader::new(version.clone(), salt.clone(), data_checksum, config.options().clone(), (priv_header_len, priv_header_checksum));
         if !config.dry_run() {

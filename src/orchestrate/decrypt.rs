@@ -167,7 +167,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         } else {
             None
         };
-        assert!(!out_pth.exists(), "see https://github.com/mverleg/file_endec/issues/25; for now make sure output path '{}' does not exist", out_pth.to_string_lossy());
+        assert!(!out_pths.exists(), "see https://github.com/mverleg/file_endec/issues/25; for now make sure output path '{}' does not exist", out_pths.to_string_lossy());
         data.truncate(priv_header_len + unpadded_data_len);
         let revealed = decrypt_file(
             data,

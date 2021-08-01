@@ -14,13 +14,12 @@ use crate::header::PUB_HEADER_SALT_MARKER;
 use crate::header::PUB_HEADER_VERSION_MARKER;
 use crate::header::PublicHeader;
 use crate::key::salt::Salt;
-use crate::util::base::small_str_to_u64;
 use crate::util::errors::add_err;
 use crate::util::FedResult;
 use crate::util::version::version_has_options_meta;
 use crate::{EncOptionSet, EncOption};
-use std::str::FromStr;
-use crate::header::private_header_type::PRIV_HEADER_DATA_SIZE_CHECK;
+use ::std::str::FromStr;
+use crate::header::decode_util::parse_length_checksum;
 
 fn parse_version(header_data: &mut HashMap<String, String>, verbose: bool) -> FedResult<Version> {
     //TODO @mark: do these ok_or cause too many allocations? use ok_or_else?
@@ -79,7 +78,7 @@ fn parse_checksum(header_data: &mut HashMap<String, String>) -> FedResult<Checks
 fn parse_private_header_meta(header_data: &mut HashMap<String, String>) -> FedResult<(u64, Checksum)> {
     let priv_meta = header_data.remove(PUB_HEADER_PRIVATE_HEADER_META_MARKER)
         .ok_or("could not find the payload data metadata in the private file header".to_owned())?;
-    parse_length_checksum(priv_meta)
+    parse_length_checksum(&priv_meta)
 }
 
 //TODO @mark: include filename in error at caller?

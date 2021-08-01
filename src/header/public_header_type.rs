@@ -50,6 +50,10 @@ impl PublicHeader {
         &self.options
     }
 
+    pub fn data_checksum(&self) -> &Option<Checksum> {
+        &self.legacy_data_checksum
+    }
+
     //TODO @mark: check checksum
     pub fn private_header(&self) -> &Option<(u64, Checksum)> {
         &self.private_header

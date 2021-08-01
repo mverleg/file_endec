@@ -187,7 +187,7 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
         });
         if !validate_checksum_matches(
             &actual_checksum,
-            file_strat.pub_header.checksum(),
+            file_strat.pub_header.data_checksum(),
             config.verbosity(),
             &file_strat.file.path_str(),
         ) {

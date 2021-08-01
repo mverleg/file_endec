@@ -80,7 +80,7 @@ pub fn read_header_keys(reader: &mut dyn BufRead, start: Option<&str>, ends: &[&
     }
 }
 
-fn parse_length_checksum(value: &str) -> FedResult<(u64, Checksum)> {
+pub fn parse_length_checksum(value: &str) -> FedResult<(u64, Checksum)> {
     let mut parts = value.splitn(2, ' ');
 
     let length = small_str_to_u64(parts.next().unwrap())

@@ -1,13 +1,12 @@
 use ::std::collections::HashMap;
 use ::std::io::BufRead;
 
-use crate::header::decode_util::HeaderErr;
+use crate::header::decode_util::{HeaderErr, parse_length_checksum};
 use crate::header::decode_util::read_header_keys;
 use crate::header::private_header_type::{PRIV_HEADER_ACCESSED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_MODIFIED, PRIV_HEADER_PADDING, PRIV_HEADER_PEPPER, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_DATA_SIZE_CHECK};
 use crate::header::private_header_type::PrivateHeader;
 use crate::key::Salt;
 use crate::util::base::small_str_to_u128;
-use crate::util::base::small_str_to_u64;
 use crate::util::FedResult;
 use crate::files::Checksum;
 
@@ -32,7 +31,7 @@ fn parse_sizes(header_data: &mut HashMap<String, String>) -> FedResult<(Option<u
 fn parse_private_header_meta(header_data: &mut HashMap<String, String>) -> FedResult<(u64, Checksum)> {
     let priv_meta = header_data.remove(PRIV_HEADER_DATA_SIZE_CHECK)
         .ok_or("could not find the private header metadata in the public file header".to_owned())?;
-    parse_length_checksum(priv_meta)
+    parse_length_checksum(&priv_meta)
 }
 
 /// Pepper and padding are included to obfuscate metadata.
@@ -62,7 +61,7 @@ pub fn parse_private_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedRes
     let permissions = parse_permissions(&mut header_data)?;
     let (created, changed, accessed) = parse_sizes(&mut header_data)?;
     //TODO @mark: ...
-    let size_check = parse_size_checksum(&mut header_data)?;
+    let size_check = parse_private_header_meta(&mut header_data)?;
     let (pepper, padding_len) = parse_obfuscation(&mut header_data)?;
 
     if !header_data.is_empty() {

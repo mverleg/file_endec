@@ -67,7 +67,7 @@ pub fn write_public_header(writer: &mut impl Write, header: &PublicHeader, verbo
         write_options(writer, header.options(), verbose)?;
     }
     write_salt(writer, header.salt(), verbose)?;
-    write_checksum(writer, header.checksum(), verbose)?;
+    // Don't write legacy checksum, it's only for reading from old versions.
     if let Some((length, checksum)) = header.private_header() {
         write_private_header_meta(writer, *length, checksum, verbose)?;
     }

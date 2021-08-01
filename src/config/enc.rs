@@ -1,10 +1,16 @@
 use ::std::path::Path;
 use ::std::path::PathBuf;
 
-use crate::config::typ::EndecConfig;
+use crate::config::typ::{EndecConfig, InputAction, OnFileExist};
 use crate::header::strategy::Verbosity;
 use crate::key::Key;
 use crate::util::option::EncOptionSet;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DryRun {
+    IsReal,
+    IsDryRun,
+}
 
 #[derive(Debug)]
 pub struct EncryptConfig {
@@ -12,11 +18,11 @@ pub struct EncryptConfig {
     raw_key: Key,
     options: EncOptionSet,
     verbosity: Verbosity,
-    overwrite: bool,
-    delete_input: bool,
+    overwrite: OnFileExist,
+    delete_input: InputAction,
     output_dir: Option<PathBuf>,
     output_extension: String,
-    dry_run: bool,
+    dry_run: DryRun,
 }
 
 impl EncryptConfig {
@@ -26,15 +32,15 @@ impl EncryptConfig {
         raw_key: Key,
         options: EncOptionSet,
         verbosity: Verbosity,
-        overwrite: bool,
-        mut delete_input: bool,
+        overwrite: OnFileExist,
+        mut delete_input: InputAction,
         output_dir: Option<PathBuf>,
         output_extension: String,
-        dry_run: bool,
+        dry_run: DryRun,
     ) -> Self {
         assert!(!files.is_empty());
-        if dry_run {
-            delete_input = false;
+        if dry_run == DryRun::IsDryRun {
+            delete_input = InputAction::Keep;
         }
         EncryptConfig {
             files,
@@ -58,7 +64,7 @@ impl EncryptConfig {
     }
 
     pub fn dry_run(&self) -> bool {
-        self.dry_run
+        self.dry_run == DryRun::IsDryRun
     }
 }
 
@@ -76,11 +82,11 @@ impl EndecConfig for EncryptConfig {
     }
 
     fn overwrite(&self) -> bool {
-        self.overwrite
+        self.overwrite == OnFileExist::Overwrite
     }
 
     fn delete_input(&self) -> bool {
-        self.delete_input
+        self.delete_input == InputAction::Delete
     }
 
     fn output_dir(&self) -> Option<&Path> {

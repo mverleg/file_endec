@@ -44,9 +44,9 @@ fn generate_compatibility_tests() {
 
         use crate::config::DecryptConfig;
         use crate::decrypt;
-        use crate::files::scan::TEST_FILE_DIR;
         use crate::header::strategy::Verbosity;
         use crate::key::key::Key;
+        use crate::config::typ::{InputAction, OnFileExist};
 
         lazy_static! {
             static ref COMPAT_KEY: Key = Key::new(\" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ \");

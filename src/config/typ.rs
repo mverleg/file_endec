@@ -11,6 +11,18 @@ pub enum Extension<'a> {
     Strip,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OnFileExist {
+    Overwrite,
+    Fail,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InputAction {
+    Keep,
+    Delete,
+}
+
 pub trait EndecConfig: Debug {
     fn files(&self) -> &[PathBuf];
 

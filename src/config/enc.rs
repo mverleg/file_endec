@@ -7,7 +7,7 @@ use crate::key::Key;
 use crate::util::option::EncOptionSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DryRun {
+pub enum RunMode {
     IsReal,
     IsDryRun,
 }
@@ -22,7 +22,7 @@ pub struct EncryptConfig {
     delete_input: InputAction,
     output_dir: Option<PathBuf>,
     output_extension: String,
-    dry_run: DryRun,
+    dry_run: RunMode,
 }
 
 impl EncryptConfig {
@@ -36,10 +36,10 @@ impl EncryptConfig {
         mut delete_input: InputAction,
         output_dir: Option<PathBuf>,
         output_extension: String,
-        dry_run: DryRun,
+        dry_run: RunMode,
     ) -> Self {
         assert!(!files.is_empty());
-        if dry_run == DryRun::IsDryRun {
+        if dry_run == RunMode::IsDryRun {
             delete_input = InputAction::Keep;
         }
         EncryptConfig {
@@ -64,7 +64,7 @@ impl EncryptConfig {
     }
 
     pub fn dry_run(&self) -> bool {
-        self.dry_run == DryRun::IsDryRun
+        self.dry_run == RunMode::IsDryRun
     }
 }
 

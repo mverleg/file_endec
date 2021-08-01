@@ -63,6 +63,7 @@ fn generate_compatibility_tests() {
             indoc!(r#"
             #[test]
             fn compat_test_{}() {{
+                let out_dir = tempdir::TempDir::new().unwrap();
                 let enc_pth = PathBuf::from("{}");
                 let mut original_pth = enc_pth.clone();
                 original_pth.pop();
@@ -71,9 +72,9 @@ fn generate_compatibility_tests() {
                     vec![enc_pth.to_owned()],
                     COMPAT_KEY.clone(),
                     Verbosity::Debug,
-                    true,
-                    false,
-                    None,
+                    OnFileExist::Overwrite,
+                    InputAction::Keep,
+                    Some(out_dir),
                 );
                 let dec_pths = decrypt(&conf).unwrap();
                 assert_eq!(dec_pths.len(), 1);

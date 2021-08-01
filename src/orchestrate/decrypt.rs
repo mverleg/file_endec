@@ -186,6 +186,7 @@ mod tests {
     use crate::files::scan::TEST_FILE_DIR;
     use crate::header::strategy::Verbosity;
     use crate::key::key::Key;
+    use crate::config::typ::{OnFileExist, InputAction};
 
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");
@@ -200,8 +201,8 @@ mod tests {
             vec![enc_pth],
             COMPAT_KEY.clone(),
             Verbosity::Normal,
-            false,
-            false,
+            OnFileExist::Fail,
+            InputAction::Keep,
             Some(out_pth.path().to_owned()),
         );
         let result = decrypt(&conf);

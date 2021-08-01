@@ -177,6 +177,8 @@ mod tests {
     use crate::key::key::Key;
     use crate::util::option::EncOptionSet;
     use crate::util::version::get_current_version;
+    use crate::config::enc::RunMode;
+    use crate::config::typ::{OnFileExist, InputAction};
 
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");
@@ -219,11 +221,11 @@ mod tests {
                 //TODO @mark: try different options
                 variation.options,
                 Verbosity::Debug,
-                true,
-                false,
+                OnFileExist::Overwrite,
+                InputAction::Keep,
                 Some(dir.path().to_owned()),
                 ".enc".to_string(),
-                false,
+                RunMode::IsReal,
             );
             let tmp_pth = {
                 let mut p = dir.path().to_owned();

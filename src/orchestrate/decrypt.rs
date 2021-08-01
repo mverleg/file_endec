@@ -189,41 +189,6 @@ mod tests {
 
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");
-        static ref COMPAT_FILE_RE: Regex = Regex::new(r"^original_v(\d+\.\d+\.\d+).png$").unwrap();
-    }
-
-    /// Open the files in 'test_files/' that were encrypted with previous versions,
-    /// and make sure they can still be decrypted (and match the original).
-    #[datatest::files("test_files", {
-        input in r"/original_v(?:\d+\.\d+\.\d+)(?:_\w+)?.png.enc$",
-    })]
-    #[test]
-    fn load_version(input: &Path) {
-        let mut original_pth = TEST_FILE_DIR.clone();
-        original_pth.push("original.png".to_owned());
-        let conf = DecryptConfig::new(
-            vec![input.to_owned()],
-            COMPAT_KEY.clone(),
-            Verbosity::Debug,
-            true,
-            false,
-            None,
-        );
-        let dec_pths = decrypt(&conf).unwrap();
-        assert_eq!(dec_pths.len(), 1);
-        let dec_pth = dec_pths.first().unwrap();
-        let mut original_data = vec![];
-        File::open(&original_pth)
-            .unwrap()
-            .read_to_end(&mut original_data)
-            .unwrap();
-        let mut dec_data = vec![];
-        File::open(&dec_pth)
-            .unwrap()
-            .read_to_end(&mut dec_data)
-            .unwrap();
-        assert_eq!(&original_data, &dec_data);
-        fs::remove_file(&dec_pth).unwrap();
     }
 
     #[test]

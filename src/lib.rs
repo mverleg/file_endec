@@ -60,11 +60,6 @@ mod tests {
 
     type Aes256Cbc = Cbc<Aes256, Iso7816>;
 
-    lazy_static! {
-        static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");
-        static ref COMPAT_FILE_RE: Regex = Regex::new(r"^original_v(\d+\.\d+\.\d+)(_\w*)?.png$").unwrap();
-    }
-
     /// The demo used in this blog post:
     /// https://markv.nl/blog/symmetric-encryption-in-rust
     #[test]

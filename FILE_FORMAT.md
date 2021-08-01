@@ -7,15 +7,10 @@
 
   * Version
   * Salt
-  * Options:
-    
-    * Fast
-    * HideMeta
-    * PadSize
-  
+  * Data checksum (only before v1.1)
   * Private header:
   
-    * Length
+    * Length (bytes)
     * Checksum
 
 * **Private header** (v1.1+, encrypted)
@@ -25,8 +20,18 @@
   * Created (ns) (optional)
   * Changed (ns) (optional)
   * Accessed (ns) (optional)
-  * Data size (bytes)
+  * Data into
+
+    * Length (bytes)
+    * Checksum
+
   * Pepper
+  * Options:
+
+    * Fast
+    * HideMeta
+    * PadSize
+
   * Header padding length
 
 * **Data**

@@ -1,4 +1,6 @@
 use crate::key::Salt;
+use crate::files::Checksum;
+use crate::EncOptionSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PrivateHeader {
@@ -10,19 +12,21 @@ pub struct PrivateHeader {
     created_ns: Option<u128>,
     changed_ns: Option<u128>,
     accessed_ns: Option<u128>,
-    // Original filesize in bytes.
-    data_size: u64,
+    // Length and checksum of unpadded payload
+    data_info: (u64, Checksum),
     // Secret seed for values like checksum. This prevents an attacker from verifying whether
     // an encrypted file contains a specific file that the attacker has access to.
     //TODO @mark: make sure pepper influences the checksum
     pepper: Salt,
+    //TODO: move data_checksum to private header?
+    options: EncOptionSet,
     // Padding bytes length to obfuscate header size.
     //TODO @mark: padding data must not be very compressible, but should be deterministic
     padding_len: u16,
 }
 
 impl PrivateHeader {
-    pub fn new(filename: String, permissions: Option<u32>, created_ns: Option<u128>, changed_ns: Option<u128>, accessed_ns: Option<u128>, data_size: u64, pepper: Salt, padding_len: u16) -> Self {
+    pub fn new(filename: String, permissions: Option<u32>, created_ns: Option<u128>, changed_ns: Option<u128>, accessed_ns: Option<u128>, data_info: (u64, Checksum), pepper: Salt, options: EncOptionSet, padding_len: u16) -> Self {
         debug_assert!(padding_len <= 1024);  // implementation detail in padding data generation
         assert!(!filename.contains('\n'));
         PrivateHeader {
@@ -31,8 +35,9 @@ impl PrivateHeader {
             created_ns,
             changed_ns,
             accessed_ns,
-            data_size,
+            data_info,
             pepper,
+            options,
             padding_len,
         }
     }
@@ -58,7 +63,7 @@ impl PrivateHeader {
     }
 
     pub fn data_size(&self) -> u64 {
-        self.data_size
+        self.data_info.0
     }
 
     pub fn pepper(&self) -> &Salt {

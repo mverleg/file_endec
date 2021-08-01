@@ -15,6 +15,7 @@ pub fn get_current_version() -> Version {
 /// * customization options
 //TODO v2.0: this should always be true, remove code for false branch
 pub fn version_has_options_meta(version: &Version) -> bool {
+    //TODO @mark: still needed now that options are in private header?
     version >= &*OPTIONS_INTORDUCED_IN_VERSION
 }
 

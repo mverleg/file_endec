@@ -66,6 +66,10 @@ impl PrivateHeader {
         self.data_info.0
     }
 
+    pub fn options(&self) -> &EncOptionSet {
+        &self.options
+    }
+
     pub fn pepper(&self) -> &Salt {
         &self.pepper
     }
@@ -82,5 +86,6 @@ pub const PRIV_HEADER_MODIFIED: &str = "cng";
 pub const PRIV_HEADER_ACCESSED: &str = "acs";
 pub const PRIV_HEADER_SIZE: &str = "sz";
 pub const PRIV_HEADER_PEPPER: &str = "pepr";
+pub const PUB_HEADER_OPTION_MARKER: &str = "opts";
 pub const PRIV_HEADER_PADDING: &str = "pad";
 pub const PRIV_HEADER_DATA: &str = "enc:";

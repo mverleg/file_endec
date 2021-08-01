@@ -7,6 +7,7 @@ use ::std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EncOptionSet {
+    //TODO @mark: would be more efficient with EnumMap, but probably not noticeably so
     options: BTreeSet<EncOption>,
 }
 

@@ -4,7 +4,7 @@ use ::std::io::Write;
 
 use crate::{EncOption, EncOptionSet};
 use crate::header::encode_util::write_line;
-use crate::header::private_header_type::{PRIV_HEADER_ACCESSED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_MODIFIED, PRIV_HEADER_PADDING, PRIV_HEADER_PEPPER, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE, PrivateHeader};
+use crate::header::private_header_type::{PRIV_HEADER_ACCESSED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_MODIFIED, PRIV_HEADER_PADDING, PRIV_HEADER_PEPPER, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE, PrivateHeader, PUB_HEADER_OPTION_MARKER};
 use crate::key::random::generate_secure_pseudo_random_printable;
 use crate::util::base::u128_to_small_str;
 use crate::util::base::u64_to_small_str;
@@ -22,6 +22,17 @@ fn write_padding(length: u16, write: impl FnOnce(&str) -> FedResult<()>) -> FedR
         generate_secure_pseudo_random_printable(padding.borrow_mut(), length as usize);
         write(&padding)
     })
+}
+
+fn write_options(writer: &mut impl Write, options: &EncOptionSet, verbose: bool) -> FedResult<()> {
+    if options.len() == 0 {
+        return Ok(());
+    }
+    let options_txt = options.iter()
+        .map(|opt| opt.to_string())
+        .collect::<Vec<_>>()
+        .join(" ");
+    write_line(writer, PUB_HEADER_OPTION_MARKER, Some(&options_txt), verbose)
 }
 
 pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, options: &EncOptionSet, verbose: bool) -> FedResult<()> {
@@ -42,6 +53,7 @@ pub fn write_private_header(writer: &mut impl Write, header: &PrivateHeader, opt
     }
     //if options.has(EncOption::PadSize) {  //TODO @mark: keep it required? even if not used?
     write_line(writer, PRIV_HEADER_SIZE, Some(&u64_to_small_str(header.data_size())), verbose)?;
+    write_options(writer, header.options(), verbose)?;
     write_line(writer, PRIV_HEADER_PEPPER, Some(&u8s_to_base64str(&header.pepper().salt)), verbose)?;
     write_padding(header.padding_len(), |pad| write_line(writer, PRIV_HEADER_PADDING, Some(pad), verbose))?;
     write_line(writer, PRIV_HEADER_DATA, None, verbose)?;

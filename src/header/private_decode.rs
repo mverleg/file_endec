@@ -1,13 +1,16 @@
 use ::std::collections::HashMap;
 use ::std::io::BufRead;
+use ::std::str::FromStr;
 
+use crate::{EncOption, EncOptionSet};
 use crate::header::decode_util::HeaderErr;
 use crate::header::decode_util::read_header_keys;
-use crate::header::private_header_type::{PRIV_HEADER_ACCESSED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_MODIFIED, PRIV_HEADER_PADDING, PRIV_HEADER_PEPPER, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE};
+use crate::header::private_header_type::{PRIV_HEADER_ACCESSED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_MODIFIED, PRIV_HEADER_PADDING, PRIV_HEADER_PEPPER, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE, PUB_HEADER_OPTION_MARKER};
 use crate::header::private_header_type::PrivateHeader;
 use crate::key::Salt;
 use crate::util::base::small_str_to_u128;
 use crate::util::base::small_str_to_u64;
+use crate::util::errors::add_err;
 use crate::util::FedResult;
 
 fn parse_filename(header_data: &mut HashMap<String, String>) -> FedResult<String> {
@@ -42,9 +45,37 @@ fn parse_obfuscation(header_data: &mut HashMap<String, String>) -> FedResult<(Sa
     Ok((pepper, padding_len))
 }
 
+fn parse_options(header_data: &mut HashMap<String, String>, verbose: bool) -> FedResult<EncOptionSet> {
+    let options_str = match header_data.remove(PUB_HEADER_OPTION_MARKER) {
+        Some(val) => val,
+        None => return Ok(EncOptionSet::empty()),
+    };
+    let mut option_vec = vec![];
+    for option_str in options_str.split_whitespace() {
+        match EncOption::from_str(option_str) {
+            Ok(option) => option_vec.push(option),
+            Err(err) => return Err(add_err(
+                format!("could not determine the options of fileenc that encrypted this file (got {} which is unknown); maybe it was encrypted with a newer version?", option_str),
+                verbose,
+                err,
+            )),
+        }
+    }
+    let option_count = option_vec.len();
+    let options: EncOptionSet = option_vec.into();
+    if options.len() != option_count {
+        return Err(add_err(
+            format!("there were duplicate encryption options in the file header; it is possible the header has been meddled with"),
+            verbose,
+            format!("found {}", options_str),
+        ));
+    }
+    Ok(options)
+}
+
 //TODO @mark: include filename in error at caller?
 /// Parses the data in the private header and returns it, along with the index of the first byte after the header.
-pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<(usize, PrivateHeader)> {
+pub fn parse_private_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<(usize, PrivateHeader)> {
 
     let (index, mut header_data) = match read_header_keys(reader, None, &[PRIV_HEADER_DATA]) {
         Ok(map) => map,
@@ -60,6 +91,7 @@ pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<(usize, Pri
     let permissions = parse_permissions(&mut header_data)?;
     let (created, changed, accessed) = parse_sizes(&mut header_data)?;
     let size = parse_size(&mut header_data)?;
+    let options = parse_options(&mut header_data, verbose)?;
     let (pepper, padding_len) = parse_obfuscation(&mut header_data)?;
 
     if !header_data.is_empty() {

@@ -1,5 +1,8 @@
 use ::std::collections::HashMap;
 use ::std::io::BufRead;
+use crate::FedResult;
+use crate::files::Checksum;
+use crate::util::base::small_str_to_u64;
 
 #[derive(Debug, PartialEq)]
 pub enum HeaderErr {
@@ -75,6 +78,20 @@ pub fn read_header_keys(reader: &mut dyn BufRead, start: Option<&str>, ends: &[&
 
         read_line(reader, &mut line, &mut index)?;
     }
+}
+
+fn parse_length_checksum(value: &str) -> FedResult<(u64, Checksum)> {
+    let mut parts = value.splitn(2, ' ');
+
+    let length = small_str_to_u64(parts.next().unwrap())
+        .ok_or("metadata about private header contained an incorrectly formatted length")?;
+
+    let checksum_str = parts.next()
+        .ok_or("metadata about private header has a missing separator")?;
+    let checksum = Checksum::parse(checksum_str)
+        .map_err(|_| "metadata about private header contained an incorrectly formatted checksum")?;
+
+    Ok((length, checksum))
 }
 
 #[cfg(test)]

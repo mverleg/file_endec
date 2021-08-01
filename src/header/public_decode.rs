@@ -20,6 +20,7 @@ use crate::util::FedResult;
 use crate::util::version::version_has_options_meta;
 use crate::{EncOptionSet, EncOption};
 use std::str::FromStr;
+use crate::header::private_header_type::PRIV_HEADER_DATA_SIZE_CHECK;
 
 fn parse_version(header_data: &mut HashMap<String, String>, verbose: bool) -> FedResult<Version> {
     //TODO @mark: do these ok_or cause too many allocations? use ok_or_else?
@@ -77,18 +78,8 @@ fn parse_checksum(header_data: &mut HashMap<String, String>) -> FedResult<Checks
 
 fn parse_private_header_meta(header_data: &mut HashMap<String, String>) -> FedResult<(u64, Checksum)> {
     let priv_meta = header_data.remove(PUB_HEADER_PRIVATE_HEADER_META_MARKER)
-        .ok_or("could not find the private header metadata in the public file header".to_owned())?;
-    let mut parts = priv_meta.splitn(2, ' ');
-
-    let length = small_str_to_u64(parts.next().unwrap())
-        .ok_or("metadata about private header contained an incorrectly formatted length")?;
-
-    let checksum_str = parts.next()
-        .ok_or("metadata about private header has a missing separator")?;
-    let checksum = Checksum::parse(checksum_str)
-        .map_err(|_| "metadata about private header contained an incorrectly formatted checksum")?;
-
-    Ok((length, checksum))
+        .ok_or("could not find the payload data metadata in the private file header".to_owned())?;
+    parse_length_checksum(priv_meta)
 }
 
 //TODO @mark: include filename in error at caller?
@@ -130,7 +121,7 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
         eprintln!("encountered unknown header keys '{}'; this may happen if the file is encrypted using a newer version of file_endec, or if the file is corrupt; ignoring this problem", key_names);
     }
 
-    Ok((index, PublicHeader::legacy(version, salt, checksum, options)))
+    Ok((index, PublicHeader::legacy(version, salt, checksum)))
 }
 
 #[cfg(test)]

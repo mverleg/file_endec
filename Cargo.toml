@@ -25,14 +25,18 @@ expose = []
 test-e2e = []
 # Feature 'dev-mode' adds debug information like timings. Not meant for those who are just using file_endec.
 dev-mode = []
+# Feature bin is used to strip executable-only dependencies when using file-endec as a library.
+bin = ["jemallocator", "structopt", "indicatif"]
 
 [[bin]]
 name = "fileenc"
 path = "src/encrypt.rs"
+required-features = ["bin"]
 
 [[bin]]
 name = "filedec"
 path = "src/decrypt.rs"
+required-features = ["bin"]
 
 [[bench]]
 name = "file_endec_bench"
@@ -41,8 +45,8 @@ harness = false
 
 [dependencies]
 # command line interaction
-structopt = { version = "0.3.22", default-features = false }
-indicatif = "0.16.2"
+structopt = { version = "0.3.22", default-features = false, optional = true }
+indicatif = { version = "0.16.2", optional = true }
 
 # encryption key
 rpassword = "5.0.1"
@@ -83,15 +87,12 @@ tempfile = "3.2.0"
 [build-dependencies]
 indoc = "1.0.3"
 
-[profile.test]
-# note: might not be working...
-lto = false
-opt-level = 3
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+jemallocator = { version = "0.3.2", optional = true }
 
 [profile.release]
-lto = 'thin'
+lto = "thin"
 opt-level = 3
 
 [profile.dev.package."*"]
 opt-level = 3
-debug = false

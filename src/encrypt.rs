@@ -4,13 +4,25 @@ use ::std::process::exit;
 
 use ::structopt::StructOpt;
 
-use ::file_endec::EncOption;
 use ::file_endec::encrypt;
+use ::file_endec::EncOption;
 use ::file_endec::EncryptConfig;
 use ::file_endec::FedResult;
 use ::file_endec::Key;
 use ::file_endec::KeySource;
 use ::file_endec::Verbosity;
+
+use ::std::time::SystemTime;
+
+use ::derive_getters::Getters;
+use ::env_logger;
+
+use ::dockerfile_version_bumper::bump_dockerfiles;
+use ::dockerfile_version_bumper::TagUp;
+
+#[cfg(feature = "jemalloc")]
+#[global_allocator]
+static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 #[derive(Debug, StructOpt)]
 #[structopt(
@@ -61,10 +73,7 @@ pub struct EncryptArguments {
     )]
     delete_input: bool,
 
-    #[structopt(
-        long,
-        help = "Hide name, timestamp and permissions."
-    )]
+    #[structopt(long, help = "Hide name, timestamp and permissions.")]
     hide_meta: bool,
 
     #[structopt(
@@ -124,8 +133,16 @@ impl fmt::Display for EncryptArguments {
 
         writeln!(f, "* extension: {}", &self.output_extension)?;
 
-        writeln!(f, "* hide metadata: {}", if self.hide_meta { "yes" } else { "no" })?;
-        writeln!(f, "* hide size: {}", if self.hide_meta { "yes" } else { "no" })?;
+        writeln!(
+            f,
+            "* hide metadata: {}",
+            if self.hide_meta { "yes" } else { "no" }
+        )?;
+        writeln!(
+            f,
+            "* hide size: {}",
+            if self.hide_meta { "yes" } else { "no" }
+        )?;
 
         writeln!(f, "* fast mode: {}", if self.fast { "YES" } else { "no" })?;
 

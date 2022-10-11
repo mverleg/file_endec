@@ -4,9 +4,9 @@ use ::std::fmt::Formatter;
 use ::lazy_static::lazy_static;
 use ::semver::Version;
 
-use crate::util::FedResult;
-use crate::util::option::{EncOptionSet, EncOption};
+use crate::util::option::{EncOption, EncOptionSet};
 use crate::util::version::get_current_version;
+use crate::util::FedResult;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Verbosity {
@@ -97,19 +97,19 @@ lazy_static! {
         ],
     };
     static ref STRATEGY_1_1_FAST: Strategy = Strategy {
-        stretch_count: 0,
+        stretch_count: 2,
         compression_algorithm: Some(CompressionAlg::Brotli),
-        key_hash_algorithms: vec![
-            KeyHashAlg::Argon2i
-        ],
-        symmetric_algorithms: vec![
-            SymmetricEncryptionAlg::Aes256,
-        ],
+        key_hash_algorithms: vec![KeyHashAlg::Argon2i, KeyHashAlg::Sha512],
+        symmetric_algorithms: vec![SymmetricEncryptionAlg::Aes256,],
     };
 }
 
 /// Get the encryption strategy used for a specific code version.
-pub fn get_version_strategy(version: &Version, options: &EncOptionSet, verbose: bool) -> FedResult<&'static Strategy> {
+pub fn get_version_strategy(
+    version: &Version,
+    options: &EncOptionSet,
+    verbose: bool,
+) -> FedResult<&'static Strategy> {
     // This should return the strategy for all old versions - don't delete any, just add new ones!
     if version < &Version::parse("1.0.0").unwrap() {
         return Err(if verbose {
@@ -135,15 +135,63 @@ mod tests {
 
     #[test]
     fn determine_strategy_1_0() {
-        assert_eq!(&*STRATEGY_1_0, get_version_strategy(&Version::parse("1.0.0").unwrap(), &EncOptionSet::empty(), true).unwrap());
-        assert_eq!(&*STRATEGY_1_0, get_version_strategy(&Version::parse("1.0.0").unwrap(), &EncOptionSet::empty(), false).unwrap());
+        assert_eq!(
+            &*STRATEGY_1_0,
+            get_version_strategy(
+                &Version::parse("1.0.0").unwrap(),
+                &EncOptionSet::empty(),
+                true
+            )
+            .unwrap()
+        );
+        assert_eq!(
+            &*STRATEGY_1_0,
+            get_version_strategy(
+                &Version::parse("1.0.0").unwrap(),
+                &EncOptionSet::empty(),
+                false
+            )
+            .unwrap()
+        );
     }
 
     #[test]
     fn determine_strategy_1_1() {
-        assert_eq!(&*STRATEGY_1_0, get_version_strategy(&Version::parse("1.1.0").unwrap(), &EncOptionSet::empty(), true).unwrap());
-        assert_eq!(&*STRATEGY_1_0, get_version_strategy(&Version::parse("1.1.0").unwrap(), &EncOptionSet::empty(), false).unwrap());
-        assert_eq!(&*STRATEGY_1_1_FAST, get_version_strategy(&Version::parse("1.1.0").unwrap(), &EncOptionSet::all_for_test(), true).unwrap());
-        assert_eq!(&*STRATEGY_1_1_FAST, get_version_strategy(&Version::parse("1.1.0").unwrap(), &EncOptionSet::all_for_test(), false).unwrap());
+        assert_eq!(
+            &*STRATEGY_1_0,
+            get_version_strategy(
+                &Version::parse("1.1.0").unwrap(),
+                &EncOptionSet::empty(),
+                true
+            )
+            .unwrap()
+        );
+        assert_eq!(
+            &*STRATEGY_1_0,
+            get_version_strategy(
+                &Version::parse("1.1.0").unwrap(),
+                &EncOptionSet::empty(),
+                false
+            )
+            .unwrap()
+        );
+        assert_eq!(
+            &*STRATEGY_1_1_FAST,
+            get_version_strategy(
+                &Version::parse("1.1.0").unwrap(),
+                &EncOptionSet::all_for_test(),
+                true
+            )
+            .unwrap()
+        );
+        assert_eq!(
+            &*STRATEGY_1_1_FAST,
+            get_version_strategy(
+                &Version::parse("1.1.0").unwrap(),
+                &EncOptionSet::all_for_test(),
+                false
+            )
+            .unwrap()
+        );
     }
 }

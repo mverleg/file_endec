@@ -2,32 +2,44 @@ use ::semver::Version;
 
 use crate::files::Checksum;
 use crate::key::Salt;
-use crate::util::option::EncOptionSet;
+use crate::EncOptionSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PublicHeader {
     version: Version,
     salt: Salt,
-    //TODO: move data_checksum to private header?
-    data_checksum: Checksum,
+    // Data checksum only BEFORE v1.1 (from 1.1 moved to private header)
+    legacy_data_checksum: Option<Checksum>,
+    // Options must be here because some of them affect private header decryption (like `fast`).
     options: EncOptionSet,
     // Length and checksum; required from v1.1
     private_header: Option<(u64, Checksum)>,
 }
 
 impl PublicHeader {
-    pub fn new(version: Version, salt: Salt, checksum: Checksum, options: EncOptionSet, private_header: (u64, Checksum)) -> Self {
-        Self::legacy(version, salt, checksum, options, Some(private_header))
-    }
-
-    /// Legacy version (which may not have private headers if it was before v1.1)
-    pub fn legacy(version: Version, salt: Salt, data_checksum: Checksum, options: EncOptionSet, private_header: Option<(u64, Checksum)>) -> Self {
+    pub fn new(
+        version: Version,
+        salt: Salt,
+        options: EncOptionSet,
+        private_header: (u64, Checksum),
+    ) -> Self {
         PublicHeader {
             version,
             salt,
-            data_checksum,
+            legacy_data_checksum: None,
             options,
-            private_header,
+            private_header: Some(private_header),
+        }
+    }
+
+    /// Legacy version (which may not have private headers if it was before v1.1)
+    pub fn legacy(version: Version, salt: Salt, data_checksum: Checksum) -> Self {
+        PublicHeader {
+            version,
+            salt,
+            legacy_data_checksum: Some(data_checksum),
+            options: EncOptionSet::empty(),
+            private_header: None,
         }
     }
 
@@ -39,12 +51,12 @@ impl PublicHeader {
         &self.salt
     }
 
-    pub fn checksum(&self) -> &Checksum {
-        &self.data_checksum
-    }
-
     pub fn options(&self) -> &EncOptionSet {
         &self.options
+    }
+
+    pub fn data_checksum(&self) -> &Option<Checksum> {
+        &self.legacy_data_checksum
     }
 
     //TODO @mark: check checksum

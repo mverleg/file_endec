@@ -13,6 +13,18 @@ use ::file_endec::Key;
 use ::file_endec::KeySource;
 use ::file_endec::Verbosity;
 
+use ::std::time::SystemTime;
+
+use ::derive_getters::Getters;
+use ::env_logger;
+
+use ::dockerfile_version_bumper::bump_dockerfiles;
+use ::dockerfile_version_bumper::TagUp;
+
+#[cfg(feature = "jemalloc")]
+#[global_allocator]
+static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
 #[derive(Debug, StructOpt)]
 #[structopt(
     name = "FileEnc",

@@ -7,6 +7,7 @@ use ::std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EncOptionSet {
+    //TODO @mark: would be more efficient with EnumMap, but probably not noticeably so
     options: BTreeSet<EncOption>,
 }
 
@@ -74,11 +75,15 @@ impl PartialOrd for EncOption {
 impl fmt::Display for EncOption {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         // Should NOT contain whitespace (whitespace is used as separator in the file header).
-        write!(f, "{}", match self {
-            EncOption::Fast => "fast",
-            EncOption::HideMeta => "hide-meta",
-            EncOption::PadSize => "pad-size",
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                EncOption::Fast => "fast",
+                EncOption::HideMeta => "hide-meta",
+                EncOption::PadSize => "pad-size",
+            }
+        )
     }
 }
 
@@ -90,8 +95,8 @@ impl FromStr for EncOption {
             "fast" => EncOption::Fast,
             "hide-meta" => EncOption::HideMeta,
             "pad-size" => EncOption::PadSize,
-            _ => return Err(())
-        })
+            _ => return Err(()),
+        });
     }
 }
 
@@ -104,11 +109,8 @@ mod tests {
 
         #[test]
         fn deduplicate() {
-            let options = EncOptionSet::new(vec![
-                EncOption::Fast,
-                EncOption::HideMeta,
-                EncOption::Fast,
-            ]);
+            let options =
+                EncOptionSet::new(vec![EncOption::Fast, EncOption::HideMeta, EncOption::Fast]);
             assert_eq!(options.iter().count(), 2);
         }
 
@@ -127,10 +129,7 @@ mod tests {
 
         #[test]
         fn has() {
-            let options = EncOptionSet::new(vec![
-                EncOption::HideMeta,
-                EncOption::PadSize,
-            ]);
+            let options = EncOptionSet::new(vec![EncOption::HideMeta, EncOption::PadSize]);
             assert!(!options.has(EncOption::Fast));
             assert!(options.has(EncOption::HideMeta));
             assert!(options.has(EncOption::PadSize));

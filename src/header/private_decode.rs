@@ -1,52 +1,78 @@
 use ::std::collections::HashMap;
 use ::std::io::BufRead;
 
-use crate::header::decode_util::HeaderErr;
+use crate::files::Checksum;
 use crate::header::decode_util::read_header_keys;
-use crate::header::private_header_type::{PRIV_HEADER_ACCESSED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_FILENAME, PRIV_HEADER_MODIFIED, PRIV_HEADER_PADDING, PRIV_HEADER_PEPPER, PRIV_HEADER_PERMISSIONS, PRIV_HEADER_SIZE};
+use crate::header::decode_util::{parse_length_checksum, HeaderErr};
 use crate::header::private_header_type::PrivateHeader;
+use crate::header::private_header_type::{
+    PRIV_HEADER_ACCESSED, PRIV_HEADER_CREATED, PRIV_HEADER_DATA, PRIV_HEADER_DATA_SIZE_CHECK,
+    PRIV_HEADER_FILENAME, PRIV_HEADER_MODIFIED, PRIV_HEADER_PADDING, PRIV_HEADER_PEPPER,
+    PRIV_HEADER_PERMISSIONS,
+};
 use crate::key::Salt;
 use crate::util::base::small_str_to_u128;
-use crate::util::base::small_str_to_u64;
 use crate::util::FedResult;
 
 fn parse_filename(header_data: &mut HashMap<String, String>) -> FedResult<String> {
-    header_data.remove(PRIV_HEADER_FILENAME)
+    header_data
+        .remove(PRIV_HEADER_FILENAME)
         .ok_or("could not find the original filename in the private file header".to_owned())
 }
 
 fn parse_permissions(header_data: &mut HashMap<String, String>) -> FedResult<Option<u32>> {
     //TODO @mark: test parsing
-    Ok(header_data.remove(PRIV_HEADER_PERMISSIONS).map(|sz| u32::from_str_radix(&sz, 8).unwrap()))
+    Ok(header_data
+        .remove(PRIV_HEADER_PERMISSIONS)
+        .map(|sz| u32::from_str_radix(&sz, 8).unwrap()))
 }
 
-fn parse_sizes(header_data: &mut HashMap<String, String>) -> FedResult<(Option<u128>, Option<u128>, Option<u128>)> {
+fn parse_sizes(
+    header_data: &mut HashMap<String, String>,
+) -> FedResult<(Option<u128>, Option<u128>, Option<u128>)> {
     Ok((
-        header_data.remove(PRIV_HEADER_CREATED).map(|ts| small_str_to_u128(&ts).unwrap()),
-        header_data.remove(PRIV_HEADER_MODIFIED).map(|ts| small_str_to_u128(&ts).unwrap()),
-        header_data.remove(PRIV_HEADER_ACCESSED).map(|ts| small_str_to_u128(&ts).unwrap()),
+        header_data
+            .remove(PRIV_HEADER_CREATED)
+            .map(|ts| small_str_to_u128(&ts).unwrap()),
+        header_data
+            .remove(PRIV_HEADER_MODIFIED)
+            .map(|ts| small_str_to_u128(&ts).unwrap()),
+        header_data
+            .remove(PRIV_HEADER_ACCESSED)
+            .map(|ts| small_str_to_u128(&ts).unwrap()),
     ))
 }
 
-fn parse_size(header_data: &mut HashMap<String, String>) -> FedResult<u64> {
-    header_data.remove(PRIV_HEADER_SIZE).map(|sz| small_str_to_u64(&sz).unwrap())
-        .ok_or("could not find the original file size in the private file header".to_owned())
+fn parse_private_header_meta(
+    header_data: &mut HashMap<String, String>,
+) -> FedResult<(u64, Checksum)> {
+    let priv_meta = header_data
+        .remove(PRIV_HEADER_DATA_SIZE_CHECK)
+        .ok_or("could not find the private header metadata in the public file header".to_owned())?;
+    parse_length_checksum(&priv_meta)
 }
 
 /// Pepper and padding are included to obfuscate metadata.
 fn parse_obfuscation(header_data: &mut HashMap<String, String>) -> FedResult<(Salt, u16)> {
-    let pepper = header_data.remove(PRIV_HEADER_PEPPER).map(|pepr| Salt::parse_base64(&pepr, false))
-        .ok_or("could not find the pepper (private salt) in the private file header".to_owned())??;
-    let padding_len = header_data.remove(PRIV_HEADER_PADDING).map(|pad| pad.len() as u16)
+    let pepper = header_data
+        .remove(PRIV_HEADER_PEPPER)
+        .map(|pepr| Salt::parse_base64(&pepr, false))
+        .ok_or(
+            "could not find the pepper (private salt) in the private file header".to_owned(),
+        )??;
+    let padding_len = header_data
+        .remove(PRIV_HEADER_PADDING)
+        .map(|pad| pad.len() as u16)
         .ok_or("could not find the padding in the private file header".to_owned())?;
     Ok((pepper, padding_len))
 }
 
 //TODO @mark: include filename in error at caller?
 /// Parses the data in the private header and returns it, along with the index of the first byte after the header.
-pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<(usize, PrivateHeader)> {
-
-    eprintln!("START parse_private_header");   //TODO @mark: TEMPORARY! REMOVE THIS!
+pub fn parse_private_header<R: BufRead>(
+    reader: &mut R,
+    verbose: bool,
+) -> FedResult<(usize, PrivateHeader)> {
     let (index, mut header_data) = match read_header_keys(reader, None, &[PRIV_HEADER_DATA]) {
         Ok(map) => map,
         Err(err) => return Err(match err {
@@ -56,31 +82,36 @@ pub fn parse_private_header<R: BufRead>(reader: &mut R) -> FedResult<(usize, Pri
             HeaderErr::ReadError => format!("the private file header could not be read; perhaps the file was not accessible, or the file header has been corrupted"),
         }),
     };
-    eprintln!("END parse_private_header");   //TODO @mark: TEMPORARY! REMOVE THIS!
 
     let filename = parse_filename(&mut header_data)?;
     let permissions = parse_permissions(&mut header_data)?;
     let (created, changed, accessed) = parse_sizes(&mut header_data)?;
-    let size = parse_size(&mut header_data)?;
+    //TODO @mark: ...
+    let size_check = parse_private_header_meta(&mut header_data)?;
     let (pepper, padding_len) = parse_obfuscation(&mut header_data)?;
 
     if !header_data.is_empty() {
-        let key_names = header_data.iter()
+        let key_names = header_data
+            .iter()
             .map(|(key, _)| key.as_str())
-            .collect::<Vec<_>>().join("', '");
+            .collect::<Vec<_>>()
+            .join("', '");
         eprintln!("encountered unknown private header keys '{}'; this may happen if the file is encrypted using a newer version of file_endec, or if the file is corrupt; ignoring this problem", key_names);
     }
 
-    Ok((index, PrivateHeader::new(
-        filename,
-        permissions,
-        created,
-        changed,
-        accessed,
-        size,
-        pepper,
-        padding_len,
-    )))
+    Ok((
+        index,
+        PrivateHeader::new(
+            filename,
+            permissions,
+            created,
+            changed,
+            accessed,
+            size_check,
+            pepper,
+            padding_len,
+        ),
+    ))
 }
 
 #[cfg(test)]
@@ -88,7 +119,7 @@ mod tests {
     use ::std::collections::HashMap;
 
     use crate::header::private_decode::{parse_permissions, parse_private_header};
-    use crate::header::private_header_type::{PRIV_HEADER_PERMISSIONS, PrivateHeader};
+    use crate::header::private_header_type::{PrivateHeader, PRIV_HEADER_PERMISSIONS};
     use crate::key::Salt;
 
     #[test]

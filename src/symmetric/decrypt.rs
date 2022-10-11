@@ -1,5 +1,3 @@
-use ::block_modes::BlockMode;
-
 use crate::header::SymmetricEncryptionAlg;
 use crate::key::key::StretchKey;
 use crate::key::Salt;
@@ -8,6 +6,7 @@ use crate::util::FedResult;
 
 pub fn decrypt_file(
     mut data: Vec<u8>,
+    //TODO @mark: test start index
     mut data_start_index: usize,
     key: &StretchKey,
     salt: &Salt,
@@ -19,7 +18,9 @@ pub fn decrypt_file(
         start_progress(decrypt_alg);
         data = match decrypt_alg {
             SymmetricEncryptionAlg::Aes256 => decrypt_aes256(&data[data_start_index..], key, salt)?,
-            SymmetricEncryptionAlg::Twofish => decrypt_twofish(&data[data_start_index..], key, salt)?,
+            SymmetricEncryptionAlg::Twofish => {
+                decrypt_twofish(&data[data_start_index..], key, salt)?
+            }
         };
         data_start_index = 0;
     }

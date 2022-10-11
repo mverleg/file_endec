@@ -14,11 +14,17 @@ pub fn round_up_to_power_of_two(value: u64) -> u64 {
     2u64.pow(power)
 }
 
+/// Number needed to reach the next-nearest power of two (as returned
+/// by `round_up_to_power_of_two`).
+pub fn remainder_to_power_of_two(value: u64) -> u64 {
+    round_up_to_power_of_two(value) - value
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    mod round_up_to_power_of_two {
+    mod round_up {
         use super::*;
 
         #[test]
@@ -40,6 +46,31 @@ mod tests {
         #[test]
         fn zero() {
             assert_eq!(round_up_to_power_of_two(0), 0);
+        }
+    }
+
+    mod remainder {
+        use super::*;
+
+        #[test]
+        fn needs_rounding() {
+            assert_eq!(remainder_to_power_of_two(7), 1);
+            assert_eq!(remainder_to_power_of_two(13), 3);
+            assert_eq!(remainder_to_power_of_two(1023), 1);
+            assert_eq!(remainder_to_power_of_two(1025), 1023);
+            assert_eq!(remainder_to_power_of_two(2u64.pow(63) - 1), 1);
+        }
+
+        #[test]
+        fn already_rounded() {
+            assert_eq!(remainder_to_power_of_two(1), 0);
+            assert_eq!(remainder_to_power_of_two(8), 0);
+            assert_eq!(remainder_to_power_of_two(4096), 0);
+        }
+
+        #[test]
+        fn zero() {
+            assert_eq!(remainder_to_power_of_two(0), 0);
         }
     }
 }

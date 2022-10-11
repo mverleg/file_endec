@@ -1,5 +1,6 @@
 pub use checksum::Checksum;
 
+pub mod auto_name;
 pub mod checksum;
 pub mod compress;
 pub mod delete;

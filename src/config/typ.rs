@@ -11,6 +11,15 @@ pub enum Extension<'a> {
     Strip,
 }
 
+impl<'a> Extension<'a> {
+    pub fn unwrap_add(&self) -> &str {
+        match self {
+            Extension::Add(ext) => ext,
+            Extension::Strip => panic!("unwrapping extension that is set to strip"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OnFileExist {
     Overwrite,

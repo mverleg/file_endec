@@ -1,3 +1,4 @@
+use crate::files::Checksum;
 use crate::key::Salt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -10,8 +11,8 @@ pub struct PrivateHeader {
     created_ns: Option<u128>,
     changed_ns: Option<u128>,
     accessed_ns: Option<u128>,
-    // Original filesize in bytes.
-    size: u64,
+    // Length and checksum of unpadded payload
+    data_info: (u64, Checksum),
     // Secret seed for values like checksum. This prevents an attacker from verifying whether
     // an encrypted file contains a specific file that the attacker has access to.
     //TODO @mark: make sure pepper influences the checksum
@@ -22,8 +23,17 @@ pub struct PrivateHeader {
 }
 
 impl PrivateHeader {
-    pub fn new(filename: String, permissions: Option<u32>, created_ns: Option<u128>, changed_ns: Option<u128>, accessed_ns: Option<u128>, size: u64, pepper: Salt, padding_len: u16) -> Self {
-        debug_assert!(padding_len <= 1024);  // implementation detail in padding data generation
+    pub fn new(
+        filename: String,
+        permissions: Option<u32>,
+        created_ns: Option<u128>,
+        changed_ns: Option<u128>,
+        accessed_ns: Option<u128>,
+        data_info: (u64, Checksum),
+        pepper: Salt,
+        padding_len: u16,
+    ) -> Self {
+        debug_assert!(padding_len <= 1024); // implementation detail in padding data generation
         assert!(!filename.contains('\n'));
         PrivateHeader {
             filename,
@@ -31,7 +41,7 @@ impl PrivateHeader {
             created_ns,
             changed_ns,
             accessed_ns,
-            size,
+            data_info,
             pepper,
             padding_len,
         }
@@ -57,8 +67,8 @@ impl PrivateHeader {
         self.accessed_ns
     }
 
-    pub fn size(&self) -> u64 {
-        self.size
+    pub fn data_size(&self) -> u64 {
+        self.data_info.0
     }
 
     pub fn pepper(&self) -> &Salt {
@@ -75,7 +85,7 @@ pub const PRIV_HEADER_PERMISSIONS: &str = "perm";
 pub const PRIV_HEADER_CREATED: &str = "crt";
 pub const PRIV_HEADER_MODIFIED: &str = "cng";
 pub const PRIV_HEADER_ACCESSED: &str = "acs";
-pub const PRIV_HEADER_SIZE: &str = "sz";
+pub const PRIV_HEADER_DATA_SIZE_CHECK: &str = "szck";
 pub const PRIV_HEADER_PEPPER: &str = "pepr";
 pub const PRIV_HEADER_PADDING: &str = "pad";
 pub const PRIV_HEADER_DATA: &str = "enc:";

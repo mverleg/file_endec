@@ -1,11 +1,13 @@
+use ::std::path::Path;
+
 use ::file_shred::shred_file;
 
 use crate::files::file_meta::FileInfo;
 use crate::{FedResult, Verbosity};
 
-pub fn delete_existing_file_in_output_location(file: &FileInfo) -> FedResult<()> {
-    assert!(file.out_pth.is_file());
-    shred_file(&file.out_pth).map_err(|_| {
+pub fn delete_existing_file_in_output_location(pth: &Path) -> FedResult<()> {
+    assert!(pth.is_file());
+    shred_file(&pth).map_err(|_| {
         "Failed to remove previously-existing file that exists in output location".to_string()
     })
 }

@@ -1,9 +1,9 @@
 use ::std::fs::File;
 use ::std::io::Write;
+use ::std::path::Path;
 
 use crate::config::typ::EndecConfig;
 use crate::files::delete::delete_existing_file_in_output_location;
-use crate::files::file_meta::FileInfo;
 use crate::header::write_public_header;
 use crate::header::PublicHeader;
 use crate::util::errors::wrap_io;
@@ -11,19 +11,20 @@ use crate::util::FedResult;
 
 pub fn write_output_file(
     config: &impl EndecConfig,
-    file: &FileInfo,
-    data: &[u8],
+    out_pth: &Path,
+    datas: &[&[u8]],
     header: Option<&PublicHeader>,
     start_progress: &mut impl FnMut(),
 ) -> FedResult<()> {
+    debug_assert!(datas.len() >= 1);
     start_progress();
-    if file.out_pth.exists() {
+    if out_pth.exists() {
         if config.overwrite() {
-            delete_existing_file_in_output_location(&file)?;
+            delete_existing_file_in_output_location(&out_pth)?;
         } else {
             return Err(format!(
                 "While encrypting, a file appeared in previously empty output location '{}'",
-                &file.out_pth.to_string_lossy()
+                &out_pth.to_string_lossy()
             ));
         }
     }
@@ -31,10 +32,10 @@ pub fn write_output_file(
         || {
             format!(
                 "Could not create output file for '{}'",
-                &file.out_pth.to_string_lossy()
+                &out_pth.to_string_lossy()
             )
         },
-        File::create(&file.out_pth),
+        File::create(&out_pth),
     )?;
     if let Some(header) = header {
         write_public_header(&mut out_file, header, config.debug())?;
@@ -43,13 +44,19 @@ pub fn write_output_file(
         || {
             format!(
                 "Failed to write encrypted output data for '{}'",
-                &file.out_pth.to_string_lossy()
+                &out_pth.to_string_lossy()
             )
         },
-        out_file.write_all(&data),
+        datas
+            .iter()
+            .map(|data| out_file.write_all(data))
+            .collect::<Result<Vec<_>, _>>(),
     )?;
     if config.debug() {
-        println!("encrypted {}", &file.file_name());
+        println!(
+            "encrypted {}",
+            out_pth.file_name().unwrap().to_string_lossy().to_string()
+        );
     }
     Ok(())
 }

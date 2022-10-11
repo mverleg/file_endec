@@ -3,13 +3,11 @@
 
 [![Dependencies](https://deps.rs/repo/github/mverleg/file_endec/status.svg)](https://deps.rs/repo/github/mverleg/file_endec)
 
-File encrypt/decrypt
-===============================
+# File encrypt/decrypt
 
 Command line utility that encrypts and decrypts files.
 
-Functionality
--------------------------------
+## Functionality
 
 * Encryption and decryption using established algorithms.
 * Compression.
@@ -22,8 +20,13 @@ Functionality
 * Shredding of deleted files.
 * Hiding of file name, size and metadata.
 
-In Docker
--------------------------------
+## Locally
+
+To build the binaries locally, include feature `bin`. This feature is not needed when using as a library.
+
+    cargo build --release --features=bin
+
+## In Docker
 
 Run the encryptor with Docker:
 
@@ -37,8 +40,7 @@ To build the image yourself (instead of downloading from Dockerhub), clone the G
 
 This will also run the tests and lints, to verify that your version is okay.
 
-Options
--------------------------------
+## Options
 
 Use `fileenc --help` and `filedec --help` to see CLI arguments. For `fileenc`:
 
@@ -70,8 +72,7 @@ Use `fileenc --help` and `filedec --help` to see CLI arguments. For `fileenc`:
 
 The `--fast` mode uses only one hash algorithm one encryption algorithm (argon2i and aes256), and reduces key stretching; this makes it about 10 times faster.
 
-Keep in mind
--------------------------------
+## Keep in mind
 
 *While this mostly relies on established hashing and encryption algorithms, there are no security guarantees, and the author is not a professional security expert. Use at your own risk.*
 

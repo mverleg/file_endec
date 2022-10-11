@@ -8,9 +8,10 @@ use ::std::path::PathBuf;
 use ::std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::config::typ::Extension;
+use crate::files::auto_name::generate_available_name;
 use crate::header::strategy::Verbosity;
-use crate::util::FedResult;
 use crate::util::pth::determine_output_path;
+use crate::util::FedResult;
 use std::fs::Metadata;
 
 #[derive(Debug)]
@@ -88,6 +89,7 @@ pub fn inspect_files<'a>(
     overwrite: bool,
     extension: Extension,
     output_dir: Option<&Path>,
+    hide_name: bool,
 ) -> FedResult<Vec<FileInfo<'a>>> {
     let mut not_found_cnt: u32 = 0;
     let mut output_exists_cnt: u32 = 0;
@@ -117,7 +119,14 @@ pub fn inspect_files<'a>(
         }
 
         // Output file
-        let output_file = determine_output_path(file.as_path(), extension, output_dir);
+        //TODO @mark: test for hide_name
+        let output_file = if hide_name {
+            // `hide_name` only applies to encryption (not decryption), so extension should be available.
+            let dir = file.parent().unwrap();
+            generate_available_name(dir, extension.unwrap_add())
+        } else {
+            determine_output_path(file.as_path(), extension, output_dir)
+        };
         if !overwrite && output_file.exists() {
             eprintln!(
                 "output path '{}' already exists",
@@ -163,9 +172,9 @@ mod tests {
     use ::tempfile::NamedTempFile;
     use ::tempfile::TempDir;
 
-    use crate::config::EncryptConfig;
-    use crate::config::typ::{EndecConfig, InputAction, OnFileExist};
     use crate::config::typ::Extension;
+    use crate::config::typ::{EndecConfig, InputAction, OnFileExist};
+    use crate::config::EncryptConfig;
     use crate::header::strategy::Verbosity;
     use crate::key::Key;
     use crate::util::option::EncOptionSet;
@@ -195,6 +204,7 @@ mod tests {
             config.overwrite(),
             Extension::Add(".enc"),
             config.output_dir(),
+            false,
         )
         .unwrap();
         assert_eq!(2, out_files.len());

@@ -5,7 +5,8 @@ use ::std::str::FromStr;
 use ::semver::Version;
 
 use crate::files::Checksum;
-use crate::header::decode_util::{HeaderErr, read_header_keys};
+use crate::header::decode_util::{read_header_keys, HeaderErr};
+use crate::header::PublicHeader;
 use crate::header::PUB_HEADER_CHECKSUM_MARKER;
 use crate::header::PUB_HEADER_MARKER;
 use crate::header::PUB_HEADER_META_DATA_MARKER;
@@ -14,17 +15,17 @@ use crate::header::PUB_HEADER_PRIVATE_HEADER_META_MARKER;
 use crate::header::PUB_HEADER_PURE_DATA_MARKER;
 use crate::header::PUB_HEADER_SALT_MARKER;
 use crate::header::PUB_HEADER_VERSION_MARKER;
-use crate::header::PublicHeader;
 use crate::key::salt::Salt;
 use crate::util::base::small_str_to_u64;
 use crate::util::errors::add_err;
-use crate::util::FedResult;
 use crate::util::option::{EncOption, EncOptionSet};
 use crate::util::version::version_has_options_meta;
+use crate::util::FedResult;
 
 fn parse_version(header_data: &mut HashMap<String, String>, verbose: bool) -> FedResult<Version> {
     //TODO @mark: do these ok_or cause too many allocations? use ok_or_else?
-    let version_str = header_data.remove(PUB_HEADER_VERSION_MARKER)
+    let version_str = header_data
+        .remove(PUB_HEADER_VERSION_MARKER)
         .ok_or("could not find the version in the file header".to_owned())?;
     match Version::parse(&version_str) {
         Ok(version) => Ok(version),
@@ -36,7 +37,10 @@ fn parse_version(header_data: &mut HashMap<String, String>, verbose: bool) -> Fe
     }
 }
 
-fn parse_options(header_data: &mut HashMap<String, String>, verbose: bool) -> FedResult<EncOptionSet> {
+fn parse_options(
+    header_data: &mut HashMap<String, String>,
+    verbose: bool,
+) -> FedResult<EncOptionSet> {
     let options_str = match header_data.remove(PUB_HEADER_OPTION_MARKER) {
         Some(val) => val,
         None => return Ok(EncOptionSet::empty()),
@@ -65,26 +69,32 @@ fn parse_options(header_data: &mut HashMap<String, String>, verbose: bool) -> Fe
 }
 
 fn parse_salt(header_data: &mut HashMap<String, String>, verbose: bool) -> FedResult<Salt> {
-    let salt_str = header_data.remove(PUB_HEADER_SALT_MARKER)
+    let salt_str = header_data
+        .remove(PUB_HEADER_SALT_MARKER)
         .ok_or("could not find the salt in the file header".to_owned())?;
     Salt::parse_base64(&salt_str, verbose)
 }
 
 fn parse_checksum(header_data: &mut HashMap<String, String>) -> FedResult<Checksum> {
-    let checksum_str = header_data.remove(PUB_HEADER_CHECKSUM_MARKER)
+    let checksum_str = header_data
+        .remove(PUB_HEADER_CHECKSUM_MARKER)
         .ok_or("could not find the checksum in the file header".to_owned())?;
     Checksum::parse(&checksum_str)
 }
 
-fn parse_private_header_meta(header_data: &mut HashMap<String, String>) -> FedResult<(u64, Checksum)> {
-    let priv_meta = header_data.remove(PUB_HEADER_PRIVATE_HEADER_META_MARKER)
+fn parse_private_header_meta(
+    header_data: &mut HashMap<String, String>,
+) -> FedResult<(u64, Checksum)> {
+    let priv_meta = header_data
+        .remove(PUB_HEADER_PRIVATE_HEADER_META_MARKER)
         .ok_or("could not find the private header metadata in the public file header".to_owned())?;
     let mut parts = priv_meta.splitn(2, ' ');
 
     let length = small_str_to_u64(parts.next().unwrap())
         .ok_or("metadata about private header contained an incorrectly formatted length")?;
 
-    let checksum_str = parts.next()
+    let checksum_str = parts
+        .next()
         .ok_or("metadata about private header has a missing separator")?;
     let checksum = Checksum::parse(checksum_str)
         .map_err(|_| "metadata about private header contained an incorrectly formatted checksum")?;
@@ -93,25 +103,33 @@ fn parse_private_header_meta(header_data: &mut HashMap<String, String>) -> FedRe
 }
 
 //TODO @mark: include filename in error at caller?
-pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResult<(usize, PublicHeader)> {
-
-    let (index, mut header_data) = match read_header_keys(reader, Some(PUB_HEADER_MARKER), &[PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER]) {
+pub fn parse_public_header<R: BufRead>(
+    reader: &mut R,
+    verbose: bool,
+) -> FedResult<(usize, PublicHeader)> {
+    let (index, mut header_data) = match read_header_keys(
+        reader,
+        Some(PUB_HEADER_MARKER),
+        &[PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER],
+    ) {
         Ok(map) => map,
-        Err(err) => return Err(if verbose {
-            match err {
+        Err(err) => {
+            return Err(if verbose {
+                match err {
                 HeaderErr::NoStartMarker => format!("did not recognize encryption header (expected '{}'); was this file really encrypted with fileenc?", PUB_HEADER_MARKER),
                 HeaderErr::NoEndMarker => format!("could not find the end of the file header ('{}' or '{}'); has the file header been corrupted?", PUB_HEADER_PURE_DATA_MARKER, PUB_HEADER_META_DATA_MARKER),
                 HeaderErr::HeaderSyntax(line) => format!("part of the file header could not be parsed because it did not have the expected format (found '{}')", &line),
                 HeaderErr::ReadError => format!("the file header could not be read; perhaps the file was not accessible, or the file header has been corrupted"),
             }
-        } else {
-            match err {
+            } else {
+                match err {
                 HeaderErr::NoStartMarker => format!("did not recognize encryption header; was this file really encrypted with fileenc?"),
                 HeaderErr::NoEndMarker => format!("could not find the end of the file header; has the file header been corrupted?"),
                 HeaderErr::HeaderSyntax(_) => format!("part of the file header could not be parsed because it did not have the expected format"),
                 HeaderErr::ReadError => format!("the file header could not be read; perhaps the file was not accessible, or the file header has been corrupted"),
             }
-        }),
+            })
+        }
     };
 
     let version = parse_version(&mut header_data, verbose)?;
@@ -125,13 +143,18 @@ pub fn parse_public_header<R: BufRead>(reader: &mut R, verbose: bool) -> FedResu
     };
 
     if !header_data.is_empty() {
-        let key_names = header_data.iter()
+        let key_names = header_data
+            .iter()
             .map(|(key, _)| key.as_str())
-            .collect::<Vec<_>>().join("', '");
+            .collect::<Vec<_>>()
+            .join("', '");
         eprintln!("encountered unknown header keys '{}'; this may happen if the file is encrypted using a newer version of file_endec, or if the file is corrupt; ignoring this problem", key_names);
     }
 
-    Ok((index, PublicHeader::legacy(version, salt, checksum, options, private_header)))
+    Ok((
+        index,
+        PublicHeader::legacy(version, salt, checksum, options, private_header),
+    ))
 }
 
 #[cfg(test)]
@@ -172,7 +195,7 @@ mod tests {
             Version::parse("1.0.0").unwrap(),
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
-            EncOptionSet::empty(),  // always empty for v1.0
+            EncOptionSet::empty(), // always empty for v1.0
             None,
         );
         let mut buf = input.as_bytes();
@@ -189,7 +212,7 @@ mod tests {
             Version::parse("1.1.0").unwrap(),
             Salt::fixed_for_test(1),
             Checksum::fixed_for_test(vec![2]),
-            EncOptionSet::empty(),  // always empty for v1.0
+            EncOptionSet::empty(), // always empty for v1.0
             (20, Checksum::fixed_for_test(vec![10, 20, 30])),
         );
         let mut buf = input.as_bytes();

@@ -9,8 +9,8 @@ use ::std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::config::typ::Extension;
 use crate::header::strategy::Verbosity;
-use crate::util::FedResult;
 use crate::util::pth::determine_output_path;
+use crate::util::FedResult;
 use std::fs::Metadata;
 
 #[derive(Debug)]
@@ -163,9 +163,9 @@ mod tests {
     use ::tempfile::NamedTempFile;
     use ::tempfile::TempDir;
 
-    use crate::config::EncryptConfig;
-    use crate::config::typ::{EndecConfig, InputAction, OnFileExist};
     use crate::config::typ::Extension;
+    use crate::config::typ::{EndecConfig, InputAction, OnFileExist};
+    use crate::config::EncryptConfig;
     use crate::header::strategy::Verbosity;
     use crate::key::Key;
     use crate::util::option::EncOptionSet;

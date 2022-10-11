@@ -16,12 +16,24 @@ pub struct PublicHeader {
 }
 
 impl PublicHeader {
-    pub fn new(version: Version, salt: Salt, checksum: Checksum, options: EncOptionSet, private_header: (u64, Checksum)) -> Self {
+    pub fn new(
+        version: Version,
+        salt: Salt,
+        checksum: Checksum,
+        options: EncOptionSet,
+        private_header: (u64, Checksum),
+    ) -> Self {
         Self::legacy(version, salt, checksum, options, Some(private_header))
     }
 
     /// Legacy version (which may not have private headers if it was before v1.1)
-    pub fn legacy(version: Version, salt: Salt, data_checksum: Checksum, options: EncOptionSet, private_header: Option<(u64, Checksum)>) -> Self {
+    pub fn legacy(
+        version: Version,
+        salt: Salt,
+        data_checksum: Checksum,
+        options: EncOptionSet,
+        private_header: Option<(u64, Checksum)>,
+    ) -> Self {
         PublicHeader {
             version,
             salt,

@@ -3,17 +3,17 @@ use ::criterion::criterion_main;
 
 #[cfg(all(test, feature = "expose"))]
 mod hash {
-    use ::criterion::Benchmark;
     use ::criterion::black_box;
+    use ::criterion::Benchmark;
     use ::criterion::Criterion;
 
     use ::file_endec::get_current_version_strategy;
     use ::file_endec::hash_argon2i;
     use ::file_endec::hash_bcrypt;
     use ::file_endec::hash_sha256;
+    use ::file_endec::stretch_key;
     use ::file_endec::Key;
     use ::file_endec::Salt;
-    use ::file_endec::stretch_key;
 
     fn get_data() -> Vec<u8> {
         black_box(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
@@ -78,8 +78,8 @@ mod hash {
 
 #[cfg(all(test, feature = "expose"))]
 mod encrypt {
-    use ::criterion::Benchmark;
     use ::criterion::black_box;
+    use ::criterion::Benchmark;
     use ::criterion::Criterion;
 
     use ::file_endec::decrypt_aes256;
@@ -152,10 +152,10 @@ mod back_and_forth {
     use ::tempfile::tempdir;
 
     use ::file_endec::decrypt;
+    use ::file_endec::encrypt;
     use ::file_endec::DecryptConfig;
     use ::file_endec::EncOption;
     use ::file_endec::EncOptionSet;
-    use ::file_endec::encrypt;
     use ::file_endec::EncryptConfig;
     use ::file_endec::Key;
     use ::file_endec::Verbosity;
@@ -164,13 +164,13 @@ mod back_and_forth {
         let mut pth = tempdir().unwrap().into_path();
         pth.push("source.data");
         let mut writer = BufWriter::new(File::create(&pth).unwrap());
-        for _ in 0 .. 10 * 1024 {
+        for _ in 0..10 * 1024 {
             let mut data = [0; 1024];
             rand::thread_rng().fill_bytes(&mut data);
             writer.write(&data).unwrap();
         }
         assert!(pth.exists());
-        return pth
+        return pth;
     }
 
     fn enc_dec_files_with_options(key: Key, test_file: PathBuf, options: EncOptionSet) {
@@ -187,14 +187,7 @@ mod back_and_forth {
         );
         let enc_files = encrypt(&conf).unwrap();
 
-        let conf = DecryptConfig::new(
-            enc_files,
-            key,
-            Verbosity::Quiet,
-            false,
-            false,
-            None,
-        );
+        let conf = DecryptConfig::new(enc_files, key, Verbosity::Quiet, false, false, None);
         decrypt(&conf).unwrap();
     }
 
@@ -207,7 +200,13 @@ mod back_and_forth {
             Benchmark::new("v1_0", |b| {
                 let key = Key::new("s$j2d@PBBajiX$1+&hMEEij@+XNrUR4u");
                 let test_file = create_test_file();
-                b.iter(|| enc_dec_files_with_options(key.clone(), test_file.clone(), EncOptionSet::empty()))
+                b.iter(|| {
+                    enc_dec_files_with_options(
+                        key.clone(),
+                        test_file.clone(),
+                        EncOptionSet::empty(),
+                    )
+                })
             })
             .sample_size(10),
         );
@@ -219,7 +218,13 @@ mod back_and_forth {
             Benchmark::new("v1_1_fast", |b| {
                 let key = Key::new("TzBdMjzA8%++lSUdwxlak83jZg=veF4!");
                 let test_file = create_test_file();
-                b.iter(|| enc_dec_files_with_options(key.clone(), test_file.clone(), EncOptionSet::new(vec![EncOption::Fast])))
+                b.iter(|| {
+                    enc_dec_files_with_options(
+                        key.clone(),
+                        test_file.clone(),
+                        EncOptionSet::new(vec![EncOption::Fast]),
+                    )
+                })
             })
             .sample_size(10),
         );

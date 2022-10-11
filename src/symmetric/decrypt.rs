@@ -19,7 +19,9 @@ pub fn decrypt_file(
         start_progress(decrypt_alg);
         data = match decrypt_alg {
             SymmetricEncryptionAlg::Aes256 => decrypt_aes256(&data[data_start_index..], key, salt)?,
-            SymmetricEncryptionAlg::Twofish => decrypt_twofish(&data[data_start_index..], key, salt)?,
+            SymmetricEncryptionAlg::Twofish => {
+                decrypt_twofish(&data[data_start_index..], key, salt)?
+            }
         };
         data_start_index = 0;
     }

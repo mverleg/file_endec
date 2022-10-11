@@ -3,10 +3,8 @@ use ::std::io::Seek;
 use ::std::io::SeekFrom;
 use ::std::path::PathBuf;
 
-use crate::{FedResult, Verbosity};
-use crate::config::DecryptConfig;
 use crate::config::typ::{EndecConfig, Extension};
-use crate::files::Checksum;
+use crate::config::DecryptConfig;
 use crate::files::checksum::calculate_checksum;
 use crate::files::compress::decompress_file;
 use crate::files::delete::delete_input_file;
@@ -14,16 +12,18 @@ use crate::files::file_meta::inspect_files;
 use crate::files::read_headers::read_file_strategies;
 use crate::files::reading::{open_reader, read_file};
 use crate::files::write_output::write_output_file;
+use crate::files::Checksum;
 use crate::header::private_decode::parse_private_header;
 use crate::key::key::StretchKey;
-use crate::key::Salt;
 use crate::key::stretch::stretch_key;
+use crate::key::Salt;
 use crate::progress::indicatif::IndicatifProgress;
 use crate::progress::log::LogProgress;
-use crate::progress::Progress;
 use crate::progress::silent::SilentProgress;
+use crate::progress::Progress;
 use crate::symmetric::decrypt::decrypt_file;
 use crate::util::version::version_has_options_meta;
+use crate::{FedResult, Verbosity};
 
 pub fn validate_checksum_matches(
     actual_checksum: &Checksum,
@@ -77,7 +77,9 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
     let mut out_pths = vec![];
     for file_strat in &files_strats {
         let mut reader = open_reader(&file_strat.file, config.verbosity())?;
-        reader.seek(SeekFrom::Start(file_strat.pub_header_len as u64)).unwrap();
+        reader
+            .seek(SeekFrom::Start(file_strat.pub_header_len as u64))
+            .unwrap();
         let salt = file_strat.pub_header.salt().clone();
         let stretched_key = if let Some(sk) = key_cache.get(&salt) {
             sk.clone()
@@ -101,9 +103,14 @@ pub fn decrypt(config: &DecryptConfig) -> FedResult<Vec<PathBuf>> {
             config.verbosity(),
             &mut || progress.start_read_for_file(&file_strat.file),
         )?;
-        let priv_header_len = file_strat.pub_header.private_header().as_ref().map(|hdr| hdr.0 as usize).unwrap_or(0);
+        let priv_header_len = file_strat
+            .pub_header
+            .private_header()
+            .as_ref()
+            .map(|hdr| hdr.0 as usize)
+            .unwrap_or(0);
         let priv_header = if version_has_options_meta(&file_strat.pub_header.version()) {
-            dbg!(&data[..priv_header_len]);  //TODO @mark: TEMPORARY! REMOVE THIS!
+            dbg!(&data[..priv_header_len]); //TODO @mark: TEMPORARY! REMOVE THIS!
             let index_header = parse_private_header(&mut &data[..priv_header_len])?;
             Some(index_header.1)
         } else {
@@ -175,12 +182,12 @@ mod tests {
     use ::lazy_static::lazy_static;
     use ::tempfile::tempdir;
 
+    use crate::config::typ::{InputAction, OnFileExist};
     use crate::config::DecryptConfig;
     use crate::decrypt;
     use crate::files::scan::TEST_FILE_DIR;
     use crate::header::strategy::Verbosity;
     use crate::key::key::Key;
-    use crate::config::typ::{OnFileExist, InputAction};
 
     lazy_static! {
         static ref COMPAT_KEY: Key = Key::new(" LP0y#shbogtwhGjM=*jFFZPmNd&qBO+ ");

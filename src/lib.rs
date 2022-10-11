@@ -1,4 +1,3 @@
-
 pub use crate::config::DecryptConfig;
 pub use crate::config::EncryptConfig;
 pub use crate::config::EndecConfig;
@@ -12,14 +11,14 @@ pub use crate::key::hash::hash_argon2i;
 pub use crate::key::hash::hash_bcrypt;
 #[cfg(feature = "expose")]
 pub use crate::key::hash::hash_sha256;
-pub use crate::key::Key;
 #[cfg(feature = "expose")]
 pub use crate::key::key::StretchKey;
+#[cfg(feature = "expose")]
+pub use crate::key::stretch::stretch_key;
+pub use crate::key::Key;
 pub use crate::key::KeySource;
 #[cfg(feature = "expose")]
 pub use crate::key::Salt;
-#[cfg(feature = "expose")]
-pub use crate::key::stretch::stretch_key;
 pub use crate::orchestrate::decrypt::decrypt;
 pub use crate::orchestrate::encrypt::encrypt;
 #[cfg(feature = "expose")]
@@ -30,9 +29,9 @@ pub use crate::symmetric::decrypt::decrypt_twofish;
 pub use crate::symmetric::encrypt::encrypt_aes256;
 #[cfg(feature = "expose")]
 pub use crate::symmetric::encrypt::encrypt_twofish;
-pub use crate::util::FedResult;
 pub use crate::util::option::EncOption;
 pub use crate::util::option::EncOptionSet;
+pub use crate::util::FedResult;
 
 //TODO @mark: match set_file_times(path, FileTime::zero(), FileTime::zero()) {
 

@@ -35,7 +35,7 @@ pub fn generate_available_name(directory: &Path, extension: &str) -> PathBuf {
             nr += 1;
             file.set_file_name(make_name(nr, extension));
             if !file.exists() {
-                break
+                break;
             }
         }
         counts.insert(extension.to_owned(), nr);
@@ -60,7 +60,11 @@ mod tests {
     }
 
     fn generate_available_pure_str_name(directory: &TempDir, extension: &str) -> String {
-        generate_available_name(directory.path(), extension).file_name().unwrap().to_string_lossy().to_string()
+        generate_available_name(directory.path(), extension)
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .to_string()
     }
 
     #[test]
@@ -89,7 +93,7 @@ mod tests {
     #[test]
     fn repeatedly() {
         let dir = TempDir::new().unwrap();
-        create_nr_files(dir.path(), &[1, 2, 3, 5, 6, 8, 9,]);
+        create_nr_files(dir.path(), &[1, 2, 3, 5, 6, 8, 9]);
         assert_eq!(&generate_available_pure_str_name(&dir, "enc"), "0004.enc");
         assert_eq!(&generate_available_pure_str_name(&dir, "enc"), "0007.enc");
         assert_eq!(&generate_available_pure_str_name(&dir, "enc"), "0010.enc");
@@ -98,7 +102,7 @@ mod tests {
     #[test]
     fn extension() {
         let dir = TempDir::new().unwrap();
-        create_nr_files(dir.path(), &[1, 2, 3, 5, 6, 8, 9,]);
+        create_nr_files(dir.path(), &[1, 2, 3, 5, 6, 8, 9]);
         assert_eq!(&generate_available_pure_str_name(&dir, "enc"), "0004.enc");
         assert_eq!(&generate_available_pure_str_name(&dir, "enc"), "0007.enc");
         assert_eq!(&generate_available_pure_str_name(&dir, "new"), "0001.new");

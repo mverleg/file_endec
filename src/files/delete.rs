@@ -2,8 +2,8 @@ use ::std::path::Path;
 
 use ::file_shred::shred_file;
 
-use crate::{FedResult, Verbosity};
 use crate::files::file_meta::FileInfo;
+use crate::{FedResult, Verbosity};
 
 pub fn delete_existing_file_in_output_location(pth: &Path) -> FedResult<()> {
     assert!(pth.is_file());

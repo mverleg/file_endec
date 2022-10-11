@@ -11,7 +11,7 @@ pub enum Extension<'a> {
     Strip,
 }
 
-impl <'a> Extension<'a> {
+impl<'a> Extension<'a> {
     pub fn unwrap_add(&self) -> &str {
         match self {
             Extension::Add(ext) => ext,

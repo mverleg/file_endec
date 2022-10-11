@@ -1,16 +1,16 @@
 use ::std::cell::RefCell;
-use ::std::sync::Arc;
 use ::std::sync::atomic::AtomicBool;
 use ::std::sync::atomic::Ordering;
+use ::std::sync::Arc;
 use ::std::thread::sleep;
 use ::std::thread::spawn;
 use ::std::time::Duration;
 use ::std::time::SystemTime;
 
-use ::rand::Rng;
-use ::rand::RngCore;
 use ::rand::rngs::OsRng;
 use ::rand::rngs::StdRng;
+use ::rand::Rng;
+use ::rand::RngCore;
 use ::rand::SeedableRng;
 
 thread_local! {
@@ -22,7 +22,6 @@ thread_local! {
 /// Generate a secure random series of bytes, showing a
 /// warning on stderr if it takes long.
 pub fn generate_secure_random_timed(buffer: &mut [u8]) {
-
     let is_ready = Arc::new(AtomicBool::new(false));
     let has_warned = Arc::new(AtomicBool::new(false));
     let timer = SystemTime::now();
@@ -46,7 +45,10 @@ pub fn generate_secure_random_timed(buffer: &mut [u8]) {
 
     // If the warning was shown, then also show that the situation is resolved now.
     if has_warned.load(Ordering::Acquire) {
-        eprintln!("secure random number generation ready after {} ms", timer.elapsed().unwrap().as_millis());
+        eprintln!(
+            "secure random number generation ready after {} ms",
+            timer.elapsed().unwrap().as_millis()
+        );
     }
 }
 
@@ -70,7 +72,7 @@ pub fn generate_secure_pseudo_random_printable(buffer: &mut String, length: usiz
     RNG.with(|rng| {
         let mut rng = rng.borrow_mut();
         for _ in 0..length {
-            buffer.push(rng.gen_range(33 .. 127) as u8 as char)
+            buffer.push(rng.gen_range(33..127) as u8 as char)
             //TODO: would this be faster in batches?
         }
     })
@@ -96,7 +98,10 @@ mod tests {
         generate_secure_pseudo_random_bytes(&mut data, N);
         assert_eq!(data.len(), N);
         let total: u64 = data.into_iter().map(|v| v as u64).sum();
-        assert!(total > 0, "all random bytes were 0; this has probability < 1e-240");
+        assert!(
+            total > 0,
+            "all random bytes were 0; this has probability < 1e-240"
+        );
     }
 
     #[test]
@@ -105,6 +110,9 @@ mod tests {
         generate_secure_pseudo_random_printable(&mut data, N);
         assert_eq!(data.len(), N);
         let total: u64 = data.as_bytes().iter().map(|v| *v as u64).sum();
-        assert!(total > 0, "all random characters were 0; this has probability < 1e-240");
+        assert!(
+            total > 0,
+            "all random characters were 0; this has probability < 1e-240"
+        );
     }
 }

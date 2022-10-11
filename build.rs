@@ -74,14 +74,15 @@ fn generate_compatibility_tests() {
         }
         "
     )
-        .to_owned()];
+    .to_owned()];
     for path in paths {
         let path_txt = path.to_str().unwrap();
         println!("cargo:rerun-if-changed={}", path_txt);
         let name = path.file_name().unwrap().to_string_lossy().to_string();
-        let name = name[9 .. name.len()-8].replace(".", "_");
+        let name = name[9..name.len() - 8].replace(".", "_");
         test_code.push(format!(
-            indoc!(r#"
+            indoc!(
+                r#"
             #[test]
             fn compat_test_{}() {{
                 test_compatibility(PathBuf::from("{}"))

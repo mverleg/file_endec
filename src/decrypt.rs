@@ -25,7 +25,6 @@ use ::dockerfile_version_bumper::TagUp;
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
-
 #[derive(Debug, StructOpt)]
 #[structopt(
     name = "FileEnc",

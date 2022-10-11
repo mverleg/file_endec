@@ -12,7 +12,12 @@ pub struct FileHeaderStrategy<'a> {
 }
 
 impl<'a> FileHeaderStrategy<'a> {
-    pub fn new(file: &'a FileInfo<'a>, header: PublicHeader, header_len: usize, verbosity: Verbosity) -> FedResult<Self> {
+    pub fn new(
+        file: &'a FileInfo<'a>,
+        header: PublicHeader,
+        header_len: usize,
+        verbosity: Verbosity,
+    ) -> FedResult<Self> {
         let strategy = get_version_strategy(header.version(), header.options(), verbosity.debug())?;
         Ok(FileHeaderStrategy {
             file,
@@ -36,8 +41,9 @@ pub fn read_file_strategies<'a>(
                 reader.and_then(|mut r| parse_public_header(&mut r, verbosity.debug())),
             )
         })
-        .map(|(fi, hdr_info)| hdr_info
-            .and_then(|(hdr_len, hdr)| FileHeaderStrategy::new(fi, hdr, hdr_len, verbosity)))
+        .map(|(fi, hdr_info)| {
+            hdr_info.and_then(|(hdr_len, hdr)| FileHeaderStrategy::new(fi, hdr, hdr_len, verbosity))
+        })
         .collect()
 }
 

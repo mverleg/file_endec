@@ -4,8 +4,8 @@ use ::std::path::Path;
 
 use crate::config::typ::EndecConfig;
 use crate::files::delete::delete_existing_file_in_output_location;
-use crate::header::PublicHeader;
 use crate::header::write_public_header;
+use crate::header::PublicHeader;
 use crate::util::errors::wrap_io;
 use crate::util::FedResult;
 
@@ -47,16 +47,16 @@ pub fn write_output_file(
                 &out_pth.to_string_lossy()
             )
         },
-        datas.iter()
+        datas
+            .iter()
             .map(|data| out_file.write_all(data))
             .collect::<Result<Vec<_>, _>>(),
     )?;
     if config.debug() {
-        println!("encrypted {}", out_pth
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .to_string());
+        println!(
+            "encrypted {}",
+            out_pth.file_name().unwrap().to_string_lossy().to_string()
+        );
     }
     Ok(())
 }

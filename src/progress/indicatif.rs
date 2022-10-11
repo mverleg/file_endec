@@ -50,7 +50,13 @@ impl ProgressData {
         {
             let duration_us = self.started_at.elapsed().as_micros();
             let us_per_unit = (duration_us as f64 * 1e-3) / (self.current.size as f64);
-            let msg = format!("{}: {} ms for {} units, so {:.4} ms/u", &self.current.text, duration_us/1000, self.current.size, us_per_unit);
+            let msg = format!(
+                "{}: {} ms for {} units, so {:.4} ms/u",
+                &self.current.text,
+                duration_us / 1000,
+                self.current.size,
+                us_per_unit
+            );
             println!("== {}", &msg);
             eprintln!("== {}", &msg);
             self.started_at = Instant::now();
@@ -67,7 +73,6 @@ impl ProgressData {
 }
 
 impl<'a> FileStrategy for (&'a FileInfo<'a>, &'a Strategy) {
-
     fn file(&self) -> &FileInfo {
         self.0
     }
@@ -310,7 +315,7 @@ impl Progress for IndicatifProgress {
 
     fn finish(&mut self) {
         if let Some(data) = &mut self.data {
-            dbg!(&data.todo);  //TODO @mark: TEMPORARY! REMOVE THIS!
+            dbg!(&data.todo); //TODO @mark: TEMPORARY! REMOVE THIS!
             assert!(data.todo.is_empty());
             data.next_step(Some(TaskInfo {
                 text: "finished".to_owned(),

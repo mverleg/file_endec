@@ -1,5 +1,6 @@
 pub use checksum::Checksum;
 
+pub mod auto_name;
 pub mod checksum;
 pub mod compress;
 pub mod delete;
@@ -8,7 +9,6 @@ pub mod mockfile;
 pub mod read_headers;
 pub mod reading;
 pub mod write_output;
-pub mod auto_name;
 
 #[cfg(test)]
 pub mod scan;

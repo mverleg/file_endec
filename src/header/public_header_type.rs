@@ -17,7 +17,12 @@ pub struct PublicHeader {
 }
 
 impl PublicHeader {
-    pub fn new(version: Version, salt: Salt, options: EncOptionSet, private_header: (u64, Checksum)) -> Self {
+    pub fn new(
+        version: Version,
+        salt: Salt,
+        options: EncOptionSet,
+        private_header: (u64, Checksum),
+    ) -> Self {
         PublicHeader {
             version,
             salt,

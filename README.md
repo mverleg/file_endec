@@ -1,10 +1,8 @@
 
-[![Tests](https://github.com/mverleg/file_endec/workflows/Test%20file_endec/badge.svg)](https://github.com/mverleg/file_endec/actions)
-
-[![Dependencies](https://deps.rs/repo/github/mverleg/file_endec/status.svg)](https://deps.rs/repo/github/mverleg/file_endec)
-
 File encrypt/decrypt
 ===============================
+
+**⚠️ Not maintained anymore**
 
 Command line utility that encrypts and decrypts files.
 

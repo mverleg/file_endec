@@ -52,7 +52,6 @@ zxcvbn = "2.2.1"
 # encyrption and decryption
 twofish = "0.7.1"
 aes = "0.8.2"
-block-modes = "0.9.1"
 
 # hashing
 ring = "0.16.20"

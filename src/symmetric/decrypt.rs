@@ -1,5 +1,3 @@
-use ::block_modes::BlockMode;
-
 use crate::header::SymmetricEncryptionAlg;
 use crate::key::key::StretchKey;
 use crate::key::Salt;

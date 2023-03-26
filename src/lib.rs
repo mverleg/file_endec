@@ -48,9 +48,6 @@ mod util;
 #[cfg(test)]
 mod tests {
     use ::aes::Aes256;
-    use ::block_modes::block_padding::Iso7816;
-    use ::block_modes::BlockMode;
-    use ::block_modes::Cbc;
     use ::secstr::SecVec;
 
     type Aes256Cbc = Cbc<Aes256, Iso7816>;

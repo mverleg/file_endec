@@ -84,7 +84,8 @@ fn key_from_file(file_path: &Path) -> FedResult<Key> {
 }
 
 fn ask_key_from_prompt(message: &str) -> FedResult<Key> {
-    match rpassword::read_password_from_tty(Some(message)) {
+    println!("{}", message);
+    match rpassword::read_password() {
         Ok(pw) => {
             let pw = pw.trim();
             if pw.is_empty() {
